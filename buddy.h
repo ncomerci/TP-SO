@@ -1,16 +1,61 @@
 #ifndef BUDDY_H
 
-#define BUDDY_H
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+    #define BUDDY_H
+    
+    #include <memory.h>
+    #include <stdint.h>
+    #include <stdlib.h>
+    #include <unistd.h>
 
-struct buddy;
+    /*
+    * Every allocation needs an 8-byte header to store the allocation size while
+    * staying 8-byte aligned. The address returned by "malloc" is the address
+    * right after this header (i.e. the size occupies the 8 bytes before the
+    * returned address).
+    */
+    #define HEADER_SIZE 8
 
-struct buddy *buddy_new(unsigned num_of_fragments);
-int buddy_alloc(struct buddy *self, size_t size);
-void buddy_free(struct buddy *self, int offset);
-void buddy_dump(struct buddy *self);
-int buddy_size(struct buddy *self, int offset);
+    /*
+    * The minimum allocation size is 16 bytes because we have an 8-byte header and
+    * we need to stay 8-byte aligned.
+    */
+    #define MIN_ALLOC_LOG2 4
+    #define MIN_ALLOC ((size_t)1 << MIN_ALLOC_LOG2)
 
-#endif /* end of include guard: BUDDY_H */
+    /*
+    * The maximum allocation size is currently set to 2gb. This is the total size
+    * of the heap. It's technically also the maximum allocation size because the
+    * heap could consist of a single allocation of this size. But of course real
+    * heaps will have multiple allocations, so the real maximum allocation limit
+    * is at most 1gb.
+    */
+    #define MAX_ALLOC_LOG2 31
+    #define MAX_ALLOC ((size_t)1 << MAX_ALLOC_LOG2)
+
+    /*
+    * Allocations are done in powers of two starting from MIN_ALLOC and ending at
+    * MAX_ALLOC inclusive. Each allocation size has a bucket that stores the free
+    * list for that allocation size.
+    *
+    * Given a bucket index, the size of the allocations in that bucket can be
+    * found with "(size_t)1 << (MAX_ALLOC_LOG2 - bucket)".
+    */
+    #define BUCKET_COUNT (MAX_ALLOC_LOG2 - MIN_ALLOC_LOG2 + 1)
+
+    /*
+    * Free lists are stored as circular doubly-linked lists. Every possible
+    * allocation size has an associated free list that is threaded through all
+    * currently free blocks of that size. That means MIN_ALLOC must be at least
+    * "sizeof(list_t)". MIN_ALLOC is currently 16 bytes, so this will be true for
+    * both 32-bit and 64-bit.
+    */
+    typedef struct list_t {
+    struct list_t *prev, *next;
+    } list_t;
+
+    void *b_malloc(size_t request);
+    void b_free(void *ptr); 
+
+
+
+#endif // !BUDDY_H
