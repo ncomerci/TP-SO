@@ -1,5 +1,4 @@
 #include <timet.h>
-#include <mm.h>
 
 #define MAX_FUNCTIONS 20
 
@@ -15,11 +14,6 @@ static int functions_size;
 void timer_handler() {
 	ticks++;
 	functionsHandler();
-	void * ptr[20];
-	for(int i = 0; i < 20; i++)
-		ptr[i] = pvPortMalloc(2000);
-	for(int i = 0; i < 20; i++)
-		vPortFree(ptr[i]);	
 }
 
 unsigned long ticks_elapsed() {

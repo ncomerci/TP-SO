@@ -33,6 +33,8 @@ int _sys_sound(void * arg1, void * arg2, void * arg3);
 
 // ----------- System ------------
 int getMem(void *pos, uint64_t *mem_buffer, unsigned int dim);
+void * malloc(uint64_t size);
+void free(void * ptr);
 
 // ----------- Timet ------------
 unsigned long getTicks(void);

@@ -26,7 +26,7 @@
  */
 
 /*
- * A sample implementation of pvPortMalloc() and vPortFree() that combines
+ * A sample implementation of malloc() and free() that combines
  * (coalescences) adjacent memory blocks as they are freed, and in so doing
  * limits memory fragmentation.
  *
@@ -34,7 +34,7 @@
  * memory management pages of http://www.FreeRTOS.org for more information.
  */
 
-#include "mm.h"
+#include <mm.h>
 
 /*
  * Inserts a block of memory that is being freed into the correct position in
@@ -46,7 +46,7 @@ static void prvInsertBlockIntoFreeList( BlockLink_t *pxBlockToInsert );
 
 /*
  * Called automatically to setup the required heap structures the first time
- * pvPortMalloc() is called.
+ * malloc() is called.
  */
 static void prvHeapInit( void );
 
@@ -74,7 +74,7 @@ static uint64_t xBlockAllocatedBit = 0;
 
 /*-----------------------------------------------------------*/
 
-void *pvPortMalloc( uint64_t xWantedSize )
+void *malloc( uint64_t xWantedSize )
 {
 BlockLink_t *pxBlock, *pxPreviousBlock, *pxNewBlockLink;
 void *pvReturn = NULL;
@@ -225,7 +225,7 @@ void *pvReturn = NULL;
 }
 /*-----------------------------------------------------------*/
 
-void vPortFree( void *pv )
+void free( void *pv )
 {
 uint8_t *puc = ( uint8_t * ) pv;
 BlockLink_t *pxLink;

@@ -14,5 +14,4 @@ int sys_rtc(void * option) {
         else
             aux -= 3;
     }
-    return aux;
 }

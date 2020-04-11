@@ -26,7 +26,7 @@
 
     static uint8_t const * ucHeap = 0x600000;
 
-    void *pvPortMalloc( uint64_t xWantedSize );
-    void vPortFree( void *pv );
+    void *malloc( uint64_t xWantedSize );
+    void free( void *pv );
 
 #endif

@@ -109,7 +109,6 @@ void printMemoryStatus(long int offset){
     for(int i = 0 ; i + 1 < 32 ; i+= 2) {
         printf("%x: 0x%X    %x: 0x%X\n", offset + i*sizeof(uint64_t), mem[i], offset + (i+1)*sizeof(uint64_t), mem[i+1]);
     }
-    
 }
 
 void startAracnoid(gameState * save_file, int * saved) {
@@ -117,11 +116,28 @@ void startAracnoid(gameState * save_file, int * saved) {
     clear();
 }
 
+void testMem(void){
+    char line1[] = "Copied?";
+    char * line2 = malloc(sizeof(line1)/sizeof(char));
+    strcpy(line2, line1);
+    printf("Copied?: %s\n", line2);
+    printf("Freed\n");
+    void * aux = malloc(10 * (1 << 20) - 100);
+    printf("Malloc returned %d\n", (int) aux);
+    void * aux2 = malloc(100);
+    printf("Malloc returned %d\n", (int) aux2);
+    free(line2);
+    free(aux);
+    free(aux2);
+}
+
 void test(char * option) {
     if (strcmp(option, "zero_div") == 0)
         testDivException();
     else if (strcmp(option, "inv_op_code") == 0)
         testInvOpCode();
+    else if (strcmp(option, "mem") == 0)
+        testMem();
     else
         println("Invalid testing.");
 }

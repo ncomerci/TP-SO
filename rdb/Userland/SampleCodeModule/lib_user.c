@@ -12,6 +12,16 @@ int getMem(void *pos, uint64_t *mem_buffer, unsigned int dim) {
 	return 0;
 }
 
+void * malloc(uint64_t size) {
+	void * ptr;
+	_sys_system((void *) 1, &ptr, (void *) size, 0);
+	return ptr;
+}
+
+void free(void * ptr) {
+	_sys_system((void *) 2, ptr, 0, 0);
+}
+
 // ----------- Timet ------------
 
 unsigned long getTicks() {

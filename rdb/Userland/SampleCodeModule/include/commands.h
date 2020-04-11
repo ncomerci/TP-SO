@@ -13,5 +13,6 @@ void test(char * option);
 void command_set(char * option, char * color);
 void testDivException(void);
 void testInvOpCode(void);
+void testMem(void);
 
 #endif
