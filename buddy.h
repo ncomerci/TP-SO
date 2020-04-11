@@ -50,7 +50,7 @@
     * both 32-bit and 64-bit.
     */
     typedef struct list_t {
-    struct list_t *prev, *next;
+        struct list_t *prev, *next;
     } list_t;
 
     void *b_malloc(size_t request);
