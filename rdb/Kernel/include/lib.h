@@ -1,6 +1,10 @@
 #ifndef LIB_H
 #define LIB_H
 
+#define NULL ((void *) 0)
+#define portBYTE_ALIGNMENT 8
+#define portBYTE_ALIGNMENT_MASK 7 
+
 #include <stdint.h>
 
 void * memset(void * destination, int32_t character, uint64_t length);
