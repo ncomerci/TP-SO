@@ -2,6 +2,10 @@
     "files.associations": {
         "stdint.h": "c",
         "rtc.h": "c",
-        "commands.h": "c"
+        "commands.h": "c",
+        "ffmm.h": "c",
+        "system.h": "c",
+        "mm.h": "c",
+        "bdmm.h": "c"
     }
 }

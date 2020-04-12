@@ -1,5 +1,4 @@
 #include <system.h>
-#include <stdint.h>
 
 static void getMemory(uint64_t * pos, uint64_t * mem_buffer, unsigned int dim) {
     for (int i = 0; i < dim; i++)

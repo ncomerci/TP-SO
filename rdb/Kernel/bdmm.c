@@ -1,7 +1,4 @@
-void *mov_sbrk(int increment);
-
-
-
+#ifdef _BDMM_USE
 /*
  * This file implements a buddy memory allocator, which is an allocator that
  * allocates memory within a fixed linear address range. It spans the address
@@ -16,7 +13,10 @@ void *mov_sbrk(int increment);
  * for larger allocations again.
  */
 
-#include "buddy.h"
+#include <bdmm.h>
+
+void *sbrk(int increment);
+int brk(void * ptr);
 
 /*
  * Each bucket corresponds to a certain allocation size and stores a free list
@@ -33,7 +33,7 @@ static list_t buckets[BUCKET_COUNT];
  * root. Instead, we have the tree start out small and grow the size of the
  * tree as we use more memory. The size of the tree is tracked by this value.
  */
-static size_t bucket_limit;
+static uint64_t bucket_limit;
 
 /*
  * This array represents a linearized binary tree of bits. Every possible
@@ -143,7 +143,7 @@ static list_t *list_pop(list_t *list) {
  * required to be provided here since having them means we can avoid the loop
  * and have this function return in constant time.
  */
-static uint8_t *ptr_for_node(size_t index, size_t bucket) {
+static uint8_t *ptr_for_node(uint64_t index, uint64_t bucket) {
   return base_ptr + ((index - (1 << bucket) + 1) << (MAX_ALLOC_LOG2 - bucket));
 }
 
@@ -152,13 +152,13 @@ static uint8_t *ptr_for_node(size_t index, size_t bucket) {
  * address. There are often many nodes that all map to the same address, so
  * the bucket is needed to uniquely identify a node.
  */
-static size_t node_for_ptr(uint8_t *ptr, size_t bucket) {
+static uint64_t node_for_ptr(uint8_t *ptr, uint64_t bucket) {
   return ((ptr - base_ptr) >> (MAX_ALLOC_LOG2 - bucket)) + (1 << bucket) - 1;
 }
 /*
  * Given the index of a node, this returns the "is split" flag of the parent.
  */
-static int parent_is_split(size_t index) {
+static int parent_is_split(uint64_t index) {
   index = (index - 1) / 2;
   return (node_is_split[index / 8] >> (index % 8)) & 1;
 }
@@ -166,7 +166,7 @@ static int parent_is_split(size_t index) {
 /*
  * Given the index of a node, this flips the "is split" flag of the parent.
  */
-static void flip_parent_is_split(size_t index) {
+static void flip_parent_is_split(uint64_t index) {
   index = (index - 1) / 2;
   node_is_split[index / 8] ^= 1 << (index % 8);
 }
@@ -175,9 +175,9 @@ static void flip_parent_is_split(size_t index) {
  * Given the requested size passed to "malloc", this function returns the index
  * of the smallest bucket that can fit that size.
  */
-static size_t bucket_for_request(size_t request) {
-  size_t bucket = BUCKET_COUNT - 1;
-  size_t size = MIN_ALLOC;
+static uint64_t bucket_for_request(uint64_t request) {
+  uint64_t bucket = BUCKET_COUNT - 1;
+  uint64_t size = MIN_ALLOC;
 
   while (size < request) {
     bucket--;
@@ -192,9 +192,9 @@ static size_t bucket_for_request(size_t request) {
  * tree by repeatedly doubling it in size until the root lies at the provided
  * bucket index. Each doubling lowers the bucket limit by 1.
  */
-static int lower_bucket_limit(size_t bucket) {
+static int lower_bucket_limit(uint64_t bucket) {
   while (bucket < bucket_limit) {
-    size_t root = node_for_ptr(base_ptr, bucket_limit);
+    uint64_t root = node_for_ptr(base_ptr, bucket_limit);
     uint8_t *right_child;
 
     /*
@@ -238,8 +238,8 @@ static int lower_bucket_limit(size_t bucket) {
   return 1;
 }
 
-void *b_malloc(size_t request) {
-  size_t original_bucket, bucket;
+void * malloc(uint64_t request) {
+  uint64_t original_bucket, bucket;
 
   /*
    * Make sure it's possible for an allocation of this size to succeed. There's
@@ -256,7 +256,7 @@ void *b_malloc(size_t request) {
    * possible allocation size. More memory will be reserved later as needed.
    */
   if (base_ptr == NULL) {
-    base_ptr = max_ptr = (uint8_t *)mov_sbrk(0);
+    base_ptr = max_ptr = (uint8_t *)sbrk(0);
     bucket_limit = BUCKET_COUNT - 1;
     update_max_ptr(base_ptr + sizeof(list_t));
     list_init(&buckets[BUCKET_COUNT - 1]);
@@ -276,7 +276,7 @@ void *b_malloc(size_t request) {
    * larger one to get a match.
    */
   while (bucket + 1 != 0) {
-    size_t size, bytes_needed, i;
+    uint64_t size, bytes_needed, i;
     uint8_t *ptr;
 
     /*
@@ -319,7 +319,7 @@ void *b_malloc(size_t request) {
      * Try to expand the address space first before going any further. If we
      * have run out of space, put this block back on the free list and fail.
      */
-    size = (size_t)1 << (MAX_ALLOC_LOG2 - bucket);
+    size = (uint64_t)1 << (MAX_ALLOC_LOG2 - bucket);
     bytes_needed = bucket < original_bucket ? size / 2 + sizeof(list_t) : size;
     if (!update_max_ptr(ptr + bytes_needed)) {
       list_push(&buckets[bucket], (list_t *)ptr);
@@ -360,15 +360,15 @@ void *b_malloc(size_t request) {
      * Now that we have a memory address, write the block header (just the size
      * of the allocation) and return the address immediately after the header.
      */
-    *(size_t *)ptr = request;
+    *(uint64_t *)ptr = request;
     return ptr + HEADER_SIZE;
   }
 
   return NULL;
 }
 
-void b_free(void *ptr) {
-  size_t bucket, i;
+void free(void *ptr) {
+  uint64_t bucket, i;
 
   /*
    * Ignore any attempts to free a NULL pointer.
@@ -383,7 +383,7 @@ void b_free(void *ptr) {
    * look up the index of the node corresponding to this address.
    */
   ptr = (uint8_t *)ptr - HEADER_SIZE;
-  bucket = bucket_for_request(*(size_t *)ptr + HEADER_SIZE);
+  bucket = bucket_for_request(*(uint64_t *)ptr + HEADER_SIZE);
   i = node_for_ptr((uint8_t *)ptr, bucket);
 
   /*
@@ -431,3 +431,25 @@ void b_free(void *ptr) {
    */
   list_push(&buckets[bucket], (list_t *)ptr_for_node(i, bucket));
 }
+
+static char *p_break;
+
+void *sbrk(int increment){
+    if (p_break == 0)
+      p_break = (char *) minAddress;
+    char * const original =  p_break;
+    if (increment < (char *) minAddress - p_break  ||  increment >= (char *) maxAddress - p_break)
+        return (void*)-1;
+
+    p_break += increment;
+    return original;
+}
+
+int brk(void * ptr){
+    if ((char *) ptr >= p_break && (char *) ptr <= (char *) maxAddress) {
+        p_break = ptr;
+        return 0;
+    }
+    return -1;
+}
+#endif

@@ -1,3 +1,4 @@
+#ifndef _BDMM_USE
 /*
  * FreeRTOS Kernel V10.3.1
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
@@ -34,7 +35,7 @@
  * memory management pages of http://www.FreeRTOS.org for more information.
  */
 
-#include <mm.h>
+#include <ffmm.h>
 
 /*
  * Inserts a block of memory that is being freed into the correct position in
@@ -300,13 +301,13 @@ uint64_t uxAddress;
 uint64_t xTotalHeapSize = configTOTAL_HEAP_SIZE;
 
 	/* Ensure the heap starts on a correctly aligned boundary. */
-	uxAddress = ( uint64_t ) ucHeap;
+	uxAddress = ( uint64_t ) (uint8_t *) minAddress;
 
 	if( ( uxAddress & portBYTE_ALIGNMENT_MASK ) != 0 ) //si no esta alineado
 	{
 		uxAddress += ( portBYTE_ALIGNMENT - 1 ); //then do it
 		uxAddress &= ~( ( uint64_t ) portBYTE_ALIGNMENT_MASK );
-		xTotalHeapSize -= uxAddress - ( uint64_t ) ucHeap; //el tamaño es menor
+		xTotalHeapSize -= uxAddress - ( uint64_t ) (uint8_t *) minAddress; //el tamaño es menor
 	}
 
 	pucAlignedHeap = ( uint8_t * ) uxAddress;
@@ -399,3 +400,4 @@ uint8_t *puc;
 		// mtCOVERAGE_TEST_MARKER();
 	}
 }
+#endif

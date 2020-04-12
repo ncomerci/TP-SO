@@ -1,11 +1,9 @@
-#ifndef BUDDY_H
+#ifndef BDMM_H
 
-    #define BUDDY_H
+    #define BDMM_H
     
-    #include <memory.h>
-    #include <stdint.h>
-    #include <stdlib.h>
-    #include <unistd.h>
+    #include <mm.h>
+    // #include <unistd.h>
 
     /*
     * Every allocation needs an 8-byte header to store the allocation size while
@@ -20,7 +18,7 @@
     * we need to stay 8-byte aligned.
     */
     #define MIN_ALLOC_LOG2 4
-    #define MIN_ALLOC ((size_t)1 << MIN_ALLOC_LOG2)
+    #define MIN_ALLOC ((uint64_t)1 << MIN_ALLOC_LOG2)
 
     /*
     * The maximum allocation size is currently set to 2gb. This is the total size
@@ -30,7 +28,7 @@
     * is at most 1gb.
     */
     #define MAX_ALLOC_LOG2 31
-    #define MAX_ALLOC ((size_t)1 << MAX_ALLOC_LOG2)
+    #define MAX_ALLOC ((uint64_t)1 << MAX_ALLOC_LOG2)
 
     /*
     * Allocations are done in powers of two starting from MIN_ALLOC and ending at
@@ -38,7 +36,7 @@
     * list for that allocation size.
     *
     * Given a bucket index, the size of the allocations in that bucket can be
-    * found with "(size_t)1 << (MAX_ALLOC_LOG2 - bucket)".
+    * found with "(uint64_t)1 << (MAX_ALLOC_LOG2 - bucket)".
     */
     #define BUCKET_COUNT (MAX_ALLOC_LOG2 - MIN_ALLOC_LOG2 + 1)
 
@@ -53,9 +51,11 @@
         struct list_t *prev, *next;
     } list_t;
 
-    void *b_malloc(size_t request);
-    void b_free(void *ptr); 
+    static void const * maxAddress = (void *) MAX_ADDRESS;
 
+    static void const * minAddress = (void *) MIN_ADDRESS;
 
+    void *malloc(uint64_t request);
+    void free(void *ptr); 
 
-#endif // !BUDDY_H
+#endif
