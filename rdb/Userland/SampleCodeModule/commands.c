@@ -28,7 +28,8 @@ void printUserManual(){
     println("                       + default");
     println("- test     --> Tests exceptions.");
     println("       + zero_div           --> Tests Zero-Division.");
-    println("       + inv_op_code        --> Tests Invalid Op-code."); 
+    println("       + inv_op_code        --> Tests Invalid Op-code.");
+    println("       + mem                --> Tests Memory Allocation."); 
     println("");
 }
 
@@ -117,12 +118,12 @@ void startAracnoid(gameState * save_file, int * saved) {
 }
 
 void testMem(void){
-    char line1[] = "Copied?";
+    char line1[] = "Copied";
     char * line2 = malloc(sizeof(line1)/sizeof(char));
     strcpy(line2, line1);
     printf("Copied?: %s\n", line2);
     printf("Freed\n");
-    void * aux = malloc(10 * (1 << 20) - 100);
+    void * aux = malloc((1 << 22) - 8);
     printf("Malloc returned %d\n", (int) aux);
     void * aux2 = malloc(100);
     printf("Malloc returned %d\n", (int) aux2);

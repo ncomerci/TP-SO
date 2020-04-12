@@ -30,7 +30,7 @@ static char * commands[] = {"aracnoid", "clear", "clock",  "help", "inforeg", "p
 static char * void_func[] = {"help", "clock", "inforeg", "clear"};
 static void (*void_commands_func[])(void) = {printUserManual, getLocalTime, printRegistersInfo, clear};
 
-static char * user = "dummie_user";
+static char * user = "not_so_dummie_user";
 static char * syst_name = "@rdb: ";
 static int user_writing_color;
 

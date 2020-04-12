@@ -3,7 +3,6 @@
     #define BDMM_H
     
     #include <mm.h>
-    // #include <unistd.h>
 
     /*
     * Every allocation needs an 8-byte header to store the allocation size while
@@ -21,13 +20,17 @@
     #define MIN_ALLOC ((uint64_t)1 << MIN_ALLOC_LOG2)
 
     /*
-    * The maximum allocation size is currently set to 2gb. This is the total size
-    * of the heap. It's technically also the maximum allocation size because the
-    * heap could consist of a single allocation of this size. But of course real
-    * heaps will have multiple allocations, so the real maximum allocation limit
-    * is at most 1gb.
+    * This is the total size of the heap. It's technically also the maximum 
+    * allocation size because the heap could consist of a single allocation of 
+    * this size. But of course real heaps will have multiple allocations.
+    * 
+    * 
+    *   000010011101011 -> 15
+    *   000010000000000 -> 4
+    *   -----------------> 11 - 1 = 10
     */
-    #define MAX_ALLOC_LOG2 31
+    #define LOG2(X) ((unsigned) (8*sizeof (unsigned long long) - __builtin_clzll((X)) - 1))
+    #define MAX_ALLOC_LOG2 (LOG2((unsigned long long)(MAX_ADDRESS - MIN_ADDRESS)))
     #define MAX_ALLOC ((uint64_t)1 << MAX_ALLOC_LOG2)
 
     /*
