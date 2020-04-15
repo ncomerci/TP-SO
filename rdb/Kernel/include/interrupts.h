@@ -4,11 +4,9 @@
 #include <idtLoader.h>
 
 void _irq00Handler(void);
-void timer_handler(void);
-void int_20(void);
+void * int_20(void * rsp);
 
 void _irq01Handler(void);
-void keyboard_handler(void);
 void int_21(void);
 
 void _irq02Handler(void);

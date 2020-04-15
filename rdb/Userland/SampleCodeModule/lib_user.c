@@ -28,6 +28,44 @@ mm_stat getMMStats(void) {
 	return aux;
 }
 
+// ----------- Process ------------
+
+int createProcess(main_func_t * main_f, char * name, int foreground) {
+	return _sys_process((void *)(uint64_t) 0, (void *) main_f, (void *) name, (void *)(uint64_t) foreground);
+}
+
+int kill(int pid) {
+	return _sys_process((void *)(uint64_t) 1, (void *)(uint64_t) pid, 0, 0);
+}
+
+int getPid(void) {
+	return _sys_process((void *)(uint64_t) 2, 0, 0, 0);
+}
+
+unsigned int getProcessesAmount(void) {
+	return _sys_process((void *)(uint64_t) 3, 0, 0, 0);
+}
+
+int getProcessesInfo(PCB * arr, unsigned int max_size) {
+	return _sys_process((void *)(uint64_t) 4, (void *) arr, (void *)(uint64_t) max_size, 0);
+}
+
+int exit(int pid) {
+	return _sys_process((void *)(uint64_t) 5, (void *)(uint64_t) pid, 0, 0);
+}
+
+int changePriority(int pid, int new_priority) {
+	return _sys_process((void *)(uint64_t) 6, (void *)(uint64_t) pid, (void *)(uint64_t) new_priority, 0);
+}
+
+int changeState(int pid, int new_state) {
+	return _sys_process((void *)(uint64_t) 7, (void *)(uint64_t) pid, (void *)(uint64_t) new_state, 0);
+}
+
+int changeForegroundStatus(int pid, int state) {
+	return _sys_process((void *)(uint64_t) 8, (void *)(uint64_t) pid, (void *)(uint64_t) state, 0);
+}
+
 // ----------- Timet ------------
 
 unsigned long getTicks() {

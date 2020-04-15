@@ -6,6 +6,11 @@ GLOBAL _inportb
 GLOBAL _outportb
 GLOBAL _set_rsp
 GLOBAL getRegisters
+GLOBAL _prepare_stack_process_create
+GLOBAL _halt_and_wait
+GLOBAL _start
+
+EXTERN exit
 
 section .text
 	
@@ -81,4 +86,23 @@ _outportb:
 	
 _set_rsp:
     mov rsp, rdi
+    ret
+
+_start:
+    mov rbx, rdi       ; main
+    mov rdi, rsi       ; argc
+    mov rsi, rdx       ; argv
+
+    call rbx           ; Llamada al main
+
+    call exit
+
+    ret                ; Retorno lo mismo que main
+
+_halt_and_wait:
+    mov al, 20h
+	out 20h, al
+    sti
+
+    hlt
     ret

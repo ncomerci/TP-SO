@@ -288,14 +288,12 @@ uint64_t xPortGetMinimumEverFreeHeapSize( void )
 }
 /*-----------------------------------------------------------*/
 
-void vPortInitialiseBlocks( void )
-{
+void vPortInitialiseBlocks( void ) {
 	/* This just exists to keep the linker quiet. */
 }
 /*-----------------------------------------------------------*/
 
-static void prvHeapInit( void )
-{
+static void prvHeapInit( void ) {
 BlockLink_t *pxFirstFreeBlock;
 uint8_t *pucAlignedHeap;
 uint64_t uxAddress;

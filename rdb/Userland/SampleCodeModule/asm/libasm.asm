@@ -1,4 +1,5 @@
 GLOBAL _sys_system
+GLOBAL _sys_process
 GLOBAL _sys_timet
 GLOBAL _sys_rtc
 GLOBAL _sys_read
@@ -44,6 +45,15 @@ _sys_system:
     int 80h
     ret   
 
+_sys_process:
+    mov r8, rcx   ; Arguments Shifting
+    mov rcx, rdx
+    mov rdx, rsi
+    mov rsi, rdi
+    mov rdi, SYS_PROCESS_CODE
+    int 80h
+    ret
+
 _sys_timet:
     mov rcx, rdx  ; Arguments Shifting
     mov rdx, rsi
@@ -84,7 +94,8 @@ _sys_video:
     ret
 
 _sys_sound:
-    mov rdx, rsi  ; Arguments Shifting
+    mov rcx, rdx  ; Arguments Shifting 
+    mov rdx, rsi
     mov rsi, rdi
     mov rdi, SYS_SOUND_CODE
     int 80h
@@ -122,9 +133,10 @@ array resb 8*16
 
 ; Sys_calls codes
 SYS_SYSTEM_CODE equ 0
-SYS_TICKS_CODE equ 1
-SYS_RTC_CODE equ 2
-SYS_READ_CODE equ 3
-SYS_SCREEN_CODE equ 4
-SYS_VIDEO_CODE equ 5
-SYS_SOUND_CODE equ 6
+SYS_PROCESS_CODE equ 1
+SYS_TICKS_CODE equ 2
+SYS_RTC_CODE equ 3
+SYS_READ_CODE equ 4
+SYS_SCREEN_CODE equ 5
+SYS_VIDEO_CODE equ 6
+SYS_SOUND_CODE equ 7

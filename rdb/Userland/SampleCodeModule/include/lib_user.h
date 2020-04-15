@@ -10,6 +10,8 @@
 
 #define PIT_FREQUENCY 400
 
+#define MAX_PROCESS_NAME_LENGTH 50
+
 #define NULL ((void *) 0)
 
 enum SPECIAL_KEYS {SHIFT_IN = -20, SHIFT_OUT, CAPS, BACKS, ENTER, ESC,CTRL, ALT,F1, F2, ARROW_UP, ARROW_LEFT,ARROW_RIGHT, ARROW_DOWN, INS, DEL};
@@ -22,17 +24,9 @@ typedef struct point {
     int y;
 } point;
 
-typedef struct mm_stat {
-	char * sys_name;
-	uint64_t total;
-	uint64_t occupied;
-	uint64_t free;
-	uint64_t successful_allocs;
-	uint64_t successful_frees;
-} mm_stat;
-
 // ----------- Sys Calls ------------
 int _sys_system(void * arg1, void * arg2, void * arg3, void * arg4);
+int _sys_process(void * arg1, void * arg2, void * arg3, void * arg4);
 int _sys_timet(void * arg1, void * arg2, void * arg3);
 int _sys_rtc(void * arg1);
 int _sys_read(void * arg1);
@@ -41,10 +35,44 @@ int _sys_video(void * arg1, void * arg2, void * arg3, void * arg4, void * arg5);
 int _sys_sound(void * arg1, void * arg2, void * arg3);
 
 // ----------- System ------------
+typedef struct mm_stat {
+	char * sys_name;
+	uint64_t total;
+	uint64_t occupied;
+	uint64_t free;
+	uint64_t successful_allocs;
+	uint64_t successful_frees;
+} mm_stat;
 int getMem(void *pos, uint64_t *mem_buffer, unsigned int dim);
 void * malloc(uint64_t size);
 void free(void * ptr);
 mm_stat getMMStats(void);
+
+// ----------- Process ------------
+typedef struct PCB {
+    char name[MAX_PROCESS_NAME_LENGTH] ;
+    void * rsp;
+    void * rbp;
+    int pid;
+    int ppid;
+    int state;
+    int foreground;
+    unsigned int priority;
+} PCB;
+typedef struct main_func_t {
+    int (*f)(int, char *);
+    int argc;
+    char * argv;
+} main_func_t;
+int createProcess(main_func_t * main_f, char * name, int foreground);
+int kill(int pid);
+int getPid(void);
+unsigned int getProcessesAmount(void);
+int getProcessesInfo(PCB * arr, unsigned int max_size);
+int exit(int pid);
+int changePriority(int pid, int new_priority);
+int changeState(int pid, int new_state);
+int changeForegroundStatus(int pid, int state);
 
 // ----------- Timet ------------
 unsigned long getTicks(void);

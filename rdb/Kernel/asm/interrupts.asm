@@ -20,6 +20,7 @@ GLOBAL _int80Handler
 EXTERN int80_handler
 
 EXTERN irqDispatcher
+EXTERN int_20
 EXTERN exceptionDispatcher
 
 SECTION .text
@@ -63,7 +64,7 @@ SECTION .text
 %macro irqHandlerMaster 1
 	pushState
 
-	mov rdi, %1 ; pasaje de parametro
+	mov rdi, %1  ; pasaje de parametro
 	call irqDispatcher
 
 	; signal pic EOI (End of Interrupt)
@@ -78,8 +79,9 @@ SECTION .text
 
 %macro exceptionHandler 1
 	pushState
-	mov rsi, rsp ; rsp
+
 	mov rdi, %1 ; pasaje de parametro
+	mov rsi, rsp ; rsp
 	call exceptionDispatcher
 	
 	popState
@@ -120,7 +122,18 @@ picSlaveMask:
 
 ;8254 Timer (Timer Tick)
 _irq00Handler:
-	irqHandlerMaster 0
+	pushState
+
+	mov rdi, rsp ; rsp
+	call int_20
+	mov rsp, rax
+
+	; signal pic EOI (End of Interrupt)
+	mov al, 20h
+	out 20h, al
+
+	popState
+	iretq
 
 ;Keyboard
 _irq01Handler:

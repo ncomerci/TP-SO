@@ -19,7 +19,7 @@ typedef struct periodic_func {
 
 void init_time(void);
 
-void timer_handler();
+void * timer_handler(void * rsp);
 unsigned long ticks_elapsed();
 unsigned long seconds_elapsed();
 

@@ -7,6 +7,13 @@
         "system.h": "c",
         "mm.h": "c",
         "bdmm.h": "c",
-        "lib.h": "c"
+        "lib.h": "c",
+        "interrupts.h": "c",
+        "timet.h": "c",
+        "idtloader.h": "c",
+        "keyboard.h": "c",
+        "lib_user.h": "c",
+        "process.h": "c",
+        "malloc.h": "c"
     }
 }

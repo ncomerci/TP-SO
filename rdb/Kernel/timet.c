@@ -1,4 +1,5 @@
 #include <timet.h>
+#include <process.h>
 
 #define MAX_FUNCTIONS 20
 
@@ -11,9 +12,10 @@ static void shiftFunctions(unsigned int idx);
 static periodic_func functions[MAX_FUNCTIONS];
 static int functions_size;
 
-void timer_handler() {
+void * timer_handler(void * rsp) {
 	ticks++;
-	functionsHandler();
+	functionsHandler();  // Deprecated
+	return scheduler(rsp);
 }
 
 unsigned long ticks_elapsed() {

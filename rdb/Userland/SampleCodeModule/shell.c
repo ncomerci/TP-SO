@@ -47,6 +47,11 @@ static int c;
 static gameState aracnoid_save;
 static int aracnoid_saved;
 
+int shellMain(int argc, char * argv) {
+    startShell();
+    return 0;
+}
+
 void startShell(){
     setCursor(0, getScreenHeight());
     user_writing_color = USER_COLOR;
