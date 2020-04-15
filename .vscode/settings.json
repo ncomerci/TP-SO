@@ -6,6 +6,7 @@
         "ffmm.h": "c",
         "system.h": "c",
         "mm.h": "c",
-        "bdmm.h": "c"
+        "bdmm.h": "c",
+        "lib.h": "c"
     }
 }

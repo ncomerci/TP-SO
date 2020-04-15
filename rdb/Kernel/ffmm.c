@@ -62,6 +62,8 @@ static BlockLink_t xStart, *pxEnd = NULL;
 
 /* Keeps track of the number of calls to allocate and free memory as well as the
 number of free bytes remaining, but says nothing about fragmentation. */
+
+static uint64_t xTotalSpace = 0U;
 static uint64_t xFreeBytesRemaining = 0U;
 static uint64_t xMinimumEverFreeBytesRemaining = 0U;
 static uint64_t xNumberOfSuccessfulAllocations = 0;
@@ -85,9 +87,8 @@ void *pvReturn = NULL;
 		/* If this is the first call to malloc then the heap will require
 		initialization to setup the list of free blocks. */
 		if( pxEnd == NULL )
-		{
 			prvHeapInit();
-		}
+
 		else
 		{
 			// mtCOVERAGE_TEST_MARKER();
@@ -329,7 +330,7 @@ uint64_t xTotalHeapSize = configTOTAL_HEAP_SIZE;
 	/* To start with there is a single free block that is sized to take up the
 	entire heap space, minus the space taken by pxEnd. */
 	pxFirstFreeBlock = ( void * ) pucAlignedHeap;
-	pxFirstFreeBlock->xBlockSize = uxAddress - ( uint64_t ) pxFirstFreeBlock;
+	xTotalSpace = pxFirstFreeBlock->xBlockSize = uxAddress - ( uint64_t ) pxFirstFreeBlock;
 	pxFirstFreeBlock->pxNextFreeBlock = pxEnd; //todo el espacio que tengo (sin pxend y sin la partecita alineada) es 1 solo block
 
 	/* Only one block exists - and it covers the entire usable heap space. */
@@ -399,5 +400,21 @@ uint8_t *puc;
 	{
 		// mtCOVERAGE_TEST_MARKER();
 	}
+}  
+// HD //
+// ___________________________________/END//
+
+mm_stat getMMStats( void ) {
+	if( pxEnd == NULL )
+		prvHeapInit();
+	mm_stat aux;  
+	aux.sys_name = (char *) sys_name;
+	aux.total = xTotalSpace;
+	aux.free = xFreeBytesRemaining;
+	aux.occupied = aux.total - aux.free;
+	aux.successful_frees = xNumberOfSuccessfulFrees;
+	aux.successful_allocs = xNumberOfSuccessfulAllocations;
+	return aux;
 }
+
 #endif

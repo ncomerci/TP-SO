@@ -22,6 +22,12 @@ void free(void * ptr) {
 	_sys_system((void *) 2, ptr, 0, 0);
 }
 
+mm_stat getMMStats(void) {
+	mm_stat aux;
+	_sys_system((void *) 3, (void *) &aux, 0, 0);
+	return aux;
+}
+
 // ----------- Timet ------------
 
 unsigned long getTicks() {

@@ -76,6 +76,11 @@ static uint8_t *base_ptr;
  */
 static uint8_t *max_ptr;
 
+
+static uint64_t free_space = MAX_ALLOC;
+static uint64_t successful_frees = 0;
+static uint64_t successful_allocs = 0;
+
 /*
  * Make sure all addresses before "new_value" are valid and can be used. Memory
  * is allocated in a 2gb address range but that memory is not reserved up
@@ -361,6 +366,10 @@ void * malloc(uint64_t request) {
      * of the allocation) and return the address immediately after the header.
      */
     *(uint64_t *)ptr = request;
+
+    successful_allocs++;
+    free_space -= (uint64_t)1 << (MAX_ALLOC_LOG2 - bucket);
+
     return ptr + HEADER_SIZE;
   }
 
@@ -368,7 +377,7 @@ void * malloc(uint64_t request) {
 }
 
 void free(void *ptr) {
-  uint64_t bucket, i;
+  uint64_t bucket, original_bucket, i;
 
   /*
    * Ignore any attempts to free a NULL pointer.
@@ -383,7 +392,7 @@ void free(void *ptr) {
    * look up the index of the node corresponding to this address.
    */
   ptr = (uint8_t *)ptr - HEADER_SIZE;
-  bucket = bucket_for_request(*(uint64_t *)ptr + HEADER_SIZE);
+  original_bucket = bucket = bucket_for_request(*(uint64_t *)ptr + HEADER_SIZE);
   i = node_for_ptr((uint8_t *)ptr, bucket);
 
   /*
@@ -430,6 +439,20 @@ void free(void *ptr) {
    * for better memory locality.
    */
   list_push(&buckets[bucket], (list_t *)ptr_for_node(i, bucket));
+
+  successful_frees++;
+  free_space += (uint64_t)1 << (MAX_ALLOC_LOG2 - original_bucket);
+}
+
+mm_stat getMMStats( void ) {
+	mm_stat aux;
+  aux.sys_name = sys_name;
+	aux.total = MAX_ALLOC;
+	aux.free = free_space;
+	aux.occupied = aux.total - aux.free;
+	aux.successful_frees = successful_frees;
+	aux.successful_allocs = successful_allocs;
+	return aux;
 }
 
 static char *p_break;

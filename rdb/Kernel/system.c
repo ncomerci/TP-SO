@@ -9,6 +9,10 @@ static void wrapMalloc(uint64_t ** ptr, uint64_t size) {
 	*ptr = (uint64_t *) malloc(size);
 }
 
+static void getMMStatsWrapper(mm_stat * ptr) {
+	*ptr = getMMStats();
+}
+
 int sys_system(void * option, void * arg1, void * arg2, void * arg3) {
     switch ((uint64_t) option) {
 	case 0:
@@ -19,6 +23,10 @@ int sys_system(void * option, void * arg1, void * arg2, void * arg3) {
 		break;
 	case 2:
 		free((uint64_t *) arg1);
+		break;
+	case 3:
+		getMMStatsWrapper((mm_stat *) arg1);
+		break;
 	}
 	return 0;
 }

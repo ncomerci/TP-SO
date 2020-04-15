@@ -24,14 +24,14 @@
     * allocation size because the heap could consist of a single allocation of 
     * this size. But of course real heaps will have multiple allocations.
     * 
-    * 
-    *   000010011101011 -> 15
+    *    __builtin_clzll : #ceros antes del 1
+    *   000010011101011 -> 64                            
     *   000010000000000 -> 4
-    *   -----------------> 11 - 1 = 10
+    *   -----------------> 60 - 1 = 59
     */
     #define LOG2(X) ((unsigned) (8*sizeof (unsigned long long) - __builtin_clzll((X)) - 1))
     #define MAX_ALLOC_LOG2 (LOG2((unsigned long long)(MAX_ADDRESS - MIN_ADDRESS)))
-    #define MAX_ALLOC ((uint64_t)1 << MAX_ALLOC_LOG2)
+    #define MAX_ALLOC ((uint64_t)1 << MAX_ALLOC_LOG2) //16 MB
 
     /*
     * Allocations are done in powers of two starting from MIN_ALLOC and ending at
@@ -58,7 +58,6 @@
 
     static void const * minAddress = (void *) MIN_ADDRESS;
 
-    void *malloc(uint64_t request);
-    void free(void *ptr); 
+    static char const * sys_name = "Buddy";
 
 #endif

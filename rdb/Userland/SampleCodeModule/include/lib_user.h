@@ -22,6 +22,15 @@ typedef struct point {
     int y;
 } point;
 
+typedef struct mm_stat {
+	char * sys_name;
+	uint64_t total;
+	uint64_t occupied;
+	uint64_t free;
+	uint64_t successful_allocs;
+	uint64_t successful_frees;
+} mm_stat;
+
 // ----------- Sys Calls ------------
 int _sys_system(void * arg1, void * arg2, void * arg3, void * arg4);
 int _sys_timet(void * arg1, void * arg2, void * arg3);
@@ -35,6 +44,7 @@ int _sys_sound(void * arg1, void * arg2, void * arg3);
 int getMem(void *pos, uint64_t *mem_buffer, unsigned int dim);
 void * malloc(uint64_t size);
 void free(void * ptr);
+mm_stat getMMStats(void);
 
 // ----------- Timet ------------
 unsigned long getTicks(void);

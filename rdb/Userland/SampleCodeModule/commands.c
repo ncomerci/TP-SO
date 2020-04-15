@@ -4,6 +4,7 @@
 #include <lib_user.h>
 
 static int findColor(char * color);
+static void printMMStats(void);
 
 char * color_names[] = {"black", "red", "green", "yellow", "blue", "pink", "light_blue", "white"};
 uint32_t color_rgb[] = {0x000000, 0xFF0000, 0x00FF00, 0xFFFF00, 0x0000FF, 0xFF00FF, 0x00FFFF, 0xFFFFFF};
@@ -117,19 +118,43 @@ void startAracnoid(gameState * save_file, int * saved) {
     clear();
 }
 
-void testMem(void){
+void testMM(void){
+    printf("Using %s Memory Manager !\n", getMMStats().sys_name);
     char line1[] = "Copied";
+    printf("Beggining\n");
+    printMMStats();
     char * line2 = malloc(sizeof(line1)/sizeof(char));
     strcpy(line2, line1);
     printf("Copied?: %s\n", line2);
-    printf("Freed\n");
+    printMMStats();
     void * aux = malloc((1 << 22) - 8);
     printf("Malloc returned %d\n", (int) aux);
+    printMMStats();
     void * aux2 = malloc(100);
     printf("Malloc returned %d\n", (int) aux2);
+    printMMStats();
     free(line2);
+    printf("Freed line2\n");
+    //printMMStats();
     free(aux);
+    printf("Freed aux\n");
+    //printMMStats();
     free(aux2);
+    printf("Freed aux2\n");
+    printMMStats();
+}
+
+static void printMMStats(void) {
+    mm_stat aux = getMMStats();
+    printf("// ----------------------------- //\n");
+
+    printf("Total Space = %d\n", (int) aux.total);
+    printf("Occupied Space = %d\n", (int) aux.occupied);
+    printf("Free Space = %d\n", (int) aux.free);
+    printf("Successful Frees = %d\n", (int) aux.successful_frees);
+    printf("Successful Allocs = %d\n", (int) aux.successful_allocs);
+    
+    printf("// ----------------------------- //\n");
 }
 
 void test(char * option) {
@@ -138,7 +163,7 @@ void test(char * option) {
     else if (strcmp(option, "inv_op_code") == 0)
         testInvOpCode();
     else if (strcmp(option, "mem") == 0)
-        testMem();
+        testMM();
     else
         println("Invalid testing.");
 }
