@@ -1,5 +1,6 @@
 #include <timet.h>
 #include <process.h>
+#include <screen.h>
 
 #define MAX_FUNCTIONS 20
 
@@ -15,7 +16,11 @@ static int functions_size;
 void * timer_handler(void * rsp) {
 	ticks++;
 	functionsHandler();  // Deprecated
-	return scheduler(rsp);
+	printString("RSP now will be: ", 18);
+	void * new_rsp = scheduler(rsp);
+	print64Hex((uint64_t) new_rsp);
+	printNewLine();
+	return new_rsp;
 }
 
 unsigned long ticks_elapsed() {

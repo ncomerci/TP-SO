@@ -26,16 +26,15 @@ void * scheduler(void * rsp) {
 
 int createProcess(main_func_t * main_f, char * name, int foreground) {
     printString("Creando proceso!", 17);
-    strcpy(processes[current].name, name); 
-    processes[current].foreground = foreground;
-    processes[current].priority = BASE_PRIORITY;
-    processes[current].state = READY;
-    processes[current].rbp = processes[current].rsp = malloc(MAX_STACK_PER_PROCESS);
-    prepareStackProcess(main_f->f, main_f->argc, main_f->argv, processes[current].rsp);
-    current++; 
+    strcpy(processes[amount].name, name); 
+    processes[amount].foreground = foreground;
+    processes[amount].priority = BASE_PRIORITY;
+    processes[amount].state = READY;
+    processes[amount].rbp = processes[amount].rsp = malloc(MAX_STACK_PER_PROCESS);
+    prepareStackProcess(main_f->f, main_f->argc, main_f->argv, processes[amount].rsp); 
     amount++; 
     if (!started) {
-        //started = 1;
+        started = 1;
     }
     return 0;
 }
@@ -47,7 +46,7 @@ static void prepareStackProcess(int (*main)(int argc, char *argv), int argc, cha
 		new_rsp = (void *) ((uint64_t) rsp & ~( (uint64_t) portBYTE_ALIGNMENT_MASK ));
 	}
     
-    uint64_t stack[INT_PUSH_STATE + PUSH_STATE_REGS] = {0x0, (uint64_t) new_rsp, 0x202, 0x8, (uint64_t) _start, 1, 2, 3, 4, 5, (uint64_t) main, (uint64_t) argc, (uint64_t) argv, 9, 10, 11, 12, 13, 14, 15};
+    uint64_t stack[INT_PUSH_STATE + PUSH_STATE_REGS] = {0x0, (uint64_t) new_rsp, 0x202, 0x8, (uint64_t) _start, 1, 2, 3, 4, 5, (uint64_t) main, (uint64_t) argc, (uint64_t) argv, 9, 10, 11, 12, 13, 14, 15}; // Para debuguear linea a linea, despues debería usar una struct
     printString("\n", 1);
     for (unsigned int i = 0; i < sizeof(stack)/sizeof(uint64_t); i++) {
         memcpy(new_rsp, (void *) &(stack[i]), 8);
@@ -60,7 +59,6 @@ static void prepareStackProcess(int (*main)(int argc, char *argv), int argc, cha
 int kill(int pid) {
     changeState(pid, KILLED);
     amount--; 
-    _halt_and_wait();
     return 0;
 }
 
@@ -77,7 +75,9 @@ int getProcessesInfo(PCB * arr, unsigned int max_size) {
 }
 
 int exit() {
-    return kill(processes[current].pid);
+    kill(current);
+    _halt_and_wait();
+    return 0;
 }
 
 int changePriority(int pid, int new_priority) {
