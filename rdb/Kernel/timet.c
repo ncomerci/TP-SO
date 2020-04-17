@@ -16,11 +16,13 @@ static int functions_size;
 void * timer_handler(void * rsp) {
 	ticks++;
 	functionsHandler();  // Deprecated
+	/*
 	printString("RSP now will be: ", 18);
 	void * new_rsp = scheduler(rsp);
 	print64Hex((uint64_t) new_rsp);
-	printNewLine();
 	return new_rsp;
+	*/
+	return rsp;
 }
 
 unsigned long ticks_elapsed() {

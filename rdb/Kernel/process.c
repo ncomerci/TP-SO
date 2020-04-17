@@ -4,39 +4,117 @@
 #include <mm.h>
 
 static void prepareStackProcess(int (*main)(int argc, char *argv), int argc, char * argv, void * rsp);
+static void * getNextProcess(void * rsp);
+static void updateCurrent(void);
+static void enqueueProcess(PCB * pp);
+static void expireCurrent(void);
 
 static PCB processes[MAX_PROCESSES];
-static unsigned int current = 0;
-static unsigned int amount = 0; 
+static QUEUE_HD queues[2][MAX_PROCESSES];
+static int actual_queue = 0;
+static QUEUE_HD * act_queue; //queue with active processes
+static QUEUE_HD * exp_queue; //queue with those processes that have expired their quantum or are new or priority changed
+static PCB * curr_process = NULL;
+static unsigned int prior = 0;
+static unsigned int processes_size = 0; //array size
+static unsigned int process_amount = 0; //without the killed ones
 static int started = 0;
 
 void * scheduler(void * rsp) {
-    if (started) {
-        if (amount == 0) {
-            printString("Halting !", 10);
-            _halt_and_wait();
+
+    if (process_amount > 0) {
+
+        if (curr_process != NULL) { // process running
+            (curr_process->given_time)--;
+
+            if (curr_process->given_time == 0) { //quantum finished --> go 
+
+                act_queue = queues[actual_queue];
+                exp_queue = queues[1 - actual_queue];
+
+                // update info and go to expired
+                updateCurrent();
+                curr_process->rsp = rsp;
+                expireCurrent();
+            }
         }
-        else {
-            printString("Entre !", 8);
-            return processes[0].rsp;
-        }
+        // get next process
+        return getNextProcess(rsp);
     }
-    return rsp;
+
+    else { //there is no processes
+        return rsp;
+    }
+}
+
+static void updateCurrent() {
+    // update info
+    (curr_process->aging)++;
+
+    // update act_queue
+    act_queue[prior].first = curr_process->next_in_queue;
+    curr_process->next_in_queue = NULL;
+}
+
+static void expireCurrent(void) {
+    // if aging is used then go to a lower priority expired queue
+    #ifdef _RR_AGING_ 
+        // set new priority
+        changePriority(curr_process->pid, (prior < MAX_PRIOR)? prior+1 : prior);
+    #endif
+
+    if (exp_queue[curr_process->priority].last != NULL)
+        exp_queue[curr_process->priority].last->next_in_queue = curr_process;
+    exp_queue[curr_process->priority].last = curr_process;
+}
+
+static void * getNextProcess(void * rsp) {
+    while (prior <= MAX_PRIORITY && act_queue[prior].first == NULL) //go to a queue with lower priority
+    prior++;
+
+    if (prior <= MAX_PRIORITY) {
+        curr_process = act_queue[prior].first;
+        curr_process->given_time = act_queue[prior].quantum;
+        return curr_process->rsp;  
+    }
+
+    else {
+        actual_queue = 1 - actual_queue; //change from active queue to expired queue
+        prior = 0;
+        curr_process = NULL;
+        return scheduler(rsp); //do it again but with the expired one
+    }
 }
 
 int createProcess(main_func_t * main_f, char * name, int foreground) {
-    printString("Creando proceso!", 17);
-    strcpy(processes[amount].name, name); 
-    processes[amount].foreground = foreground;
-    processes[amount].priority = BASE_PRIORITY;
-    processes[amount].state = READY;
-    processes[amount].rbp = processes[amount].rsp = malloc(MAX_STACK_PER_PROCESS);
-    prepareStackProcess(main_f->f, main_f->argc, main_f->argv, processes[amount].rsp); 
-    amount++; 
-    if (!started) {
-        started = 1;
+    //printString("Creando proceso!", 17);
+    int i = 0;
+    while(i < processes_size && processes[i].state != KILLED)
+        i++;
+
+    if (i < MAX_PROCESSES) {
+        strcpy(processes[i].name, name); 
+        processes[i].foreground = foreground;
+        processes[i].priority = BASE_PRIORITY;
+        processes[i].state = READY;
+        processes[i].rbp = processes[i].rsp = malloc(MAX_STACK_PER_PROCESS);
+        processes[i].next_in_queue = NULL;
+        processes[i].aging = 0; 
+        processes[i].given_time = act_queue[BASE_PRIORITY].quantum;
+
+        if (i >= processes_size)
+            processes_size++;
+
+        prepareStackProcess(main_f->f, main_f->argc, main_f->argv, processes[i].rsp); 
+
+        enqueueProcess(&(processes[i]));
+
+        process_amount++; 
+
+        return 0;
     }
-    return 0;
+
+    return -1;
 }
 
 static void prepareStackProcess(int (*main)(int argc, char *argv), int argc, char * argv, void * rsp) {
@@ -56,54 +134,81 @@ static void prepareStackProcess(int (*main)(int argc, char *argv), int argc, cha
     }
 }
 
+static void enqueueProcess(PCB * pp) {
+    pp->next_in_queue = exp_queue[pp->priority].first;
+    exp_queue[pp->priority].first = pp;
+    if (exp_queue[pp->priority].last == NULL) //there was no other process
+        exp_queue[pp->priority].last = pp;
+}
+
 int kill(int pid) {
-    changeState(pid, KILLED);
-    amount--; 
-    return 0;
+    return changeState(pid, KILLED);
 }
 
 int getPid(void) {
-    return processes[current].pid;
+    return curr_process->pid;
 }
 
 unsigned int getProcessesAmount(void) {
-    return amount; 
+    return process_amount; 
 }
 
 int getProcessesInfo(PCB * arr, unsigned int max_size) {
-    return 0;
+    unsigned int j = 0;
+    for (unsigned int i = 0; i < processes_size && j < max_size; i++) {
+        if (processes[i].state != KILLED) {
+            strcpy(arr[j].name, processes[i].name); 
+            arr[j].foreground = processes[i].foreground;
+            arr[j].priority = processes[i].priority;
+            arr[j].state = processes[i].state;
+            arr[j].rbp = processes[i].rbp;
+            arr[j].rsp = processes[i].rsp;
+            arr[j].next_in_queue = processes[i].next_in_queue;
+            arr[j].aging = processes[i].aging; 
+            arr[j].given_time = processes[i].given_time;
+        }
+    }
+    return j;
 }
 
 int exit() {
-    kill(current);
+    kill(curr_process->pid);
     _halt_and_wait();
     return 0;
 }
 
-int changePriority(int pid, int new_priority) {
-     for(int i=0; i < amount; i++){
-        if(processes[i].pid == pid)
+int changePriority(int pid, unsigned int new_priority) {
+     for(int i=0; i < process_amount; i++){
+        if(processes[i].pid == pid) {
             processes[i].priority = new_priority; 
             return 0;
+        }
     }
     return 1; 
 }
 
-int changeState(int pid, int new_state) {
-    for(int i=0; i < amount; i++){
-        if(processes[i].pid == pid)
-            processes[i].state = new_state; 
+int changeState(int pid, unsigned int new_state) {
+    for(int i=0; i < process_amount; i++){
+        if(processes[i].pid == pid) {
+            processes[i].state = new_state;
+            if (new_state == KILLED){
+                updateCurrent();
+                curr_process = NULL; 
+                process_amount--;
+            }
             return 0;
+        }
     }
     return 1; 
 
 }
 
-int changeForegroundStatus(int pid, int status) {
-     for(int i=0; i < amount; i++){
-        if(processes[i].pid == pid)
+int changeForegroundStatus(int pid, unsigned int status) {
+     for(int i=0; i < process_amount; i++){
+        if(processes[i].pid == pid) {
             processes[i].foreground = status; 
             return 0;
+        }
     }
     return 1; 
 }

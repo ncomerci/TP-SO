@@ -1,4 +1,4 @@
-#ifdef _BDMM_USE
+#ifdef _BUDDY_USE
 /*
  * This file implements a buddy memory allocator, which is an allocator that
  * allocates memory within a fixed linear address range. It spans the address
