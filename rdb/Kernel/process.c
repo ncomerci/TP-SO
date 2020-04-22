@@ -7,14 +7,13 @@ static void prepareStackProcess(int (*main)(int argc, char *argv), int argc, cha
 static void * getNextProcess(void * rsp);
 static void updateCurrent(void);
 static void enqueueProcess(PCB * pp);
-static void expireCurrent(void);
 
 stackProcess stackModel = {15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 0x8, 0x202, 0, 0};
 PCB processes[MAX_PROCESSES];
 QUEUE_HD queues[2][MAX_PRIORITY - MIN_PRIORITY + 1];
 int actual_queue = 0;
-QUEUE_HD * act_queue; //queue with active processes
-QUEUE_HD * exp_queue; //queue with those processes that have expired their quantum or are new or priority changed
+QUEUE_HD * act_queue = NULL; //queue with active processes
+QUEUE_HD * exp_queue = NULL; //queue with those processes that have expired their quantum or are new or priority changed
 unsigned quantum[MAX_PRIORITY - MIN_PRIORITY + 1];
 int quantum_started = 0;
 PCB * curr_process = NULL;
@@ -25,7 +24,7 @@ int started = 0;
 
 void * scheduler(void * rsp) {
 
-    printString("scheduler\n", 11);
+    //printString("scheduler\n", 11);
 
     if (!quantum_started) {
         initQuantums();
@@ -33,28 +32,37 @@ void * scheduler(void * rsp) {
     }
 
     if (process_amount > 0) {
-        printString("hay proceso\n",13);
+        //printString("hay proceso\n",13);
+        act_queue = queues[actual_queue];
+        exp_queue = queues[1 - actual_queue];
+
         if (curr_process != NULL) { // process running
             (curr_process->given_time)--;
 
             if (curr_process->given_time == 0) { //quantum finished --> go 
-
-                act_queue = queues[actual_queue];
-                exp_queue = queues[1 - actual_queue];
-
                 // update info and go to expired
                 updateCurrent();
                 curr_process->rsp = rsp;
-                expireCurrent();
+
+                #ifdef _RR_AGING_ 
+                    // set new priority
+                    changePriority(curr_process->pid, (prior < MAX_PRIOR)? prior+1 : prior);
+                #endif
+
+                enqueueProcess(curr_process); // Expires the current process
+            }
+            else {
+                //printString("Keep running Forest!\n", 22);
+                return rsp; //keep running
             }
         }
-        printString("proximo proceso\n", 17);
+        //printString("proximo proceso\n", 17);
         // get next process
         return getNextProcess(rsp);
     }
 
-    else { //there is no processes
-        printString("no hay proceso\n", 16);
+    else { //there are no processes
+        ////printString("no hay proceso\n", 16);
         return rsp;
     }
 }
@@ -71,19 +79,10 @@ static void updateCurrent() {
 
     // update act_queue
     act_queue[prior].first = curr_process->next_in_queue;
+    if (act_queue[prior].last == curr_process)
+        act_queue[prior].last = NULL;
+
     curr_process->next_in_queue = NULL;
-}
-
-static void expireCurrent(void) {
-    // if aging is used then go to a lower priority expired queue
-    #ifdef _RR_AGING_ 
-        // set new priority
-        changePriority(curr_process->pid, (prior < MAX_PRIOR)? prior+1 : prior);
-    #endif
-
-    if (exp_queue[curr_process->priority].last != NULL)
-        exp_queue[curr_process->priority].last->next_in_queue = curr_process;
-    exp_queue[curr_process->priority].last = curr_process;
 }
 
 static void * getNextProcess(void * rsp) {
@@ -91,14 +90,16 @@ static void * getNextProcess(void * rsp) {
     prior++;
 
     if (prior <= MAX_PRIORITY) {
-        printString("proceso encontrado\n", 20);
+        //printString("proceso encontrado\n", 20);
         curr_process = act_queue[prior].first;
+        //printString("proceso seleccionado\n", 22);
         curr_process->given_time = quantum[prior];
+        //printString("time given\n", 12);
         return curr_process->rsp;  
     }
 
     else {
-        printString("no encontre proceso\n", 22);
+        //printString("no encontre proceso\n", 22);
         actual_queue = 1 - actual_queue; //change from active queue to expired queue
         prior = 0;
         curr_process = NULL;
@@ -107,7 +108,7 @@ static void * getNextProcess(void * rsp) {
 }
 
 int createProcess(main_func_t * main_f, char * name, int foreground) {
-    //printString("Creando proceso!", 17);
+    ////printString("Creando proceso!", 17);
     int i = 0;
     while(i < processes_size && processes[i].state != KILLED)
         i++;
@@ -133,11 +134,15 @@ int createProcess(main_func_t * main_f, char * name, int foreground) {
 
         // 8, 0      1000 o 0000       -> 111111111111111111000 & 11101  -> 11000
 
-        processes[process_amount].rbp = (void *)((aux + MAX_STACK_PER_PROCESS) & -8);
-        processes[process_amount].rsp = (void *) (processes[process_amount].rbp - (INT_PUSH_STATE + PUSH_STATE_REGS) * sizeof(uint64_t));
+        processes[i].rbp = (void *)((aux + MAX_STACK_PER_PROCESS) & -8);
+        processes[i].rsp = (void *) (processes[i].rbp - (INT_PUSH_STATE + PUSH_STATE_REGS) * sizeof(uint64_t));
 
         if (i >= processes_size)
             processes_size++;
+
+        //printString("Process created at index:", 26);
+        //printDec(i);
+        //printString("\n", 2);
 
         prepareStackProcess(main_f->f, main_f->argc, main_f->argv, processes[i].rbp, processes[i].rsp); 
 
@@ -163,10 +168,17 @@ static void prepareStackProcess(int (*main)(int argc, char *argv), int argc, cha
 }
 
 static void enqueueProcess(PCB * pp) {
-    pp->next_in_queue = exp_queue[pp->priority].first;
-    exp_queue[pp->priority].first = pp;
-    if (exp_queue[pp->priority].last == NULL) //there was no other process
-        exp_queue[pp->priority].last = pp;
+    if (act_queue == NULL || exp_queue == NULL) {
+        act_queue = queues[actual_queue];
+        exp_queue = queues[1 - actual_queue];
+    }
+
+    if (exp_queue[pp->priority].first == NULL)
+        exp_queue[pp->priority].first = pp;
+
+    if (exp_queue[pp->priority].last != NULL)
+        (exp_queue[pp->priority].last)->next_in_queue = pp;
+    exp_queue[pp->priority].last = pp;
 }
 
 int kill(int pid) {

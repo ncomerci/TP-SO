@@ -92,12 +92,7 @@ int main()
 	init_VM_Driver();
 	init_screen();
 
-	main_func_t aux = {(int (*)(int, char *)) sampleCodeModuleAddress, 0, NULL};
-	createProcess(&aux, "SampleCodeModule", 1);
-
 	load_idt();
-
-	_halt_and_wait();
 
 	ncPrint("[Kernel Main]");
 	ncNewline();

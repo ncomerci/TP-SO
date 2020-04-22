@@ -59,8 +59,8 @@
     } PCB;
 
     typedef struct QUEUE_HD {
-        struct PCB * first;
-        struct PCB * last;
+        PCB * first;
+        PCB * last;
     } QUEUE_HD;
 
     typedef struct main_func_t {
