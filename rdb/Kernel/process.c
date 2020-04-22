@@ -3,7 +3,7 @@
 #include <screen.h>
 #include <mm.h>
 
-static void prepareStackProcess(int (*main)(int argc, char *argv), int argc, char * argv, void * rsp);
+static void prepareStackProcess(int (*main)(int argc, char *argv), int argc, char * argv, void * rbp, void * rsp);
 
 typedef struct stackProcess {
     uint64_t r15;
@@ -42,6 +42,7 @@ void * scheduler(void * rsp) {
         }
         else {
             printString("Entre !", 8);
+            started = 0;
             return processes[0].rsp;
         }
     }
@@ -68,7 +69,7 @@ int createProcess(main_func_t * main_f, char * name, int foreground) {
 
     processes[amount].rbp = (void *)((aux + MAX_STACK_PER_PROCESS) & -8);
     processes[amount].rsp = (void *) (processes[amount].rbp - (INT_PUSH_STATE + PUSH_STATE_REGS) * sizeof(uint64_t));
-    prepareStackProcess(main_f->f, main_f->argc, main_f->argv, processes[amount].rsp); 
+    prepareStackProcess(main_f->f, main_f->argc, main_f->argv, processes[amount].rbp, processes[amount].rsp); 
     amount++; 
     if (!started) {
         started = 1;
@@ -76,9 +77,10 @@ int createProcess(main_func_t * main_f, char * name, int foreground) {
     return 0;
 }
 
-static void prepareStackProcess(int (*main)(int argc, char *argv), int argc, char * argv, void * rsp) {
-    stackModel.rsp = (uint64_t) rsp;
-    stackModel.rip = (uint64_t) _start;
+static void prepareStackProcess(int (*main)(int argc, char *argv), int argc, char * argv, void * rbp, void * rsp) {
+    stackModel.rbp = (uint64_t) rbp;
+    stackModel.rsp = (uint64_t) rbp;
+    stackModel.rip = (uint64_t) _start_process;
     stackModel.rdi = (uint64_t) main; 
     stackModel.rsi = (uint64_t) argc;
     stackModel.rdx = (uint64_t) argv; 

@@ -20,6 +20,6 @@ void _outportb(unsigned short portid, unsigned char value);
 void _sti(void);
 void _set_rsp(void * value);
 void _halt_and_wait(void);
-int _start(int (*main)(int argc, char * argv), int argc, char * argv);
+int _start_process(int (*main)(int argc, char * argv), int argc, char * argv);
 
 #endif

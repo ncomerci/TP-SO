@@ -8,7 +8,7 @@ GLOBAL _set_rsp
 GLOBAL getRegisters
 GLOBAL _prepare_stack_process_create
 GLOBAL _halt_and_wait
-GLOBAL _start
+GLOBAL _start_process
 
 EXTERN exit
 
@@ -88,7 +88,7 @@ _set_rsp:
     mov rsp, rdi
     ret
 
-_start:
+_start_process:
     mov rbx, rdi       ; main
     mov rdi, rsi       ; argc
     mov rsi, rdx       ; argv

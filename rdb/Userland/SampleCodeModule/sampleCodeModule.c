@@ -10,6 +10,7 @@ int main() {
 	shell_main.f = shellMain;
 	shell_main.argc = 0;
 	shell_main.argv = NULL;
+	printf("Llegue!");
 	createProcess(&shell_main, "shell", 1);
 	//startShell();
 
