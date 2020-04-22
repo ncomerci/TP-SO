@@ -5,10 +5,34 @@
 
 static void prepareStackProcess(int (*main)(int argc, char *argv), int argc, char * argv, void * rsp);
 
+typedef struct stackProcess {
+    uint64_t r15;
+    uint64_t r14;
+    uint64_t r13;
+    uint64_t r12;
+    uint64_t r11;
+    uint64_t r10;
+    uint64_t r9;
+    uint64_t r8;
+    uint64_t rsi;
+    uint64_t rdi;
+    uint64_t rbp;
+    uint64_t rdx;
+    uint64_t rcx;
+    uint64_t rbx;
+    uint64_t rax;
+    uint64_t rip;
+    uint64_t cs;
+    uint64_t rflags;
+    uint64_t rsp;
+    uint64_t ss;
+} stackProcess;
+
 static PCB processes[MAX_PROCESSES];
 static unsigned int current = 0;
 static unsigned int amount = 0; 
 static int started = 0;
+stackProcess stackModel = {15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 0x8, 0x202, 0, 0};
 
 void * scheduler(void * rsp) {
     if (started) {
@@ -30,7 +54,20 @@ int createProcess(main_func_t * main_f, char * name, int foreground) {
     processes[amount].foreground = foreground;
     processes[amount].priority = BASE_PRIORITY;
     processes[amount].state = READY;
-    processes[amount].rbp = processes[amount].rsp = malloc(MAX_STACK_PER_PROCESS);
+    uint64_t aux = (uint64_t) malloc(MAX_STACK_PER_PROCESS); // 600010
+
+    /*
+    00 |         |
+       |         | 600010 ->  |
+       |   0202  |            | > MAX_STACK_PER_PROCESS
+       |  rsp    | rbp    ->  |
+    ff |   0     |
+    */
+
+    // 8, 0      1000 o 0000       -> 111111111111111111000 & 11101  -> 11000
+
+    processes[amount].rbp = (void *)((aux + MAX_STACK_PER_PROCESS) & -8);
+    processes[amount].rsp = (void *) (processes[amount].rbp - (INT_PUSH_STATE + PUSH_STATE_REGS) * sizeof(uint64_t));
     prepareStackProcess(main_f->f, main_f->argc, main_f->argv, processes[amount].rsp); 
     amount++; 
     if (!started) {
@@ -40,20 +77,13 @@ int createProcess(main_func_t * main_f, char * name, int foreground) {
 }
 
 static void prepareStackProcess(int (*main)(int argc, char *argv), int argc, char * argv, void * rsp) {
-    void * new_rsp = rsp;
-    if( ((uint64_t) new_rsp & portBYTE_ALIGNMENT_MASK) != 0 ) { // si no esta alineado
-		new_rsp = (void *) ((uint64_t) rsp + ( portBYTE_ALIGNMENT - 1 )); //then do it
-		new_rsp = (void *) ((uint64_t) rsp & ~( (uint64_t) portBYTE_ALIGNMENT_MASK ));
-	}
+    stackModel.rsp = (uint64_t) rsp;
+    stackModel.rip = (uint64_t) _start;
+    stackModel.rdi = (uint64_t) main; 
+    stackModel.rsi = (uint64_t) argc;
+    stackModel.rdx = (uint64_t) argv; 
     
-    uint64_t stack[INT_PUSH_STATE + PUSH_STATE_REGS] = {0x0, (uint64_t) new_rsp, 0x202, 0x8, (uint64_t) _start, 1, 2, 3, 4, 5, (uint64_t) main, (uint64_t) argc, (uint64_t) argv, 9, 10, 11, 12, 13, 14, 15}; // Para debuguear linea a linea, despues debería usar una struct
-    printString("\n", 1);
-    for (unsigned int i = 0; i < sizeof(stack)/sizeof(uint64_t); i++) {
-        memcpy(new_rsp, (void *) &(stack[i]), 8);
-        print64Hex(stack[i]);
-        printString("\n", 1);
-        new_rsp = (void *) ((uint64_t) new_rsp + 8);
-    }
+    memcpy(rsp, (void *) &stackModel, sizeof(stackModel));
 }
 
 int kill(int pid) {
