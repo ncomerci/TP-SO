@@ -1,0 +1,8 @@
+#!/bin/bash
+
+if [ "$1" == "tcn" ]
+then
+    cd /root/Toolchain/ && make ${@:2}
+else
+    cd /root/ && make ${@:1}
+fi
