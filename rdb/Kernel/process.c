@@ -3,27 +3,37 @@
 #include <screen.h>
 #include <mm.h>
 
-static void prepareStackProcess(int (*main)(int argc, char *argv), int argc, char * argv, void * rsp);
+static void prepareStackProcess(int (*main)(int argc, char *argv), int argc, char * argv, void * rbp, void * rsp);
 static void * getNextProcess(void * rsp);
 static void updateCurrent(void);
 static void enqueueProcess(PCB * pp);
 static void expireCurrent(void);
 
-static PCB processes[MAX_PROCESSES];
-static QUEUE_HD queues[2][MAX_PROCESSES];
-static int actual_queue = 0;
-static QUEUE_HD * act_queue; //queue with active processes
-static QUEUE_HD * exp_queue; //queue with those processes that have expired their quantum or are new or priority changed
-static PCB * curr_process = NULL;
-static unsigned int prior = 0;
-static unsigned int processes_size = 0; //array size
-static unsigned int process_amount = 0; //without the killed ones
-static int started = 0;
+stackProcess stackModel = {15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 0x8, 0x202, 0, 0};
+PCB processes[MAX_PROCESSES];
+QUEUE_HD queues[2][MAX_PRIORITY - MIN_PRIORITY + 1];
+int actual_queue = 0;
+QUEUE_HD * act_queue; //queue with active processes
+QUEUE_HD * exp_queue; //queue with those processes that have expired their quantum or are new or priority changed
+unsigned quantum[MAX_PRIORITY - MIN_PRIORITY + 1];
+int quantum_started = 0;
+PCB * curr_process = NULL;
+unsigned int prior = 0;
+unsigned int processes_size = 0; //array size
+unsigned int process_amount = 0; //without the killed ones
+int started = 0;
 
 void * scheduler(void * rsp) {
 
-    if (process_amount > 0) {
+    printString("scheduler\n", 11);
 
+    if (!quantum_started) {
+        initQuantums();
+        quantum_started = 1;
+    }
+
+    if (process_amount > 0) {
+        printString("hay proceso\n",13);
         if (curr_process != NULL) { // process running
             (curr_process->given_time)--;
 
@@ -38,12 +48,20 @@ void * scheduler(void * rsp) {
                 expireCurrent();
             }
         }
+        printString("proximo proceso\n", 17);
         // get next process
         return getNextProcess(rsp);
     }
 
     else { //there is no processes
+        printString("no hay proceso\n", 16);
         return rsp;
+    }
+}
+
+static void initQuantums() {
+    for (unsigned int p = 0; p < MAX_PRIORITY - MIN_PRIORITY + 1; p++) {
+        quantum[p] = PRIOR_SLOPE * p + PRIOR_INDVAR;
     }
 }
 
@@ -73,12 +91,14 @@ static void * getNextProcess(void * rsp) {
     prior++;
 
     if (prior <= MAX_PRIORITY) {
+        printString("proceso encontrado\n", 20);
         curr_process = act_queue[prior].first;
-        curr_process->given_time = act_queue[prior].quantum;
+        curr_process->given_time = quantum[prior];
         return curr_process->rsp;  
     }
 
     else {
+        printString("no encontre proceso\n", 22);
         actual_queue = 1 - actual_queue; //change from active queue to expired queue
         prior = 0;
         curr_process = NULL;
@@ -97,15 +117,29 @@ int createProcess(main_func_t * main_f, char * name, int foreground) {
         processes[i].foreground = foreground;
         processes[i].priority = BASE_PRIORITY;
         processes[i].state = READY;
-        processes[i].rbp = processes[i].rsp = malloc(MAX_STACK_PER_PROCESS);
         processes[i].next_in_queue = NULL;
         processes[i].aging = 0; 
-        processes[i].given_time = act_queue[BASE_PRIORITY].quantum;
+        processes[i].given_time = quantum[BASE_PRIORITY];
+
+        uint64_t aux = (uint64_t) malloc(MAX_STACK_PER_PROCESS); // 600010
+
+        /*
+        00 |         |
+        |         | 600010 ->  |
+        |   0202  |            | > MAX_STACK_PER_PROCESS
+        |  rsp    | rbp    ->  |
+        ff |   0     |
+        */
+
+        // 8, 0      1000 o 0000       -> 111111111111111111000 & 11101  -> 11000
+
+        processes[process_amount].rbp = (void *)((aux + MAX_STACK_PER_PROCESS) & -8);
+        processes[process_amount].rsp = (void *) (processes[process_amount].rbp - (INT_PUSH_STATE + PUSH_STATE_REGS) * sizeof(uint64_t));
 
         if (i >= processes_size)
             processes_size++;
 
-        prepareStackProcess(main_f->f, main_f->argc, main_f->argv, processes[i].rsp); 
+        prepareStackProcess(main_f->f, main_f->argc, main_f->argv, processes[i].rbp, processes[i].rsp); 
 
         enqueueProcess(&(processes[i]));
 
@@ -117,21 +151,15 @@ int createProcess(main_func_t * main_f, char * name, int foreground) {
     return -1;
 }
 
-static void prepareStackProcess(int (*main)(int argc, char *argv), int argc, char * argv, void * rsp) {
-    void * new_rsp = rsp;
-    if( ((uint64_t) new_rsp & portBYTE_ALIGNMENT_MASK) != 0 ) { // si no esta alineado
-		new_rsp = (void *) ((uint64_t) rsp + ( portBYTE_ALIGNMENT - 1 )); //then do it
-		new_rsp = (void *) ((uint64_t) rsp & ~( (uint64_t) portBYTE_ALIGNMENT_MASK ));
-	}
+static void prepareStackProcess(int (*main)(int argc, char *argv), int argc, char * argv, void * rbp, void * rsp) {
+    stackModel.rbp = (uint64_t) rbp;
+    stackModel.rsp = (uint64_t) rbp;
+    stackModel.rip = (uint64_t) _start_process;
+    stackModel.rdi = (uint64_t) main; 
+    stackModel.rsi = (uint64_t) argc;
+    stackModel.rdx = (uint64_t) argv; 
     
-    uint64_t stack[INT_PUSH_STATE + PUSH_STATE_REGS] = {0x0, (uint64_t) new_rsp, 0x202, 0x8, (uint64_t) _start, 1, 2, 3, 4, 5, (uint64_t) main, (uint64_t) argc, (uint64_t) argv, 9, 10, 11, 12, 13, 14, 15}; // Para debuguear linea a linea, despues debería usar una struct
-    printString("\n", 1);
-    for (unsigned int i = 0; i < sizeof(stack)/sizeof(uint64_t); i++) {
-        memcpy(new_rsp, (void *) &(stack[i]), 8);
-        print64Hex(stack[i]);
-        printString("\n", 1);
-        new_rsp = (void *) ((uint64_t) new_rsp + 8);
-    }
+    memcpy(rsp, (void *) &stackModel, sizeof(stackModel));
 }
 
 static void enqueueProcess(PCB * pp) {
