@@ -8,6 +8,9 @@ void printUserManual(void);
 void getLocalTime(void);
 void printRegistersInfo(void);
 void clear(void);
+void printProcesses(void);
+void killProcess(int pid);
+void changeProcessPriority(int pid, unsigned int priority);
 void printMemoryStatus(long int offset); 
 void test(char * option);
 void command_set(char * option, char * color);
@@ -15,6 +18,7 @@ void testDivException(void);
 void testInvOpCode(void);
 void testMM(void);
 void testProcess(void);
-int testProcessMain(int argc, char **argv);
+int testProcess1Main(int argc, char **argv);
+int testProcess2Main(int argc, char ** argv);
 
 #endif

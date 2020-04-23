@@ -46,6 +46,7 @@
 
     typedef struct PCB {
         char name[MAX_NAME_LENGTH];
+        void * stack;
         void * rsp;
         void * rbp;
         int pid;

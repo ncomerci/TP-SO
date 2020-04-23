@@ -47,10 +47,14 @@ int main() {
 
 	load_idt();
 
+	/*
 	main_func_t aux = {(int (*)(int, char **)) sampleCodeModuleAddress, 0, NULL};
 	createProcess(&aux, "SampleCodeModule", 1);
 
 	_halt_and_wait();
+	*/
+
+	((int (*)(int,char**))sampleCodeModuleAddress)(0, NULL);
 
 	return 0;
 }

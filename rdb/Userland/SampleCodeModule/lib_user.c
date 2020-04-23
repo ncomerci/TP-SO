@@ -54,7 +54,7 @@ int exit(int pid) {
 	return _sys_process((void *)(uint64_t) 5, (void *)(uint64_t) pid, 0, 0);
 }
 
-int changePriority(int pid, int new_priority) {
+int changePriority(int pid, unsigned int new_priority) {
 	return _sys_process((void *)(uint64_t) 6, (void *)(uint64_t) pid, (void *)(uint64_t) new_priority, 0);
 }
 
@@ -422,4 +422,21 @@ long int strtoint(char* s){
 		num = -num;
 
     return num; 
+}
+
+int is_num(char *s) {
+	int i = 0;
+
+	if(s[0] == '-')
+		i = 1;
+	
+	if(s[i] == '\0')
+		return -1;
+
+	for( ; s[i] != '\0' ; i++) {
+		if(s[i] < '0' || s[i] > '9')
+			return -1;
+	}
+
+	return 0;
 }

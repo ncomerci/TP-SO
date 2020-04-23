@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "malloc.h": "c",
+        "samplecodemodule.h": "c",
+        "shell.h": "c",
+        "lib_user.h": "c"
+    }
+}

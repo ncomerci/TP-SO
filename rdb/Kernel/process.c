@@ -5,7 +5,7 @@
 
 static void prepareStackProcess(int (*main)(int argc, char ** argv), int argc, char ** argv, void * rbp, void * rsp);
 static void * getNextProcess(void * rsp);
-static void updateCurrent(void);
+static void updateProcess(PCB * pp);
 static void enqueueProcess(PCB * pp);
 static void initQuantums(void);
 
@@ -20,7 +20,8 @@ int quantum_started = 0;
 PCB * curr_process = NULL;
 unsigned int prior = 0;
 unsigned int processes_size = 0; //array size
-unsigned int process_amount = 0; //without the killed ones
+unsigned int processes_amount = 0; //without the killed ones
+unsigned int processes_so_far = 0;
 int started = 0;
 
 void * scheduler(void * rsp) {
@@ -32,7 +33,7 @@ void * scheduler(void * rsp) {
         quantum_started = 1;
     }
 
-    if (process_amount > 0) {
+    if (processes_amount > 0) {
         //printString("hay proceso\n",13);
         act_queue = queues[actual_queue];
         exp_queue = queues[1 - actual_queue];
@@ -42,7 +43,7 @@ void * scheduler(void * rsp) {
 
             if (curr_process->given_time == 0) { //quantum finished --> go 
                 // update info and go to expired
-                updateCurrent();
+                updateProcess(curr_process);
                 curr_process->rsp = rsp;
 
                 #ifdef _RR_AGING_ 
@@ -75,16 +76,18 @@ static void initQuantums() {
     }
 }
 
-static void updateCurrent() {
+static void updateProcess(PCB * pp) {
     // update info
-    (curr_process->aging)++;
+    (pp->aging)++;
 
     // update act_queue
-    act_queue[prior].first = curr_process->next_in_queue;
-    if (act_queue[prior].last == curr_process)
-        act_queue[prior].last = NULL;
-
-    curr_process->next_in_queue = NULL;
+    if (curr_process == pp) {
+        act_queue[prior].first = curr_process->next_in_queue;
+        if (act_queue[prior].last == curr_process)
+            act_queue[prior].last = NULL;
+    }
+    
+    pp->next_in_queue = NULL;
 }
 
 static void * getNextProcess(void * rsp) {
@@ -92,6 +95,10 @@ static void * getNextProcess(void * rsp) {
     prior++;
 
     if (prior <= MAX_PRIORITY) {
+        if ((act_queue[prior].first)->state == KILLED) {
+            act_queue[prior].first = (act_queue[prior].first)->next_in_queue;
+            return getNextProcess(rsp);
+        }
         //printString("proceso encontrado\n", 20);
         curr_process = act_queue[prior].first;
         //printString("proceso seleccionado\n", 22);
@@ -117,7 +124,7 @@ int createProcess(main_func_t * main_f, char * name, int foreground) {
 
     if (i < MAX_PROCESSES) {
         strcpy(processes[i].name, name);
-        processes[i].pid = (process_amount + 1);
+        processes[i].pid = (processes_so_far + 1);
         processes[i].ppid = (curr_process != NULL)?curr_process->pid:0;
         processes[i].foreground = foreground;
         processes[i].priority = BASE_PRIORITY;
@@ -126,7 +133,7 @@ int createProcess(main_func_t * main_f, char * name, int foreground) {
         processes[i].aging = 0; 
         processes[i].given_time = quantum[BASE_PRIORITY];
 
-        uint64_t aux = (uint64_t) malloc(MAX_STACK_PER_PROCESS); // 600010
+        processes[i].stack = malloc(MAX_STACK_PER_PROCESS); // 600010
 
         /*
         00 |         |
@@ -138,7 +145,7 @@ int createProcess(main_func_t * main_f, char * name, int foreground) {
 
         // 8, 0      1000 o 0000       -> 111111111111111111000 & 11101  -> 11000
 
-        processes[i].rbp = (void *)((aux + MAX_STACK_PER_PROCESS) & -8);
+        processes[i].rbp = (void *)(((uint64_t) processes[i].stack + MAX_STACK_PER_PROCESS) & -8);
         processes[i].rsp = (void *) (processes[i].rbp - (INT_PUSH_STATE + PUSH_STATE_REGS) * sizeof(uint64_t));
 
         if (i >= processes_size)
@@ -152,9 +159,10 @@ int createProcess(main_func_t * main_f, char * name, int foreground) {
 
         enqueueProcess(&(processes[i]));
 
-        process_amount++; 
+        processes_amount++; 
+        processes_so_far++;
 
-        return 0;
+        return processes[i].pid;
     }
 
     return -1;
@@ -194,7 +202,7 @@ int getPid(void) {
 }
 
 unsigned int getProcessesAmount(void) {
-    return process_amount; 
+    return processes_amount; 
 }
 
 int getProcessesInfo(PCB * arr, unsigned int max_size) {
@@ -212,51 +220,62 @@ int getProcessesInfo(PCB * arr, unsigned int max_size) {
             arr[j].next_in_queue = processes[i].next_in_queue;
             arr[j].aging = processes[i].aging; 
             arr[j].given_time = processes[i].given_time;
+            j++;
         }
     }
     return j;
 }
 
 int exit() {
-    kill(curr_process->pid);
-    _halt_and_wait();
-    return 0;
+    return kill(curr_process->pid);
 }
 
 int changePriority(int pid, unsigned int new_priority) {
-     for(int i=0; i < process_amount; i++){
-        if(processes[i].pid == pid) {
-            processes[i].priority = new_priority; 
-            return 0;
+    
+    if(new_priority >= MIN_PRIORITY && new_priority <=MAX_PRIORITY){
+        for(int i=0; i < processes_size; i++){
+            if(processes[i].pid == pid) {
+                if (processes[i].state == KILLED)
+                    return -1;
+                processes[i].priority = new_priority; 
+                return 0;
+            }
         }
     }
-    return 1; 
+    return -1; 
 }
 
 int changeState(int pid, unsigned int new_state) {
-    for(int i=0; i < process_amount; i++){
+    for(int i=0; i < processes_size; i++){
         if(processes[i].pid == pid) {
+            if (processes[i].state == KILLED)
+                return -1;
             processes[i].state = new_state;
             if (new_state == KILLED){
-                updateCurrent();
-                curr_process = NULL; 
-                process_amount--;
+                updateProcess(&(processes[i]));
+                if (curr_process != NULL && curr_process->pid == pid) {
+                    curr_process = NULL;
+                    _halt_and_wait();
+                }
+                free(processes[i].stack);
+                processes_amount--;
             }
             return 0;
         }
     }
-    return 1; 
-
+    return -1; 
 }
 
 int changeForegroundStatus(int pid, unsigned int status) {
-     for(int i=0; i < process_amount; i++){
+     for(int i=0; i < processes_size; i++){
         if(processes[i].pid == pid) {
+            if (processes[i].state == KILLED)
+                return -1;
             processes[i].foreground = status; 
             return 0;
         }
     }
-    return 1; 
+    return -1; 
 }
 
 int sys_process(void * option, void * arg1, void * arg2, void * arg3) {
@@ -266,28 +285,28 @@ int sys_process(void * option, void * arg1, void * arg2, void * arg3) {
             return createProcess((main_func_t *) arg1, (char *) arg2, (int)(uint64_t) arg3);
             break;
         case 1:
-            kill((int)(uint64_t) arg1); 
+            return kill((int)(uint64_t) arg1); 
             break;
         case 2:
-            getPid();
+            return getPid();
             break;
         case 3:
             return getProcessesAmount();
             break;
         case 4:
-            getProcessesInfo((PCB *) arg1, (unsigned int)(uint64_t) arg2);  
+            return getProcessesInfo((PCB *) arg1, (unsigned int)(uint64_t) arg2);  
             break;
         case 5:
-            exit(); 
+            return exit(); 
             break;
         case 6:
-            changePriority((int)(uint64_t) arg1, (int)(uint64_t) arg2);
+            return changePriority((int)(uint64_t) arg1, (int)(uint64_t) arg2);
             break;
         case 7:
-            changeState((int)(uint64_t) arg1, (int)(uint64_t) arg2); 
+            return changeState((int)(uint64_t) arg1, (int)(uint64_t) arg2); 
             break;
         case 8:
-            changeForegroundStatus((int)(uint64_t) arg1, (int)(uint64_t) arg2);
+            return changeForegroundStatus((int)(uint64_t) arg1, (int)(uint64_t) arg2);
             break;
             
     }

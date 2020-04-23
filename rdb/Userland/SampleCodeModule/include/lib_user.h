@@ -12,6 +12,7 @@
 #define PIT_FREQUENCY 400
 
 #define MAX_PROCESS_NAME_LENGTH 50
+#define MAX_PROCESSES 50 
 
 #define NULL ((void *) 0)
 
@@ -52,6 +53,7 @@ mm_stat getMMStats(void);
 // ----------- Process ------------
 typedef struct PCB {
     char name[MAX_PROCESS_NAME_LENGTH];
+    void * stack;
     void * rsp;
     void * rbp;
     int pid;
@@ -74,7 +76,7 @@ int getPid(void);
 unsigned int getProcessesAmount(void);
 int getProcessesInfo(PCB * arr, unsigned int max_size);
 int exit(int pid);
-int changePriority(int pid, int new_priority);
+int changePriority(int pid, unsigned int new_priority);
 int changeState(int pid, int new_state);
 int changeForegroundStatus(int pid, int state);
 
@@ -138,6 +140,7 @@ int strcmp (const char * s1, const char * s2);
 int strncmp(const char *s1, const char *s2, unsigned int n);
 int strcpy (char *dst, const char *src);
 long int strtoint(char* s);
+int is_num(char *s);
 
 // Importados de naiveConsole
 

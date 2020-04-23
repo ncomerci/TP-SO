@@ -26,9 +26,9 @@ static void welcomeMessage(void);
 
 static char inputBuffer[BUFFER_SIZE];
 static char commandsHistory[COMMANDS_BUFFER_SIZE][BUFFER_SIZE];
-static char * commands[] = {"aracnoid", "clear", "clock",  "help", "inforeg", "printmem", "set", "set writing_color", "test", "test zero_div", "test inv_op_code", "test mem", "test process"};
-static char * void_func[] = {"help", "clock", "inforeg", "clear"};
-static void (*void_commands_func[])(void) = {printUserManual, getLocalTime, printRegistersInfo, clear};
+static char * commands[] = {"aracnoid", "clear", "clock",  "help", "inforeg", "kill", "nice", "printmem", "ps", "set", "set writing_color", "test", "test zero_div", "test inv_op_code", "test mem", "test process"};
+static char * void_func[] = {"help", "clock", "inforeg", "clear", "ps"};
+static void (*void_commands_func[])(void) = {printUserManual, getLocalTime, printRegistersInfo, clear, printProcesses};
 
 static char * user = "not_so_dummie_user";
 static char * syst_name = "@rdb: ";
@@ -48,6 +48,7 @@ static gameState aracnoid_save;
 static int aracnoid_saved;
 
 void startShell(){
+    // testProcess();
     user_writing_color = USER_COLOR;
     setBackgroundColor(USER_BACKGROUND_COLOR);
     int real_buff_size = BUFFER_SIZE - strlen(user) - strlen(syst_name);
@@ -235,9 +236,17 @@ static void instructionHandler() {
                     executed = command_launch(cmd);
                 break;
             case 1:
-                if(strcmp(cmd, "printmem") == 0) {
-                    uint64_t aux = strtoint(params[0]);
-                    printMemoryStatus(aux);
+                if (strcmp(cmd, "printmem") == 0) {
+                    if (is_num(params[0]) == 0)
+                        printMemoryStatus(strtoint(params[0]));
+                    else
+                        printError("Arguments aren't valid.\n");
+                }
+                else if (strcmp(cmd, "kill") == 0) {
+                    if (is_num(params[0]) == 0)
+                        killProcess(strtoint(params[0]));
+                    else
+                        printError("Arguments aren't valid.\n");
                 }
                 else if (strcmp(cmd, "test") == 0)
                     test(params[0]);
@@ -247,6 +256,12 @@ static void instructionHandler() {
             case 2:
                 if(strcmp(cmd, "set") == 0)
                     command_set(params[0], params[1]);
+                else if (strcmp(cmd, "nice") == 0) {
+                    if (is_num(params[0]) == 0 && is_num(params[1]) == 0)
+                        changeProcessPriority(strtoint(params[0]), strtoint(params[1]));
+                    else
+                        printError("Arguments aren't valid.\n");
+                }
                 else
                     executed = 1;
                 break;

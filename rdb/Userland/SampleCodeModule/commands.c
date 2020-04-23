@@ -18,20 +18,23 @@ void printUserManual(){
     println(" \\___/|___/\\___|_|    \\_|  |_/\\__,_|_| |_|\\__,_|\\__,_|_|");
     println("");
     println("Commands are listed below:\n");
-    println("- aracnoid --> A classic brick breaker like game.");
-    println("- clock    --> Information about the local time in Buenos Aires.");
-    println("- inforeg  --> Prints registers status.");
-    println("- printmem --> Prints RAM status, starting at some value.");
-    println("- clear    --> Clear shell screen.");
-    println("- set      --> Sets some properties of the shell.");
-    println("       + writing_color      --> Sets user writing color.");
+    println("- aracnoid                             --> A classic brick breaker like game.");
+    println("- clock                                --> Information about the local time in Buenos Aires.");
+    println("- inforeg                              --> Prints registers status.");
+    println("- printmem <starting_point>            --> Prints RAM status, starting at <starting_point>");
+    println("- clear                                --> Clear shell screen.");
+    println("- ps                                   --> Show living processes info.");
+    println("- nice <pid> <priority>                --> Changes priority of process with PID <pid> to <priority>");
+    println("- kill <pid>                           --> Kills process with PID <pid>.");   
+    println("- set                                  --> Sets some properties of the shell.");
+    println("       + writing_color                 --> Sets user writing color.");
     println("                       + [color_name]");
     println("                       + default");
-    println("- test     --> Tests exceptions.");
-    println("       + zero_div           --> Tests Zero-Division.");
-    println("       + inv_op_code        --> Tests Invalid Op-code.");
-    println("       + mem                --> Tests Memory Allocation."); 
-    println("       + process            --> Tests Processes");
+    println("- test                                 --> Tests exceptions.");
+    println("       + zero_div                      --> Tests Zero-Division.");
+    println("       + inv_op_code                   --> Tests Invalid Op-code.");
+    println("       + mem                           --> Tests Memory Allocation."); 
+    println("       + process                       --> Tests Processes");
     println("");
 }
 
@@ -170,15 +173,20 @@ void testProcess(void) {
     strcpy(argv[1], str2);
     argv[2] = NULL;
     
-    main_func_t aux = {testProcessMain, argc, (char**)argv};
+    main_func_t aux = {testProcess1Main, argc, (char**)argv};
     createProcess(&aux, "test Process", 1);
     */
 
-   int amount = getProcessesAmount();
-   PCB * info = malloc(amount * sizeof(PCB));
-   getProcessesInfo(info, 1);
-   printf("Processes:\n");
-   for (unsigned int i = 0; i < amount; i++) {
+    main_func_t proc2 = {testProcess2Main, 200, NULL};
+    printf("Created process pid: %d\n", createProcess(&proc2, "Test Process 2", 0));
+    //printf("Process %d %s\n", pid, (kill(pid) == 0)?"Killed":"Not Killed");
+}
+
+void printProcesses(void) {
+    PCB info[MAX_PROCESSES];
+    int amount = getProcessesInfo(info, MAX_PROCESSES);
+    printf("Processes:\n");
+    for (unsigned int i = 0; i < amount; i++) {
         printf("\\--- Process number %d ---/\n", i);
         printf("--> Process Name: %s <--\n", info[i].name);
         printf("PID: %d\n", info[i].pid);
@@ -191,13 +199,35 @@ void testProcess(void) {
         printf("Time left: %d ticks\n", (int) info[i].given_time);
         printf("Quantums: %d\n", (int) info[i].aging);    
    }
-   free(info);
 }
 
-int testProcessMain(int argc, char ** argv) {
+void killProcess(int pid) {
+    if (pid == 1)
+        printColored("not_that_dummy though\n", color_rgb[1]);
+    else
+        printf("Process %s\n", (kill(pid) == 0)?"killed":"not found");
+}
+
+void changeProcessPriority(int pid, unsigned int priority) {
+
+    int aux = changePriority(pid, priority);
+    if (aux != 0)
+        printf("Process not found\n");
+    else
+        printf("Process priority changed\n");
+}
+
+int testProcess1Main(int argc, char ** argv) {
     printf("Received %d arguments!\n", argc);
     for (unsigned int i = 0; i < argc; i++)
         printf("%s", argv[i]); 
+    return 0;
+}
+
+int testProcess2Main(int argc, char ** argv) {
+    for (unsigned int i = 0; i < argc; i++) {
+        printf("%d - Soy el proceso 2!\n", i);
+    }
     return 0;
 }
 

@@ -1,4 +1,5 @@
 #include <system.h>
+#include <lib.h>
 
 static void getMemory(uint64_t * pos, uint64_t * mem_buffer, unsigned int dim) {
     for (int i = 0; i < dim; i++)
@@ -26,6 +27,9 @@ int sys_system(void * option, void * arg1, void * arg2, void * arg3) {
 		break;
 	case 3:
 		getMMStatsWrapper((mm_stat *) arg1);
+		break;
+	case 4:
+		_halt_and_wait();
 		break;
 	}
 	return 0;
