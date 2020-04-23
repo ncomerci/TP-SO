@@ -3,10 +3,11 @@
 #include <screen.h>
 #include <mm.h>
 
-static void prepareStackProcess(int (*main)(int argc, char *argv), int argc, char * argv, void * rbp, void * rsp);
+static void prepareStackProcess(int (*main)(int argc, char ** argv), int argc, char ** argv, void * rbp, void * rsp);
 static void * getNextProcess(void * rsp);
 static void updateCurrent(void);
 static void enqueueProcess(PCB * pp);
+static void initQuantums(void);
 
 stackProcess stackModel = {15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 0x8, 0x202, 0, 0};
 PCB processes[MAX_PROCESSES];
@@ -65,6 +66,7 @@ void * scheduler(void * rsp) {
         ////printString("no hay proceso\n", 16);
         return rsp;
     }
+
 }
 
 static void initQuantums() {
@@ -156,7 +158,7 @@ int createProcess(main_func_t * main_f, char * name, int foreground) {
     return -1;
 }
 
-static void prepareStackProcess(int (*main)(int argc, char *argv), int argc, char * argv, void * rbp, void * rsp) {
+static void prepareStackProcess(int (*main)(int argc, char ** argv), int argc, char ** argv, void * rbp, void * rsp) {
     stackModel.rbp = (uint64_t) rbp;
     stackModel.rsp = (uint64_t) rbp;
     stackModel.rip = (uint64_t) _start_process;

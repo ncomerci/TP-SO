@@ -6,6 +6,7 @@
 
 #define WHITE_COLOR 0xFFFFFF
 #define BLACK_COLOR 0
+#define LIGHT_BLUE_COLOR 0x89CFF0
 #define ERROR_COLOR 0xFF0000
 
 #define PIT_FREQUENCY 400
@@ -60,9 +61,9 @@ typedef struct PCB {
     unsigned int priority;
 } PCB;
 typedef struct main_func_t {
-    int (*f)(int, char *);
+    int (*f)(int, char **);
     int argc;
-    char * argv;
+    char ** argv;
 } main_func_t;
 int createProcess(main_func_t * main_f, char * name, int foreground);
 int kill(int pid);

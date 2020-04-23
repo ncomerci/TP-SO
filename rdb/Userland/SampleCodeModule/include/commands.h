@@ -14,5 +14,7 @@ void command_set(char * option, char * color);
 void testDivException(void);
 void testInvOpCode(void);
 void testMM(void);
+void testProcess(void);
+int testProcessMain(int argc, char **argv);
 
 #endif

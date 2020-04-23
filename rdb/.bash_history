@@ -13,3 +13,9 @@ sed -i -e 's/\r$//' /root/.dckr_gdb
 cd root
 ls
 sed -i -e 's/\r$//' /root/.dckr_make
+cd root
+ls
+./.dckr_make 
+sed -i -e 's/\r$//' .dckr_make 
+sed -i -e 's/\r$//' .dckr_gdb 
+exit

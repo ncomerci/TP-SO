@@ -31,6 +31,7 @@ void printUserManual(){
     println("       + zero_div           --> Tests Zero-Division.");
     println("       + inv_op_code        --> Tests Invalid Op-code.");
     println("       + mem                --> Tests Memory Allocation."); 
+    println("       + process            --> Tests Process Creation");
     println("");
 }
 
@@ -157,6 +158,28 @@ static void printMMStats(void) {
     printf("// ----------------------------- //\n");
 }
 
+void testProcess(void) {
+    int argc = 2;
+    char ** argv = malloc((argc + 1) * sizeof(char *));
+    char str1[] = "soy el proceso de prueba!\n";
+    char str2[] = "arg 2\n";
+    argv[0] = malloc(sizeof(str1));
+    strcpy(argv[0], str1);
+    argv[1] = malloc(sizeof(str2));
+    strcpy(argv[1], str2);
+    argv[2] = NULL;
+    
+    main_func_t aux = {testProcessMain, argc, (char**)argv};
+    createProcess(&aux, "test Process", 1);
+}
+
+int testProcessMain(int argc, char ** argv) {
+    printf("Received %d arguments!\n", argc);
+    for (unsigned int i = 0; i < argc; i++)
+        printf("%s", argv[i]); 
+    return 0;
+}
+
 void test(char * option) {
     if (strcmp(option, "zero_div") == 0)
         testDivException();
@@ -164,6 +187,8 @@ void test(char * option) {
         testInvOpCode();
     else if (strcmp(option, "mem") == 0)
         testMM();
+    else if(strcmp(option, "process") == 0)
+       testProcess();
     else
         println("Invalid testing.");
 }

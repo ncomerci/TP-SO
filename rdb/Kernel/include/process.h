@@ -64,9 +64,9 @@
     } QUEUE_HD;
 
     typedef struct main_func_t {
-        int (*f)(int, char *);
+        int (*f)(int, char **);
         int argc;
-        char * argv;
+        char ** argv;
     } main_func_t;
 
     void * scheduler(void * rsp);
@@ -80,7 +80,6 @@
     int changePriority(int pid, unsigned int new_priority);
     int changeState(int pid, unsigned int new_state);
     int changeForegroundStatus(int pid, unsigned int state);
-    int sys_process(void * option, void * arg1, void * arg2, void * arg3);
-    static void initQuantums(); 
+    int sys_process(void * option, void * arg1, void * arg2, void * arg3); 
 
 #endif

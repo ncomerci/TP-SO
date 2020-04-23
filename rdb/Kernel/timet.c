@@ -15,7 +15,7 @@ static int functions_size;
 
 void * timer_handler(void * rsp) {
 	ticks++;
-	//functionsHandler();  // Deprecated
+	functionsHandler();  // Deprecated
 	/*
 	printString("RSP now will be: ", 18);
 	void * new_rsp = scheduler(rsp);
