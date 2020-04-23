@@ -116,7 +116,9 @@ int createProcess(main_func_t * main_f, char * name, int foreground) {
         i++;
 
     if (i < MAX_PROCESSES) {
-        strcpy(processes[i].name, name); 
+        strcpy(processes[i].name, name);
+        processes[i].pid = (process_amount + 1);
+        processes[i].ppid = (curr_process != NULL)?curr_process->pid:0;
         processes[i].foreground = foreground;
         processes[i].priority = BASE_PRIORITY;
         processes[i].state = READY;
@@ -203,6 +205,8 @@ int getProcessesInfo(PCB * arr, unsigned int max_size) {
             arr[j].foreground = processes[i].foreground;
             arr[j].priority = processes[i].priority;
             arr[j].state = processes[i].state;
+            arr[j].pid = processes[i].pid;
+            arr[j].ppid = processes[i].ppid;
             arr[j].rbp = processes[i].rbp;
             arr[j].rsp = processes[i].rsp;
             arr[j].next_in_queue = processes[i].next_in_queue;
@@ -268,7 +272,7 @@ int sys_process(void * option, void * arg1, void * arg2, void * arg3) {
             getPid();
             break;
         case 3:
-            getProcessesAmount();
+            return getProcessesAmount();
             break;
         case 4:
             getProcessesInfo((PCB *) arg1, (unsigned int)(uint64_t) arg2);  

@@ -51,14 +51,17 @@ mm_stat getMMStats(void);
 
 // ----------- Process ------------
 typedef struct PCB {
-    char name[MAX_PROCESS_NAME_LENGTH] ;
+    char name[MAX_PROCESS_NAME_LENGTH];
     void * rsp;
     void * rbp;
     int pid;
     int ppid;
-    int state;
     int foreground;
+    unsigned int state;
     unsigned int priority;
+    unsigned int given_time;
+    unsigned int aging; 
+    struct PCB * next_in_queue;
 } PCB;
 typedef struct main_func_t {
     int (*f)(int, char **);

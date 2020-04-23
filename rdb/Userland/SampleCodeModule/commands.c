@@ -31,7 +31,7 @@ void printUserManual(){
     println("       + zero_div           --> Tests Zero-Division.");
     println("       + inv_op_code        --> Tests Invalid Op-code.");
     println("       + mem                --> Tests Memory Allocation."); 
-    println("       + process            --> Tests Process Creation");
+    println("       + process            --> Tests Processes");
     println("");
 }
 
@@ -159,6 +159,7 @@ static void printMMStats(void) {
 }
 
 void testProcess(void) {
+    /*
     int argc = 2;
     char ** argv = malloc((argc + 1) * sizeof(char *));
     char str1[] = "soy el proceso de prueba!\n";
@@ -171,6 +172,26 @@ void testProcess(void) {
     
     main_func_t aux = {testProcessMain, argc, (char**)argv};
     createProcess(&aux, "test Process", 1);
+    */
+
+   int amount = getProcessesAmount();
+   PCB * info = malloc(amount * sizeof(PCB));
+   getProcessesInfo(info, 1);
+   printf("Processes:\n");
+   for (unsigned int i = 0; i < amount; i++) {
+        printf("\\--- Process number %d ---/\n", i);
+        printf("--> Process Name: %s <--\n", info[i].name);
+        printf("PID: %d\n", info[i].pid);
+        printf("PPID: %d\n", info[i].ppid);
+        printf("Priority: %d\n", (int) info[i].priority);
+        printf("RBP: %d\n", (int) info[i].rbp);
+        printf("RSP: %d\n", (int) info[i].rsp);
+        printf("State: %d\n", (int) info[i].state);
+        printf("Foreground: %s\n", (info[i].foreground != 0)?"Yes":"No");
+        printf("Time left: %d ticks\n", (int) info[i].given_time);
+        printf("Quantums: %d\n", (int) info[i].aging);    
+   }
+   free(info);
 }
 
 int testProcessMain(int argc, char ** argv) {
