@@ -18,7 +18,7 @@ uint64_t int80_handler(void * sysCallCode, void * arg1, void * arg2, void * arg3
             return sys_system(arg1, arg2, arg3, arg4);
 
         case SYS_PROCESS: //syscall Process
-            return sys_process(arg1, arg2, arg3, arg4);
+            return sys_process(arg1, arg2, arg3, arg4, arg5);
 
         case SYS_TICKS_CODE: //syscall Ticks
             return sys_timet(arg1, arg2, arg3);

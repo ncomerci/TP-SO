@@ -46,7 +46,8 @@ _sys_system:
     ret   
 
 _sys_process:
-    mov r8, rcx   ; Arguments Shifting
+    mov r9, r8    ; Arguments Shifting
+    mov r8, rcx
     mov rcx, rdx
     mov rdx, rsi
     mov rsi, rdi

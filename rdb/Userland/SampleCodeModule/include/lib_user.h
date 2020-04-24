@@ -28,7 +28,7 @@ typedef struct point {
 
 // ----------- Sys Calls ------------
 int _sys_system(void * arg1, void * arg2, void * arg3, void * arg4);
-int _sys_process(void * arg1, void * arg2, void * arg3, void * arg4);
+int _sys_process(void * arg1, void * arg2, void * arg3, void * arg4, void * arg5);
 int _sys_timet(void * arg1, void * arg2, void * arg3);
 int _sys_rtc(void * arg1);
 int _sys_read(void * arg1);
@@ -51,30 +51,32 @@ void free(void * ptr);
 mm_stat getMMStats(void);
 
 // ----------- Process ------------
-typedef struct PCB {
+typedef enum PROCESS_STATE {READY = 0, BLOCKED, KILLED} process_state;
+
+typedef struct PCB_info {
     char name[MAX_PROCESS_NAME_LENGTH];
-    void * stack;
     void * rsp;
     void * rbp;
     int pid;
     int ppid;
     int foreground;
-    unsigned int state;
+    process_state state;
     unsigned int priority;
     unsigned int given_time;
     unsigned int aging; 
-    struct PCB * next_in_queue;
-} PCB;
+} PCB_info;
+
 typedef struct main_func_t {
     int (*f)(int, char **);
     int argc;
     char ** argv;
 } main_func_t;
+
 int createProcess(main_func_t * main_f, char * name, int foreground);
 int kill(int pid);
 int getPid(void);
-unsigned int getProcessesAmount(void);
-int getProcessesInfo(PCB * arr, unsigned int max_size);
+unsigned int getProcessesAlive(void);
+int getProcessesInfo(PCB_info * arr, unsigned int max_size);
 int exit(int pid);
 int changePriority(int pid, unsigned int new_priority);
 int changeState(int pid, int new_state);
@@ -143,7 +145,6 @@ long int strtoint(char* s);
 int is_num(char *s);
 
 // Importados de naiveConsole
-
 int printDec(uint64_t value);
 int printOct(uint64_t value);
 int printHex(uint64_t value);

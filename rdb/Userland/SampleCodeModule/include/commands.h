@@ -11,6 +11,7 @@ void clear(void);
 void printProcesses(void);
 void killProcess(int pid);
 void changeProcessPriority(int pid, unsigned int priority);
+void block(int pid);
 void printMemoryStatus(long int offset); 
 void test(char * option);
 void command_set(char * option, char * color);

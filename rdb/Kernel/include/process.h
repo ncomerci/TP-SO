@@ -52,12 +52,25 @@
         int pid;
         int ppid;
         int foreground;
-        unsigned int state;
+        process_state state;
         unsigned int priority;
         unsigned int given_time;
         unsigned int aging; 
         struct PCB * next_in_queue;
     } PCB;
+
+    typedef struct PCB_info {
+        char name[MAX_NAME_LENGTH];
+        void * rsp;
+        void * rbp;
+        int pid;
+        int ppid;
+        int foreground;
+        process_state state;
+        unsigned int priority;
+        unsigned int given_time;
+        unsigned int aging; 
+    } PCB_info;
 
     typedef struct QUEUE_HD {
         PCB * first;
@@ -72,15 +85,15 @@
 
     void * scheduler(void * rsp);
 
-    int createProcess(main_func_t * main_f, char * name, int foreground);
+    int createProcess(main_func_t * main_f, char * name, int foreground, int * pid);
     int kill(int pid);
-    int getPid(void);
-    unsigned int getProcessesAmount(void);
-    int getProcessesInfo(PCB * arr, unsigned int max_size);
+    int getPid(int * pid);
+    int getProcessesAlive(unsigned int * amount);
+    int getProcessesInfo(PCB_info * arr, unsigned int max_size, unsigned int * size);
     int exit();
     int changePriority(int pid, unsigned int new_priority);
-    int changeState(int pid, unsigned int new_state);
-    int changeForegroundStatus(int pid, unsigned int state);
-    int sys_process(void * option, void * arg1, void * arg2, void * arg3); 
+    int changeState(int pid, process_state new_state);
+    int changeForegroundStatus(int pid, int status);
+    int sys_process(void * option, void * arg1, void * arg2, void * arg3, void * arg4); 
 
 #endif

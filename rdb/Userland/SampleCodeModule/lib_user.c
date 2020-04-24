@@ -31,39 +31,58 @@ mm_stat getMMStats(void) {
 // ----------- Process ------------
 
 int createProcess(main_func_t * main_f, char * name, int foreground) {
-	return _sys_process((void *)(uint64_t) 0, (void *) main_f, (void *) name, (void *)(uint64_t) foreground);
+	int pid;
+	if (_sys_process((void *)(uint64_t) 0, (void *) main_f, (void *) name, (void *)(uint64_t) foreground, (void *) &pid) != 0)
+		return -1;
+	return pid;
 }
 
 int kill(int pid) {
-	return _sys_process((void *)(uint64_t) 1, (void *)(uint64_t) pid, 0, 0);
+	int aux;
+	if (_sys_process((void *)(uint64_t) 1, (void *)(uint64_t) pid, (void *) &aux, 0, 0) != 0)
+		return -1;
+	return aux;
 }
 
 int getPid(void) {
-	return _sys_process((void *)(uint64_t) 2, 0, 0, 0);
+	int pid;
+	if (_sys_process((void *)(uint64_t) 2, (void *) &pid, 0, 0, 0) != 0)
+		return -1;
+	return pid;
 }
 
-unsigned int getProcessesAmount(void) {
-	return _sys_process((void *)(uint64_t) 3, 0, 0, 0);
+unsigned int getProcessesAlive(void) {
+	unsigned int size;
+	if (_sys_process((void *)(uint64_t) 3, (void *) &size, 0, 0, 0) != 0)
+		return -1;
+	return size;
 }
 
-int getProcessesInfo(PCB * arr, unsigned int max_size) {
-	return _sys_process((void *)(uint64_t) 4, (void *) arr, (void *)(uint64_t) max_size, 0);
+int getProcessesInfo(PCB_info * arr, unsigned int max_size) {
+	unsigned int size;
+	if (_sys_process((void *)(uint64_t) 4, (void *) arr, (void *)(uint64_t) max_size, (void *) &size, 0) != 0)
+		return -1;
+	return size;
 }
 
 int exit(int pid) {
-	return _sys_process((void *)(uint64_t) 5, (void *)(uint64_t) pid, 0, 0);
+	return _sys_process((void *)(uint64_t) 5, (void *)(uint64_t) pid, 0, 0, 0);
 }
 
 int changePriority(int pid, unsigned int new_priority) {
-	return _sys_process((void *)(uint64_t) 6, (void *)(uint64_t) pid, (void *)(uint64_t) new_priority, 0);
+	return _sys_process((void *)(uint64_t) 6, (void *)(uint64_t) pid, (void *)(uint64_t) new_priority, 0, 0);
 }
 
 int changeState(int pid, int new_state) {
-	return _sys_process((void *)(uint64_t) 7, (void *)(uint64_t) pid, (void *)(uint64_t) new_state, 0);
+	return _sys_process((void *)(uint64_t) 7, (void *)(uint64_t) pid, (void *)(uint64_t) new_state, 0, 0);
 }
 
 int changeForegroundStatus(int pid, int state) {
-	return _sys_process((void *)(uint64_t) 8, (void *)(uint64_t) pid, (void *)(uint64_t) state, 0);
+	return _sys_process((void *)(uint64_t) 8, (void *)(uint64_t) pid, (void *)(uint64_t) state, 0, 0);
+}
+
+int getProcessState(int pid, process_state * state) {
+	return _sys_process((void *)(uint64_t) 9, (void *)(uint64_t) pid, (void *) state, 0, 0);
 }
 
 // ----------- Timet ------------

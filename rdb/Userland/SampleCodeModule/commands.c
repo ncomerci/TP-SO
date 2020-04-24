@@ -6,8 +6,9 @@
 static int findColor(char * color);
 static void printMMStats(void);
 
-char * color_names[] = {"black", "red", "green", "yellow", "blue", "pink", "light_blue", "white"};
-uint32_t color_rgb[] = {0x000000, 0xFF0000, 0x00FF00, 0xFFFF00, 0x0000FF, 0xFF00FF, 0x00FFFF, 0xFFFFFF};
+static char * color_names[] = {"black", "red", "green", "yellow", "blue", "pink", "light_blue", "white"};
+static uint32_t color_rgb[] = {0x000000, 0xFF0000, 0x00FF00, 0xFFFF00, 0x0000FF, 0xFF00FF, 0x00FFFF, 0xFFFFFF};
+static char * processess_states[] = {"READY", "BLOCKED", "KILLED"};
 
 void printUserManual(){
     println(" _   _                ___  ___                        _ "); 
@@ -18,21 +19,22 @@ void printUserManual(){
     println(" \\___/|___/\\___|_|    \\_|  |_/\\__,_|_| |_|\\__,_|\\__,_|_|");
     println("");
     println("Commands are listed below:\n");
-    println("- aracnoid                             --> A classic brick breaker like game.");
+    //println("- aracnoid                             --> A classic brick breaker like game.");
     println("- clock                                --> Information about the local time in Buenos Aires.");
     println("- inforeg                              --> Prints registers status.");
-    println("- printmem <starting_point>            --> Prints RAM status, starting at <starting_point>");
+    println("- printmem <starting_point>            --> Prints RAM status, starting at <starting_point>.");
     println("- clear                                --> Clear shell screen.");
     println("- ps                                   --> Show living processes info.");
-    println("- nice <pid> <priority>                --> Changes priority of process with PID <pid> to <priority>");
-    println("- kill <pid>                           --> Kills process with PID <pid>.");   
+    println("- nice <pid> <priority>                --> Changes priority of process with PID <pid> to <priority>.");
+    println("- kill <pid>                           --> Kills process with PID <pid>.");
+    println("- block <pid>                          --> Switches process PID <pid> between BLOCKED and READY state.");     
     println("- set                                  --> Sets some properties of the shell.");
     println("       + writing_color                 --> Sets user writing color.");
     println("                       + [color_name]");
     println("                       + default");
     println("- test                                 --> Tests exceptions.");
-    println("       + zero_div                      --> Tests Zero-Division.");
-    println("       + inv_op_code                   --> Tests Invalid Op-code.");
+    //println("       + zero_div                      --> Tests Zero-Division.");
+    //println("       + inv_op_code                   --> Tests Invalid Op-code.");
     println("       + mem                           --> Tests Memory Allocation."); 
     println("       + process                       --> Tests Processes");
     println("");
@@ -178,12 +180,14 @@ void testProcess(void) {
     */
 
     main_func_t proc2 = {testProcess2Main, 200, NULL};
-    printf("Created process pid: %d\n", createProcess(&proc2, "Test Process 2", 0));
+    int pid = createProcess(&proc2, "Test Process 2", 1);
+    printf("Created process pid: %d\n", pid);
+    changeState(pid, 1);
     //printf("Process %d %s\n", pid, (kill(pid) == 0)?"Killed":"Not Killed");
 }
 
 void printProcesses(void) {
-    PCB info[MAX_PROCESSES];
+    PCB_info info[MAX_PROCESSES];
     int amount = getProcessesInfo(info, MAX_PROCESSES);
     printf("Processes:\n");
     for (unsigned int i = 0; i < amount; i++) {
@@ -194,7 +198,7 @@ void printProcesses(void) {
         printf("Priority: %d\n", (int) info[i].priority);
         printf("RBP: %d\n", (int) info[i].rbp);
         printf("RSP: %d\n", (int) info[i].rsp);
-        printf("State: %d\n", (int) info[i].state);
+        printf("State: %s\n", processess_states[(int) info[i].state]);
         printf("Foreground: %s\n", (info[i].foreground != 0)?"Yes":"No");
         printf("Time left: %d ticks\n", (int) info[i].given_time);
         printf("Quantums: %d\n", (int) info[i].aging);    
@@ -206,6 +210,25 @@ void killProcess(int pid) {
         printColored("not_that_dummy though\n", color_rgb[1]);
     else
         printf("Process %s\n", (kill(pid) == 0)?"killed":"not found");
+}
+
+void block(int pid){
+    if(pid == 1){
+         printColored("not_that_dummy though\n", color_rgb[1]);
+    }else{
+        process_state state;
+        int ans = getProcessState(pid, &state); 
+
+        if(ans == -1 || state == KILLED) //it is KILLED or does not exist 
+            printf("Process not found\n"); 
+        
+        else if ( state == READY )  
+            changeState(pid, BLOCKED); 
+
+        else if( state == BLOCKED)
+            changeState(pid, READY); 
+    }
+   
 }
 
 void changeProcessPriority(int pid, unsigned int priority) {
@@ -232,14 +255,17 @@ int testProcess2Main(int argc, char ** argv) {
 }
 
 void test(char * option) {
-    if (strcmp(option, "zero_div") == 0)
-        testDivException();
-    else if (strcmp(option, "inv_op_code") == 0)
-        testInvOpCode();
-    else if (strcmp(option, "mem") == 0)
+
+    if (strcmp(option, "mem") == 0)
         testMM();
     else if(strcmp(option, "process") == 0)
        testProcess();
+    /*
+    else if (strcmp(option, "zero_div") == 0)
+        testDivException();
+    else if (strcmp(option, "inv_op_code") == 0)
+        testInvOpCode();
+    */
     else
         println("Invalid testing.");
 }
