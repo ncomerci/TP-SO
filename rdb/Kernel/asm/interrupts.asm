@@ -27,6 +27,15 @@ SECTION .text
 
 %macro pushState 0
 	push rax
+	pushStateNoRax
+%endmacro
+
+%macro popState 0
+	popStateNoRax
+	pop rax
+%endmacro
+
+%macro pushStateNoRax 0
 	push rbx
 	push rcx
 	push rdx
@@ -43,7 +52,7 @@ SECTION .text
 	push r15
 %endmacro
 
-%macro popState 0
+%macro popStateNoRax 0
 	pop r15
 	pop r14
 	pop r13
@@ -58,7 +67,6 @@ SECTION .text
 	pop rdx
 	pop rcx
 	pop rbx
-	pop rax
 %endmacro
 
 %macro irqHandlerMaster 1
@@ -157,7 +165,9 @@ _irq05Handler:
 
 ; Software interruptions
 _int80Handler:
+	pushStateNoRax
 	call int80_handler
+	popStateNoRax
 	iretq
 
 ;Zero Division Exception
