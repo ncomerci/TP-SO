@@ -13,6 +13,7 @@ typedef void (*function)(void);
 
 typedef struct periodic_func {
 	function f;
+	int arg;
 	unsigned int ticks;
 	unsigned int ticks_left;
 } periodic_func;

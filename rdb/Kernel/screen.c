@@ -71,7 +71,7 @@ void showCursor(int status) {
             toggleCursor();
     }
     else if (status == 1) {
-        addFunction(toggleCursor, PIT_FREQUENCY / 2);
+        addFunction(toggleCursor ,PIT_FREQUENCY / 2);
     }
 }
 

@@ -19,3 +19,8 @@ ls
 sed -i -e 's/\r$//' .dckr_make 
 sed -i -e 's/\r$//' .dckr_gdb 
 exit
+cd root
+ls
+make MM=BUDDY
+make clean
+make MM=BUDDY

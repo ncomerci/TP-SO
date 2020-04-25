@@ -29,9 +29,10 @@ void printUserManual(){
     println("- kill <pid>                           --> Kills process with PID <pid>.");
     println("- block <pid>                          --> Switches process PID <pid> between BLOCKED and READY state.");     
     println("- set                                  --> Sets some properties of the shell.");
+    println("- loop                                 --> Creates background process named loop.");  
     println("       + writing_color                 --> Sets user writing color.");
     println("                       + [color_name]");
-    println("                       + default");
+    println("                       + default");  
     println("- test                                 --> Tests exceptions.");
     //println("       + zero_div                      --> Tests Zero-Division.");
     //println("       + inv_op_code                   --> Tests Invalid Op-code.");
@@ -178,11 +179,13 @@ void testProcess(void) {
     main_func_t aux = {testProcess1Main, argc, (char**)argv};
     createProcess(&aux, "test Process", 1);
     */
+}
 
-    main_func_t proc2 = {testProcess2Main, 200, NULL};
-    int pid = createProcess(&proc2, "Test Process 2", 1);
+void loop(void) {
+    main_func_t loop = {loopMain, 0, NULL};
+    int pid = createProcess(&loop, "Loop", 0);
     printf("Created process pid: %d\n", pid);
-    changeState(pid, 1);
+    //changeState(pid, 1);
     //printf("Process %d %s\n", pid, (kill(pid) == 0)?"Killed":"Not Killed");
 }
 
@@ -247,9 +250,10 @@ int testProcess1Main(int argc, char ** argv) {
     return 0;
 }
 
-int testProcess2Main(int argc, char ** argv) {
-    for (unsigned int i = 0; i < argc; i++) {
-        printf("%d - Soy el proceso 2!\n", i);
+int loopMain(int argc, char ** argv) {
+    for (unsigned int i = 0; 1 ; i++) {
+        wait(5);
+        printf("%d - Soy el proceso id: %d!\n", i, getPid());
     }
     return 0;
 }

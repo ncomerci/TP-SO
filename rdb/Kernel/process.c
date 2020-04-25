@@ -42,7 +42,7 @@ void * scheduler(void * rsp) {
         if (curr_process != NULL) { // process running
             (curr_process->given_time)--;
 
-            if (curr_process->given_time == 0) { //quantum finished --> go 
+            if (curr_process->given_time <= 0) { //quantum finished --> go 
                 // update info and go to expired
                 
                 // update aging
@@ -56,7 +56,8 @@ void * scheduler(void * rsp) {
                     changePriority(curr_process->pid, (prior < MAX_PRIOR)? prior+1 : prior);
                 #endif
 
-                enqueueProcess(curr_process); // Expires the current process
+                if (curr_process->state != BLOCKED) // Blocked current process
+                    enqueueProcess(curr_process); // Expires the current process
             }
             else {
                 //printString("Keep running Forest!\n", 22);
@@ -171,14 +172,11 @@ int createProcess(main_func_t * main_f, char * name, int foreground, int * pid) 
 
         *pid = processes[i].pid;
 
-        if (curr_process != NULL && processes[i].foreground) { // PROBLEM
-            updateProcess(curr_process);
-            changeState(processes[i].ppid, BLOCKED);
+        if (curr_process != NULL && processes[i].foreground) {
+            changeState(curr_process->pid, BLOCKED);
         }
-
         return 0;
     }
-
     return -1;
 }
 
@@ -276,12 +274,21 @@ int changeState(int pid, process_state new_state) {
                 processes_ready++;
             }
             else if (last_state == READY && new_state == BLOCKED){
-                updateProcess(&(processes[i]));
+                processes_ready--;
                 if (curr_process != NULL && curr_process->pid == pid) {
-                    curr_process = NULL;
+                    if (act_queue == NULL || exp_queue == NULL) {
+                        act_queue = queues[actual_queue];
+                        exp_queue = queues[1 - actual_queue];
+                    }
+                    curr_process->state = BLOCKED;
+                    curr_process->given_time = 1;
+
                     _halt_and_wait(); //wait for the next ps
                 }
-                processes_ready--;
+                else {
+                    updateProcess(&(processes[i]));
+                }
+                
             }
 
             if (new_state == KILLED){

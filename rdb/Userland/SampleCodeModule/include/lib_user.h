@@ -81,14 +81,15 @@ int exit(int pid);
 int changePriority(int pid, unsigned int new_priority);
 int changeState(int pid, int new_state);
 int changeForegroundStatus(int pid, int state);
+int getProcessState(int pid, process_state * state);
 
 // ----------- Timet ------------
 unsigned long getTicks(void);
 unsigned long getSecondsElapsed(void);
-int addTimeFunction(function f, unsigned int ticks);
+int addTimeFunction(function f, int arg, unsigned int ticks);
 int updateTimeFunction(function f, unsigned int new_ticks);
 void removeTimeFunction(function f);
-void wait(unsigned int millis);
+void wait(unsigned int sec);
 
 // ----------- RTC ------------
 typedef struct time_struct {

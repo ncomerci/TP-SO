@@ -27,8 +27,8 @@ static void welcomeMessage(void);
 static char inputBuffer[BUFFER_SIZE];
 static char commandsHistory[COMMANDS_BUFFER_SIZE][BUFFER_SIZE];
 static char * commands[] = {"clear", "clock",  "help", "inforeg", "kill", "nice", "printmem", "ps", "set", "set writing_color", "test", "test mem", "test process"};
-static char * void_func[] = {"help", "clock", "inforeg", "clear", "ps"};
-static void (*void_commands_func[])(void) = {printUserManual, getLocalTime, printRegistersInfo, clear, printProcesses};
+static char * void_func[] = {"help", "clock", "inforeg", "clear", "ps", "loop"};
+static void (*void_commands_func[])(void) = {printUserManual, getLocalTime, printRegistersInfo, clear, printProcesses, loop};
 
 static char * user = "not_so_dummie_user";
 static char * syst_name = "@rdb: ";

@@ -12,6 +12,7 @@ void printProcesses(void);
 void killProcess(int pid);
 void changeProcessPriority(int pid, unsigned int priority);
 void block(int pid);
+void loop(void);
 void printMemoryStatus(long int offset); 
 void test(char * option);
 void command_set(char * option, char * color);
@@ -20,6 +21,6 @@ void testInvOpCode(void);
 void testMM(void);
 void testProcess(void);
 int testProcess1Main(int argc, char **argv);
-int testProcess2Main(int argc, char ** argv);
+int loopMain(int argc, char ** argv);
 
 #endif

@@ -5,7 +5,7 @@
 
 void play_timed_sound(uint32_t nFrequence, long duration);
 void play_sound(uint32_t nFrequence);
-void nosound(void);
+void nosound();
 
 int sys_sound(void * option, void * arg1, void * arg2);
 

@@ -95,21 +95,21 @@ unsigned long getSecondsElapsed() {
 	return _sys_timet((void *) 1, 0, 0);
 }
 
-int addTimeFunction(function f, unsigned int ticks) {
+int addTimeFunction(function f, int arg, unsigned int ticks) {
 	return _sys_timet((void *) 2, (void *) f, (void *)(uint64_t) ticks);
-}
-
-int updateTimeFunction(function f, unsigned int new_ticks) {
-	return _sys_timet((void *) 3, (void *) f, (void *)(uint64_t) new_ticks);
 }
 
 void removeTimeFunction(function f) {
 	_sys_timet((void *) 3, (void *) f, 0);
 }
 
-void wait(unsigned int millis) {
-	int last_ticks = getTicks();
-	while ((getTicks() - last_ticks) < millis * 1000);
+int updateTimeFunction(function f, unsigned int new_ticks) {
+	return _sys_timet((void *) 4, (void *) f, (void *)(uint64_t) new_ticks);
+}
+
+void wait(unsigned int sec) {
+	unsigned int last = getTicks();
+	while ( (getTicks() - last) < (sec * 1000) );
 }
 
 // ----------- RTC ------------
