@@ -19,6 +19,7 @@ unsigned char _inportb(unsigned short portid);
 void _outportb(unsigned short portid, unsigned char value);
 void _sti(void);
 void _cli(void);
+void _int81(void);
 void _set_rsp(void * value);
 void _halt_and_wait(void);
 int _start_process(int (*main)(int argc, char * argv), int argc, char * argv);

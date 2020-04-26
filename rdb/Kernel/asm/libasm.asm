@@ -9,6 +9,7 @@ GLOBAL getRegisters
 GLOBAL _prepare_stack_process_create
 GLOBAL _halt_and_wait
 GLOBAL _start_process
+GLOBAL _int81
 
 EXTERN exit
 
@@ -105,4 +106,8 @@ _halt_and_wait:
     sti
 
     hlt
+    ret
+
+_int81:
+    int 81h
     ret

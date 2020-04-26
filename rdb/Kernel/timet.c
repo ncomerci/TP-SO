@@ -10,12 +10,20 @@ static void functionsHandler();
 static int findFunction(function func);
 static void shiftFunctions(unsigned int idx);
 
+static void pTimersHandler(void);
+static int addTimer(int pid, unsigned int millis);
+static void wait(unsigned int millis);
+
 static periodic_func functions[MAX_FUNCTIONS];
-static int functions_size;
+static unsigned int functions_size;
+
+static process_waiting timers[MAX_PROCESSES];
+static unsigned int processes_waiting_size;
 
 void * timer_handler(void * rsp) {
 	ticks++;
 	functionsHandler();  // Deprecated
+	pTimersHandler();
 	/*
 	printString("RSP now will be: ", 18);
 	void * new_rsp = scheduler(rsp);
@@ -28,7 +36,6 @@ void * timer_handler(void * rsp) {
 unsigned long ticks_elapsed() {
 	return ticks;
 }
-
 unsigned long seconds_elapsed() {
 	return ticks / PIT_FREQUENCY;
 }
@@ -36,7 +43,7 @@ unsigned long seconds_elapsed() {
 static void functionsHandler() {
 	for (int i = 0; i < functions_size; i++) {
 		functions[i].ticks_left--;
-		if (functions[i].ticks_left == 0) {
+		if (functions[i].ticks_left <= 0) {
 			functions[i].ticks_left = functions[i].ticks;
 			(functions[i].f)();
 		}	
@@ -81,6 +88,39 @@ int addFunction(function func, unsigned int ticks) {
 	return 0;
 }
 
+static void pTimersHandler(void) {
+	for (int i = 0; i < processes_waiting_size; i++) {
+		timers[i].ticks_left--;
+		if (timers[i].ticks_left <= 0) {
+			int pid;
+			getPid(&pid);
+			changeState(pid, READY);
+
+			for (int j = i; j < processes_waiting_size - 1; j++)
+				timers[j] = timers[j+1];
+			processes_waiting_size--;
+		}	
+	}
+}
+
+static int addTimer(int pid, unsigned int millis) {
+	if (processes_waiting_size == MAX_PROCESSES)  // This should never happen
+		return -1;
+		
+	timers[processes_waiting_size].pid = pid;
+	timers[processes_waiting_size].ticks_left = ( millis * PIT_FREQUENCY ) / 1000;
+	processes_waiting_size++;
+	return 0;
+}
+
+static void wait(unsigned int millis) {
+	int pid;
+	getPid(&pid);
+
+	addTimer(pid, millis);
+	changeState(pid, BLOCKED); // No corre mas.
+}
+
 // Returns -1 if arguments aren´t right.
 unsigned long sys_timet(void * option, void * arg1, void * arg2) {
 	switch ((uint64_t) option) {
@@ -95,6 +135,9 @@ unsigned long sys_timet(void * option, void * arg1, void * arg2) {
 			return 0;
 		case 4:
 			updateFunction((function) arg1, (uint64_t) arg2);
+			return 0;
+		case 5:
+			wait((unsigned int)(uint64_t) arg1);
 			return 0;
 	}
 	return -1;

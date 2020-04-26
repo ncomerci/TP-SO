@@ -21,6 +21,8 @@ EXTERN int80_handler
 
 EXTERN irqDispatcher
 EXTERN int_20
+EXTERN scheduler
+
 EXTERN exceptionDispatcher
 
 SECTION .text
@@ -170,6 +172,16 @@ _int80Handler:
 	popStateNoRax
 	iretq
 
+_int81Handler:
+	pushState
+
+	mov rdi, rsp ; rsp
+	call scheduler
+	mov rsp, rax
+
+	popState
+	iretq
+
 ;Zero Division Exception
 _exception0Handler:
 	exceptionHandler 0
@@ -177,12 +189,6 @@ _exception0Handler:
 ;Op Code Exception
 _exception6Handler:
 	exceptionHandler 6
-
-haltcpu:
-	cli
-	hlt
-	ret
-
 
 SECTION .bss
 	aux resq 1

@@ -107,9 +107,8 @@ int updateTimeFunction(function f, unsigned int new_ticks) {
 	return _sys_timet((void *) 4, (void *) f, (void *)(uint64_t) new_ticks);
 }
 
-void wait(unsigned int sec) {
-	unsigned int last = getTicks();
-	while ( (getTicks() - last) < (sec * 1000) );
+void wait(unsigned int millis) {
+	_sys_timet((void *) 5, (void *)(uint64_t) millis, 0);
 }
 
 // ----------- RTC ------------

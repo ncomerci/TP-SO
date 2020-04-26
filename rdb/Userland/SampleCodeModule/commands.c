@@ -165,20 +165,9 @@ static void printMMStats(void) {
 }
 
 void testProcess(void) {
-    /*
-    int argc = 2;
-    char ** argv = malloc((argc + 1) * sizeof(char *));
-    char str1[] = "soy el proceso de prueba!\n";
-    char str2[] = "arg 2\n";
-    argv[0] = malloc(sizeof(str1));
-    strcpy(argv[0], str1);
-    argv[1] = malloc(sizeof(str2));
-    strcpy(argv[1], str2);
-    argv[2] = NULL;
-    
-    main_func_t aux = {testProcess1Main, argc, (char**)argv};
-    createProcess(&aux, "test Process", 1);
-    */
+    main_func_t testprocess = {testProcess1Main, 100, NULL};
+    int pid = createProcess(&testprocess, "Test Process", 1);
+    printf("Created process pid: %d\n", pid);
 }
 
 void loop(void) {
@@ -246,13 +235,13 @@ void changeProcessPriority(int pid, unsigned int priority) {
 int testProcess1Main(int argc, char ** argv) {
     printf("Received %d arguments!\n", argc);
     for (unsigned int i = 0; i < argc; i++)
-        printf("%s", argv[i]); 
+        printf("Hola! Soy el proceso %d\n", getPid()); 
     return 0;
 }
 
 int loopMain(int argc, char ** argv) {
     for (unsigned int i = 0; 1 ; i++) {
-        wait(5);
+        wait(1000);
         printf("%d - Soy el proceso id: %d!\n", i, getPid());
     }
     return 0;

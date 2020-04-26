@@ -89,7 +89,7 @@ unsigned long getSecondsElapsed(void);
 int addTimeFunction(function f, int arg, unsigned int ticks);
 int updateTimeFunction(function f, unsigned int new_ticks);
 void removeTimeFunction(function f);
-void wait(unsigned int sec);
+void wait(unsigned int millis);
 
 // ----------- RTC ------------
 typedef struct time_struct {

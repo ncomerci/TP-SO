@@ -276,6 +276,7 @@ int changeState(int pid, process_state new_state) {
             else if (last_state == READY && new_state == BLOCKED){
                 processes_ready--;
                 if (curr_process != NULL && curr_process->pid == pid) {
+
                     if (act_queue == NULL || exp_queue == NULL) {
                         act_queue = queues[actual_queue];
                         exp_queue = queues[1 - actual_queue];
@@ -283,25 +284,26 @@ int changeState(int pid, process_state new_state) {
                     curr_process->state = BLOCKED;
                     curr_process->given_time = 1;
 
-                    _halt_and_wait(); //wait for the next ps
+                    _sti();
+                    _int81(); //wait for the next ps
                 }
                 else {
                     updateProcess(&(processes[i]));
                 }
-                
             }
 
             if (new_state == KILLED){
-                if (processes[i].foreground && processes[i].ppid > 0) {//if current is not shell
-                    changeState(processes[i].ppid, READY);
-                }
+                if (processes[i].foreground && processes[i].ppid > 0) //if current is not shell
+                    changeState(processes[i].ppid, READY); //bring parent back
+
                 if (curr_process != NULL && curr_process->pid == pid)
                     updateProcess(&(processes[i]));
                 if (curr_process != NULL && curr_process->pid == pid) {
                     updateProcess(&(processes[i]));
                     curr_process = NULL;
                     free(processes[i].stack);
-                    _halt_and_wait();
+                    _sti();
+                    _int81();
                 }
                 free(processes[i].stack);
                 processes_alive--;

@@ -48,6 +48,7 @@ static int c;
 // static int aracnoid_saved;
 
 void startShell(){
+    loop();
     user_writing_color = USER_COLOR;
     setBackgroundColor(USER_BACKGROUND_COLOR);
     int real_buff_size = BUFFER_SIZE - strlen(user) - strlen(syst_name);
