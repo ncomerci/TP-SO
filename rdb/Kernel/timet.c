@@ -139,3 +139,20 @@ unsigned long sys_timet(void * option, void * arg1, void * arg2) {
 	}
 	return -1;
 }
+
+/*
+>>> b process.c:49
+Breakpoint 1 at 0x102c69: file process.c, line 49.
+>>> b process.c:81
+Breakpoint 2 at 0x102cf3: file process.c, line 81.
+>>> b commands.c:244
+Breakpoint 3 at 0x4036c7: file commands.c, line 244.
+>>> b wait
+Breakpoint 4 at 0x101619: wait. (2 locations)
+>>> b loop
+Breakpoint 5 at 0x403265: file commands.c, line 173.
+>>> b timet.c:95
+Breakpoint 6 at 0x101535: file timet.c, line 95.
+>>> b timet.c:114
+Breakpoint 7 at 0x101624: file timet.c, line 114.
+*/

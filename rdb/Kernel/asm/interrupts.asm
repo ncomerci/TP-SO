@@ -16,6 +16,7 @@ GLOBAL _exception0Handler
 GLOBAL _exception6Handler
 
 GLOBAL _int80Handler
+GLOBAL _int81Handler
 
 EXTERN int80_handler
 
@@ -107,7 +108,6 @@ _hlt:
 _cli:
 	cli
 	ret
-
 
 _sti:
 	sti

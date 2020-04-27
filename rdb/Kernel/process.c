@@ -8,33 +8,39 @@ static void * getNextProcess(void * rsp);
 static void updateProcess(PCB * pp);
 static void enqueueProcess(PCB * pp);
 static void initQuantums(void);
+static void createHalter(void);
 
 stackProcess stackModel = {15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 0x8, 0x202, 0, 0};
 PCB processes[MAX_PROCESSES];
+
+PCB halter;
+uint64_t halterStack[(INT_PUSH_STATE + PUSH_STATE_REGS) + HALTER_EXTRA_STACK_SPACE];
+
 QUEUE_HD queues[2][MAX_PRIORITY - MIN_PRIORITY + 1];
 int actual_queue = 0;
 QUEUE_HD * act_queue = NULL; //queue with active processes
 QUEUE_HD * exp_queue = NULL; //queue with those processes that have expired their quantum or are new or priority changed
 unsigned quantum[MAX_PRIORITY - MIN_PRIORITY + 1];
-int quantum_started = 0;
+int initialized = 0;
 PCB * curr_process = NULL;
 unsigned int prior = 0;
-unsigned int processes_size = 0; //array size
-unsigned int processes_alive = 0; //without the killed ones
-unsigned int processes_ready = 0;
-unsigned int processes_so_far = 0; //processes created, for the pid to be uique
+int processes_size = 0; //array size
+int processes_alive = 0; //without the killed ones
+int processes_ready = 0;
+int processes_so_far = 0; //processes created, for the pid to be uique
 int started = 0;
 
 void * scheduler(void * rsp) {
 
     //printString("scheduler\n", 11);
 
-    if (!quantum_started) {
+    if (!initialized) {
         initQuantums();
-        quantum_started = 1;
+        createHalter();
+        initialized = 1;
     }
 
-    if (processes_ready > 0) {
+    if (curr_process != NULL || processes_ready > 0) { // curr_process == NULL && process_ready = 0 in case current was blocked
         //printString("hay proceso\n",13);
         act_queue = queues[actual_queue];
         exp_queue = queues[1 - actual_queue];
@@ -71,13 +77,32 @@ void * scheduler(void * rsp) {
 
     else { //there are no processes ready
         ////printString("no hay proceso\n", 16);
-        
-        if ( ((uint64_t *) rsp)[16] >= 0x400000 ) // If RIP >= sampleCodeModuleAddress => Kernel is not running
-            _halt_and_wait(); 
-
-        return rsp;
+        if ( started )// If RIP >= sampleCodeModuleAddress => Kernel is not running
+            return halter.rsp;
+        else
+            return rsp;
     }
+}
 
+static void createHalter(void) {
+    strcpy(halter.name, "Halter");
+    halter.pid = 0;
+    halter.ppid = 0; 
+    halter.foreground = 0;
+    halter.priority = MAX_PRIORITY;
+    halter.state = READY;
+    halter.next_in_queue = NULL;
+    halter.aging = 0; 
+    halter.given_time = quantum[BASE_PRIORITY];
+    halter.stack = halterStack;
+    halter.rbp = (void *)(((uint64_t) halter.stack + sizeof(halterStack)) & -8);
+    halter.rsp = (void *) (halter.rbp - (INT_PUSH_STATE + PUSH_STATE_REGS) * sizeof(uint64_t));
+
+    stackModel.rbp = (uint64_t) halter.rbp;
+    stackModel.rsp = (uint64_t) halter.rbp;
+    stackModel.rip = (uint64_t) _halter;
+    
+    memcpy(halter.rsp, (void *) &stackModel, sizeof(stackModel));
 }
 
 static void initQuantums() {
@@ -126,6 +151,10 @@ static void * getNextProcess(void * rsp) {
 int createProcess(main_func_t * main_f, char * name, int foreground, int * pid) {
     ////printString("Creando proceso!", 17);
     int i = 0;
+
+    if (!started)
+        started = 1;
+
     while(i < processes_size && processes[i].state != KILLED)
         i++;
 
@@ -295,9 +324,9 @@ int changeState(int pid, process_state new_state) {
             if (new_state == KILLED){
                 if (processes[i].foreground && processes[i].ppid > 0) //if current is not shell
                     changeState(processes[i].ppid, READY); //bring parent back
-
-                if (curr_process != NULL && curr_process->pid == pid)
-                    updateProcess(&(processes[i]));
+                processes_alive--;
+                if (last_state == READY)
+                    processes_ready--;
                 if (curr_process != NULL && curr_process->pid == pid) {
                     updateProcess(&(processes[i]));
                     curr_process = NULL;
@@ -306,10 +335,7 @@ int changeState(int pid, process_state new_state) {
                     _int81();
                 }
                 free(processes[i].stack);
-                processes_alive--;
-                processes_ready--;
             }
-
             return 0;
         }
     }

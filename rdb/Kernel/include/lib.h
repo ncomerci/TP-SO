@@ -22,6 +22,7 @@ void _cli(void);
 void _int81(void);
 void _set_rsp(void * value);
 void _halt_and_wait(void);
+void _halter(void);
 int _start_process(int (*main)(int argc, char * argv), int argc, char * argv);
 
 #endif

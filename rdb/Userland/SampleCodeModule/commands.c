@@ -235,13 +235,13 @@ void changeProcessPriority(int pid, unsigned int priority) {
 int testProcess1Main(int argc, char ** argv) {
     printf("Received %d arguments!\n", argc);
     for (unsigned int i = 0; i < argc; i++)
-        printf("Hola! Soy el proceso %d\n", getPid()); 
+        printf("Hola! Soy el proceso %d\n", getPid());
     return 0;
 }
 
 int loopMain(int argc, char ** argv) {
     for (unsigned int i = 0; 1 ; i++) {
-        wait(4000);
+        wait(1000);
         printf("%d - Soy el proceso id: %d!\n", i, getPid());
     }
     return 0;

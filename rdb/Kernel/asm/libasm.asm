@@ -8,6 +8,7 @@ GLOBAL _set_rsp
 GLOBAL getRegisters
 GLOBAL _prepare_stack_process_create
 GLOBAL _halt_and_wait
+GLOBAL _halter
 GLOBAL _start_process
 GLOBAL _int81
 
@@ -106,6 +107,13 @@ _halt_and_wait:
     sti
 
     hlt
+    ret
+
+_halter:
+_beg:
+    sti
+    hlt
+    jmp _beg
     ret
 
 _int81:
