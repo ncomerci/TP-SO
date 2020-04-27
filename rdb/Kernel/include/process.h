@@ -94,6 +94,7 @@
     int changePriority(int pid, unsigned int new_priority);
     int changeState(int pid, process_state new_state);
     int changeForegroundStatus(int pid, int status);
+    int isCurrentForeground(void);
     int sys_process(void * option, void * arg1, void * arg2, void * arg3, void * arg4); 
 
 #endif

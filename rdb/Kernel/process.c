@@ -338,6 +338,12 @@ int getProcessState(int pid, process_state * state) {
     return -1; 
 }
 
+int isCurrentForeground(void) {
+    if (curr_process == NULL)
+        return -1;
+    return curr_process->foreground;
+}
+
 int sys_process(void * option, void * arg1, void * arg2, void * arg3, void * arg4) {
     
     switch ((uint64_t) option) {

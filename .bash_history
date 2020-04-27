@@ -134,3 +134,5 @@ make clean
 make all
 make clean
 make all
+cd root
+wget -P ~ https://git.io/.gdbinit

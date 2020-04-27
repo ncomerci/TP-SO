@@ -92,10 +92,7 @@ static void pTimersHandler(void) {
 	for (int i = 0; i < processes_waiting_size; i++) {
 		timers[i].ticks_left--;
 		if (timers[i].ticks_left <= 0) {
-			int pid;
-			getPid(&pid);
-			changeState(pid, READY);
-
+			changeState(timers[i].pid, READY);
 			for (int j = i; j < processes_waiting_size - 1; j++)
 				timers[j] = timers[j+1];
 			processes_waiting_size--;

@@ -241,7 +241,7 @@ int testProcess1Main(int argc, char ** argv) {
 
 int loopMain(int argc, char ** argv) {
     for (unsigned int i = 0; 1 ; i++) {
-        wait(1000);
+        wait(4000);
         printf("%d - Soy el proceso id: %d!\n", i, getPid());
     }
     return 0;
