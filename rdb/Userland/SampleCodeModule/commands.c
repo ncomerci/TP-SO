@@ -4,7 +4,6 @@
 #include <lib_user.h>
 
 static int findColor(char * color);
-static void printMMStats(void);
 
 static char * color_names[] = {"black", "red", "green", "yellow", "blue", "pink", "light_blue", "white"};
 static uint32_t color_rgb[] = {0x000000, 0xFF0000, 0x00FF00, 0xFFFF00, 0x0000FF, 0xFF00FF, 0x00FFFF, 0xFFFFFF};
@@ -23,6 +22,7 @@ void printUserManual(){
     println("- clock                                --> Information about the local time in Buenos Aires.");
     println("- inforeg                              --> Prints registers status.");
     println("- printmem <starting_point>            --> Prints RAM status, starting at <starting_point>.");
+    println("- mem                                  --> Prints managed memory status");
     println("- clear                                --> Clear shell screen.");
     println("- ps                                   --> Show living processes info.");
     println("- nice <pid> <priority>                --> Changes priority of process with PID <pid> to <priority>.");
@@ -125,7 +125,7 @@ void startAracnoid(gameState * save_file, int * saved) {
     clear();
 }
 
-void testMM(void){
+void testMem(void){
     printf("Using %s Memory Manager !\n", getMMStats().sys_name);
     char line1[] = "Copied";
     printf("Beggining\n");
@@ -151,7 +151,7 @@ void testMM(void){
     printMMStats();
 }
 
-static void printMMStats(void) {
+void printMMStats(void) {
     mm_stat aux = getMMStats();
     printf("// ----------------------------- //\n");
 
@@ -162,20 +162,6 @@ static void printMMStats(void) {
     printf("Successful Allocs = %d\n", (int) aux.successful_allocs);
     
     printf("// ----------------------------- //\n");
-}
-
-void testProcess(void) {
-    main_func_t testprocess = {testProcess1Main, 100, NULL};
-    int pid = createProcess(&testprocess, "Test Process", 1);
-    printf("Created process pid: %d\n", pid);
-}
-
-void loop(void) {
-    main_func_t loop = {loopMain, 0, NULL};
-    int pid = createProcess(&loop, "Loop", 0);
-    printf("Created process pid: %d\n", pid);
-    //changeState(pid, 1);
-    //printf("Process %d %s\n", pid, (kill(pid) == 0)?"Killed":"Not Killed");
 }
 
 void printProcesses(void) {
@@ -232,6 +218,20 @@ void changeProcessPriority(int pid, unsigned int priority) {
         printf("Process priority changed\n");
 }
 
+void testProcess(void) {
+    main_func_t testprocess = {testProcess1Main, 100, NULL};
+    int pid = createProcess(&testprocess, "Test Process", 1);
+    printf("Created process pid: %d\n", pid);
+}
+
+void loop(void) {
+    main_func_t loop = {loopMain, 0, NULL};
+    int pid = createProcess(&loop, "Loop", 0);
+    printf("Created process pid: %d\n", pid);
+    //changeState(pid, 1);
+    //printf("Process %d %s\n", pid, (kill(pid) == 0)?"Killed":"Not Killed");
+}
+
 int testProcess1Main(int argc, char ** argv) {
     printf("Received %d arguments!\n", argc);
     for (unsigned int i = 0; i < argc; i++)
@@ -247,12 +247,20 @@ int loopMain(int argc, char ** argv) {
     return 0;
 }
 
+void testMM(void) {
+    main_func_t testmm = {main_test_mm, 100, NULL};
+    int pid = createProcess(&testmm, "Test Process", 0);
+    printf("Created process pid: %d\n", pid);
+}
+
 void test(char * option) {
 
     if (strcmp(option, "mem") == 0)
-        testMM();
+        testMem();
     else if(strcmp(option, "process") == 0)
-       testProcess();
+        testProcess();
+    else if(strcmp(option, "mm") == 0)
+        testMM();//testMM();
     /*
     else if (strcmp(option, "zero_div") == 0)
         testDivException();

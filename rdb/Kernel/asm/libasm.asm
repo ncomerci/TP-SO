@@ -91,6 +91,7 @@ _set_rsp:
     ret
 
 _start_process:
+    push rbx
     mov rbx, rdi       ; main
     mov rdi, rsi       ; argc
     mov rsi, rdx       ; argv
@@ -99,6 +100,7 @@ _start_process:
 
     call exit
 
+    pop rbx
     ret                ; Retorno lo mismo que main
 
 _halt_and_wait:
@@ -110,10 +112,9 @@ _halt_and_wait:
     ret
 
 _halter:
-_beg:
     sti
     hlt
-    jmp _beg
+    jmp _halter
     ret
 
 _int81:

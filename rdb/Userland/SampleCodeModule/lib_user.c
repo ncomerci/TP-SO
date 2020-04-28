@@ -108,7 +108,9 @@ int updateTimeFunction(function f, unsigned int new_ticks) {
 }
 
 void wait(unsigned int millis) {
-	_sys_timet((void *) 5, (void *)(uint64_t) millis, 0);
+	//_sys_timet((void *) 5, (void *)(uint64_t) millis, 0);
+	unsigned int last = getTicks();
+	while ((getTicks() - last) <= ((millis * PIT_FREQUENCY) / 1000));
 }
 
 // ----------- RTC ------------
@@ -457,4 +459,16 @@ int is_num(char *s) {
 	}
 
 	return 0;
+}
+
+// memory
+
+void * memset(void * destiation, int32_t c, uint64_t length) {
+	uint8_t chr = (uint8_t)c;
+	char * dst = (char*)destiation;
+
+	while(length--)
+		dst[length] = chr;
+
+	return destiation;
 }

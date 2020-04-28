@@ -6,7 +6,6 @@
 extern char bss;
 extern char endOfBinary;
 
-static void * memset(void * destiny, int32_t c, uint64_t length);
 static void halt_and_wait(void);
 
 int _start() {
@@ -22,14 +21,4 @@ int _start() {
 
 static void halt_and_wait(void) {
 	_sys_system((void *) 4, 0, 0, 0);
-}
-
-static void * memset(void * destiation, int32_t c, uint64_t length) {
-	uint8_t chr = (uint8_t)c;
-	char * dst = (char*)destiation;
-
-	while(length--)
-		dst[length] = chr;
-
-	return destiation;
 }

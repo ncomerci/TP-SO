@@ -26,9 +26,9 @@ static void welcomeMessage(void);
 
 static char inputBuffer[BUFFER_SIZE];
 static char commandsHistory[COMMANDS_BUFFER_SIZE][BUFFER_SIZE];
-static char * commands[] = {"clear", "clock",  "help", "inforeg", "kill", "nice", "printmem", "ps", "set", "set writing_color", "test", "test mem", "test process"};
-static char * void_func[] = {"help", "clock", "inforeg", "clear", "ps", "loop"};
-static void (*void_commands_func[])(void) = {printUserManual, getLocalTime, printRegistersInfo, clear, printProcesses, loop};
+static char * commands[] = {"clear", "clock",  "help", "inforeg", "kill", "mem", "nice", "printmem", "ps", "set", "set writing_color", "test", "test mm", "test mem", "test process"};
+static char * void_func[] = {"help", "clock", "inforeg", "clear", "ps", "loop", "mem"};
+static void (*void_commands_func[])(void) = {printUserManual, getLocalTime, printRegistersInfo, clear, printProcesses, loop, printMMStats};
 
 static char * user = "not_so_dummie_user";
 static char * syst_name = "@rdb: ";
@@ -48,6 +48,7 @@ static int c;
 // static int aracnoid_saved;
 
 void startShell(){
+    //testMM();
     user_writing_color = USER_COLOR;
     setBackgroundColor(USER_BACKGROUND_COLOR);
     int real_buff_size = BUFFER_SIZE - strlen(user) - strlen(syst_name);

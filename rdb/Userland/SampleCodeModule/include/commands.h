@@ -18,9 +18,12 @@ void test(char * option);
 void command_set(char * option, char * color);
 void testDivException(void);
 void testInvOpCode(void);
+void testMem(void);
 void testMM(void);
+void printMMStats(void);
 void testProcess(void);
 int testProcess1Main(int argc, char **argv);
 int loopMain(int argc, char ** argv);
+int main_test_mm(int argc, char ** argv);
 
 #endif

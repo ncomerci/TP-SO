@@ -293,7 +293,7 @@ int changeState(int pid, process_state new_state) {
         if(processes[i].pid == pid) {
             int last_state = processes[i].state;
 
-            if (last_state == KILLED)
+            if (last_state == new_state || last_state == KILLED)
                 return -1;
 
             processes[i].state = new_state;
@@ -320,8 +320,7 @@ int changeState(int pid, process_state new_state) {
                     updateProcess(&(processes[i]));
                 }
             }
-
-            if (new_state == KILLED){
+            else if (new_state == KILLED){
                 if (processes[i].foreground && processes[i].ppid > 0) //if current is not shell
                     changeState(processes[i].ppid, READY); //bring parent back
                 processes_alive--;
@@ -334,7 +333,9 @@ int changeState(int pid, process_state new_state) {
                     _sti();
                     _int81();
                 }
-                free(processes[i].stack);
+                else {
+                    free(processes[i].stack);
+                }
             }
             return 0;
         }
