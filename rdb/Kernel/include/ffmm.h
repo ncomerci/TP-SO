@@ -17,7 +17,6 @@
         uint64_t xBlockSize;						/*<< The size of the free block. */
     } BlockLink_t; //Free List
 
-
     /* Block sizes must not get too small. */
     #define heapMINIMUM_BLOCK_SIZE	( ( uint64_t ) ( xHeapStructSize << 1 ) )
 

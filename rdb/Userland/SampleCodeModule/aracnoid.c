@@ -81,7 +81,7 @@ void aracnoid(gameState * save_file, int * saved) { // Debería devolver un save
     setScene();
 
     if (!loaded_save)
-        addTimeFunction(updater, PIT_FREQUENCY / FPS); // (60 fps?) FALTA VELOCIDAD DE LA BARRITA EN EL UPDATE
+        addTimeFunction(updater, 0, PIT_FREQUENCY / FPS); // (60 fps?) FALTA VELOCIDAD DE LA BARRITA EN EL UPDATE
     while (gs.remaining_lives && !player_won) {
         if (!loaded_save && !gs.shooted && !showingInfoMessage) {
             showHelpMessage();
@@ -98,7 +98,7 @@ void aracnoid(gameState * save_file, int * saved) { // Debería devolver un save
             if (aux > 0)
                 return;
             setScene();
-            addTimeFunction(updater, PIT_FREQUENCY / FPS);
+            addTimeFunction(updater, 0, PIT_FREQUENCY / FPS);
         }
         else if (!gs.shooted && last_key == ' ') {
             gs.ball.mov.movingDirX = directionDecision();

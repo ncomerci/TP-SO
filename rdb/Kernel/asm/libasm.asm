@@ -8,7 +8,9 @@ GLOBAL _set_rsp
 GLOBAL getRegisters
 GLOBAL _prepare_stack_process_create
 GLOBAL _halt_and_wait
+GLOBAL _halter
 GLOBAL _start_process
+GLOBAL _int81
 
 EXTERN exit
 
@@ -89,6 +91,7 @@ _set_rsp:
     ret
 
 _start_process:
+    push rbx
     mov rbx, rdi       ; main
     mov rdi, rsi       ; argc
     mov rsi, rdx       ; argv
@@ -97,6 +100,7 @@ _start_process:
 
     call exit
 
+    pop rbx
     ret                ; Retorno lo mismo que main
 
 _halt_and_wait:
@@ -105,4 +109,14 @@ _halt_and_wait:
     sti
 
     hlt
+    ret
+
+_halter:
+    sti
+    hlt
+    jmp _halter
+    ret
+
+_int81:
+    int 81h
     ret

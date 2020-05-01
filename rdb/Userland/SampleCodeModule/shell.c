@@ -1,5 +1,5 @@
 #include <lib_user.h>
-#include <aracnoid.h>
+//#include <aracnoid.h>
 #include <commands.h>
 #include <shell.h>
 
@@ -26,9 +26,9 @@ static void welcomeMessage(void);
 
 static char inputBuffer[BUFFER_SIZE];
 static char commandsHistory[COMMANDS_BUFFER_SIZE][BUFFER_SIZE];
-static char * commands[] = {"aracnoid", "clear", "clock",  "help", "inforeg", "printmem", "set", "set writing_color", "test", "test zero_div", "test inv_op_code", "test mem"};
-static char * void_func[] = {"help", "clock", "inforeg", "clear"};
-static void (*void_commands_func[])(void) = {printUserManual, getLocalTime, printRegistersInfo, clear};
+static char * commands[] = {"clear", "clock",  "help", "inforeg", "kill", "mem", "nice", "printmem", "ps", "set", "set writing_color", "test", "test mm", "test mem", "test process"};
+static char * void_func[] = {"help", "clock", "inforeg", "clear", "ps", "loop", "mem"};
+static void (*void_commands_func[])(void) = {printUserManual, getLocalTime, printRegistersInfo, clear, printProcesses, loop, printMMStats};
 
 static char * user = "not_so_dummie_user";
 static char * syst_name = "@rdb: ";
@@ -44,20 +44,17 @@ static int user_string_size;
 
 static int c;
 
-static gameState aracnoid_save;
-static int aracnoid_saved;
-
-int shellMain(int argc, char * argv) {
-    startShell();
-    return 0;
-}
+// static gameState aracnoid_save;
+// static int aracnoid_saved;
 
 void startShell(){
-    setCursor(0, getScreenHeight());
+    testMM();
     user_writing_color = USER_COLOR;
     setBackgroundColor(USER_BACKGROUND_COLOR);
     int real_buff_size = BUFFER_SIZE - strlen(user) - strlen(syst_name);
+    setCursor(0, 0);
     welcomeMessage();
+    setCursor(0, getScreenHeight());
     while (1) {
         showCursor(1);
         printColored(user, 0xFFC550);
@@ -230,18 +227,35 @@ static void instructionHandler() {
 
             case 0:
                 if (strcmp(cmd, "aracnoid") == 0) {
+                    printError("Game is in maintenance.\n");
+                    /*
                     startAracnoid(&aracnoid_save, &aracnoid_saved);
                     if(aracnoid_saved)
                         printColored("\n                                    Aracnoid is saved! type \"aracnoid\" to resume the game.\n\n", 0x04E798);
+                    */
                     executed = 0;
                 }
                 else
                     executed = command_launch(cmd);
                 break;
             case 1:
-                if(strcmp(cmd, "printmem") == 0) {
-                    uint64_t aux = strtoint(params[0]);
-                    printMemoryStatus(aux);
+                if (strcmp(cmd, "printmem") == 0) {
+                    if (is_num(params[0]) == 0)
+                        printMemoryStatus(strtoint(params[0]));
+                    else
+                        printError("Arguments aren't valid.\n");
+                }
+                else if (strcmp(cmd, "kill") == 0) {
+                    if (is_num(params[0]) == 0)
+                        killProcess(strtoint(params[0]));
+                    else
+                        printError("Arguments aren't valid.\n");
+                }
+                else if (strcmp(cmd, "block") == 0) {
+                    if (is_num(params[0]) == 0)
+                        block(strtoint(params[0]));
+                    else
+                        printError("Arguments aren't valid.\n");
                 }
                 else if (strcmp(cmd, "test") == 0)
                     test(params[0]);
@@ -251,6 +265,12 @@ static void instructionHandler() {
             case 2:
                 if(strcmp(cmd, "set") == 0)
                     command_set(params[0], params[1]);
+                else if (strcmp(cmd, "nice") == 0) {
+                    if (is_num(params[0]) == 0 && is_num(params[1]) == 0)
+                        changeProcessPriority(strtoint(params[0]), strtoint(params[1]));
+                    else
+                        printError("Arguments aren't valid.\n");
+                }
                 else
                     executed = 1;
                 break;
@@ -321,46 +341,48 @@ void resetUserWritingColor() {
 
 static void welcomeMessage() {
 
-    println("");
-    println("");
-    println("                             .,,uod8B8bou,,.");
-    println("                    ..,uod8BBBBBBBBBBBBBBBBRPFT?l!i:.");
-    println("               ,=m8BBBBBBBBBBBBBBBRPFT?!||||||||||||||");
-    println("               !...:!TVBBBRPFT||||||||||!!^^\"\"'   ||||");
-    println("               !.......:!?|||||!!^^\"\"'            ||||");
-    println("               !.........||||                     ||||");
-    println("               !.........||||  ##                 ||||");
-    println("               !.........||||                     ||||");
-    println("               !.........||||                     ||||");
-    println("               !.........||||                     ||||");
-    println("               !.........||||                     ||||");
-    println("               `.........||||                    ,||||");
-    println("                .;.......||||               _.-!!|||||");
-    println("         .,uodWBBBBb.....||||       _.-!!|||||||||!:'");
-    println("      !YBBBBBBBBBBBBBBb..!|||:..-!!|||||||!iof68BBBBBb....");
-    println("      !..YBBBBBBBBBBBBBBb!!||||||||!iof68BBBBBBRPFT?!::   `.");
-    println("      !....YBBBBBBBBBBBBBBbaaitf68BBBBBBRPFT?!:::::::::     `.");
-    println("      !......YBBBBBBBBBBBBBBBBBBBRPFT?!::::::;:!^\"`;:::       `.");
-    println("      !........YBBBBBBBBBBRPFT?!::::::::::^''...::::::;         iBBbo.");
-    println("      `..........YBRPFT?!::::::::::::::::::::::::;iof68bo.      WBBBBbo.");
-    println("       `..........:::::::::::::::::::::::;iof688888888888b.     `YBBBP^'");
-    println("          `........::::::::::::::::;iof688888888888888888888b.     `");
-    println("            `......:::::::::;iof688888888888888888888888888888b.");
-    println("              `....:::;iof688888888888888888888888888888888899fT!");
-    println("                `..::!8888888888888888888888888888888899fT|!^\"'");
-    println("                  `' !!988888888888888888888888899fT|!^\"'");
-    println("                      `!!8888888888888888899fT|!^\"'");
-    println("                        `!988888888899fT|!^\"'");
-    println("                          `!9899fT|!^\"'");
-    println("                            `!^\"'\")");
-    println("");
-    println("                                             _____   _                         ___    _                 _       _  ");
-    println("                                            |_   _| | |_      ___      o O O  / __|  | |_      ___     | |     | |   ");
-    println("                                              | |   | ' \\    / -_)    o       \\__ \\  | ' \\    / -_)    | |     | |   ");
-    println("                                             _|_|_  |_||_|   \\___|   TS__[O]  |___/  |_||_|   \\___|   _|_|_   _|_|_  ");
-    println("                                           _|\"\"\"\"\"|_|\"\"\"\"\"|_|\"\"\"\"\"| {======|_|\"\"\"\"\"|_|\"\"\"\"\"|_|\"\"\"\"\"|_|\"\"\"\"\"|_|\"\"\"\"\"| ");
-    println("                                           \"`-0-0-'\"`-0-0-'\"`-0-0-'./o--000'\"`-0-0-'\"`-0-0-'\"`-0-0-'\"`-0-0-'\"`-0-0-' ");
-    println("");
-    println("");
-    println("");    
+    write("\n        \n                                 .,,uod8B8bou,,.\n                        ..,uod8BBBBBBBBBBBBBBBBRPFT?l!i:.\n                   ,=m8BBBBBBBBBBBBBBBRPFT?!||||||||||||||\n                   !...:!TVBBBRPFT||||||||||!!^^\"\"'   ||||\n                   !.......:!?|||||!!^^\"\"'            ||||\n                   !.........||||                     ||||\n                   !.........||||  ##                 ||||\n                   !.........||||                     ||||\n                   !.........||||                     ||||\n                   !.........||||                     ||||\n                   !.........||||                     ||||\n                   `.........||||                    ,||||\n                    .;.......||||               _.-!!|||||\n             .,uodWBBBBb.....||||       _.-!!|||||||||!:'\n          !YBBBBBBBBBBBBBBb..!|||:..-!!|||||||!iof68BBBBBb....\n          !..YBBBBBBBBBBBBBBb!!||||||||!iof68BBBBBBRPFT?!::   `.\n          !....YBBBBBBBBBBBBBBbaaitf68BBBBBBRPFT?!:::::::::     `.\n          !......YBBBBBBBBBBBBBBBBBBBRPFT?!::::::;:!^\"`;:::       `.\n          !........YBBBBBBBBBBRPFT?!::::::::::^''...::::::;         iBBbo.\n          `..........YBRPFT?!::::::::::::::::::::::::;iof68bo.      WBBBBbo.\n           `..........:::::::::::::::::::::::;iof688888888888b.     `YBBBP^'\n              `........::::::::::::::::;iof688888888888888888888b.     `\n                `......:::::::::;iof688888888888888888888888888888b.\n                  `....:::;iof688888888888888888888888888888888899fT!\n                    `..::!8888888888888888888888888888888899fT|!^\"'\n                      `' !!988888888888888888888888899fT|!^\"'\n                          `!!8888888888888888899fT|!^\"'\n                            `!988888888899fT|!^\"'\n                              `!9899fT|!^\"'\n                                `!^\"'\")\n    \n                                                 _____   _                         ___    _                 _       _  \n                                                |_   _| | |_      ___      o O O  / __|  | |_      ___     | |     | |   \n                                                  | |   | ' \\    / -_)    o       \\__ \\  | ' \\    / -_)    | |     | |   \n                                                 _|_|_  |_||_|   \\___|   TS__[O]  |___/  |_||_|   \\___|   _|_|_   _|_|_  \n                                               _|\"\"\"\"\"|_|\"\"\"\"\"|_|\"\"\"\"\"| {======|_|\"\"\"\"\"|_|\"\"\"\"\"|_|\"\"\"\"\"|_|\"\"\"\"\"|_|\"\"\"\"\"| \n                                               \"`-0-0-'\"`-0-0-'\"`-0-0-'./o--000'\"`-0-0-'\"`-0-0-'\"`-0-0-'\"`-0-0-'\"`-0-0-' \n    \n    \n    \n", 2600, LIGHT_BLUE_COLOR);
+
+    // println("");
+    // println("");
+    // println("                             .,,uod8B8bou,,.");
+    // println("                    ..,uod8BBBBBBBBBBBBBBBBRPFT?l!i:.");
+    // println("               ,=m8BBBBBBBBBBBBBBBRPFT?!||||||||||||||");
+    // println("               !...:!TVBBBRPFT||||||||||!!^^\"\"'   ||||");
+    // println("               !.......:!?|||||!!^^\"\"'            ||||");
+    // println("               !.........||||                     ||||");
+    // println("               !.........||||  ##                 ||||");
+    // println("               !.........||||                     ||||");
+    // println("               !.........||||                     ||||");
+    // println("               !.........||||                     ||||");
+    // println("               !.........||||                     ||||");
+    // println("               `.........||||                    ,||||");
+    // println("                .;.......||||               _.-!!|||||");
+    // println("         .,uodWBBBBb.....||||       _.-!!|||||||||!:'");
+    // println("      !YBBBBBBBBBBBBBBb..!|||:..-!!|||||||!iof68BBBBBb....");
+    // println("      !..YBBBBBBBBBBBBBBb!!||||||||!iof68BBBBBBRPFT?!::   `.");
+    // println("      !....YBBBBBBBBBBBBBBbaaitf68BBBBBBRPFT?!:::::::::     `.");
+    // println("      !......YBBBBBBBBBBBBBBBBBBBRPFT?!::::::;:!^\"`;:::       `.");
+    // println("      !........YBBBBBBBBBBRPFT?!::::::::::^''...::::::;         iBBbo.");
+    // println("      `..........YBRPFT?!::::::::::::::::::::::::;iof68bo.      WBBBBbo.");
+    // println("       `..........:::::::::::::::::::::::;iof688888888888b.     `YBBBP^'");
+    // println("          `........::::::::::::::::;iof688888888888888888888b.     `");
+    // println("            `......:::::::::;iof688888888888888888888888888888b.");
+    // println("              `....:::;iof688888888888888888888888888888888899fT!");
+    // println("                `..::!8888888888888888888888888888888899fT|!^\"'");
+    // println("                  `' !!988888888888888888888888899fT|!^\"'");
+    // println("                      `!!8888888888888888899fT|!^\"'");
+    // println("                        `!988888888899fT|!^\"'");
+    // println("                          `!9899fT|!^\"'");
+    // println("                            `!^\"'\")");
+    // println("");
+    // println("                                             _____   _                         ___    _                 _       _  ");
+    // println("                                            |_   _| | |_      ___      o O O  / __|  | |_      ___     | |     | |   ");
+    // println("                                              | |   | ' \\    / -_)    o       \\__ \\  | ' \\    / -_)    | |     | |   ");
+    // println("                                             _|_|_  |_||_|   \\___|   TS__[O]  |___/  |_||_|   \\___|   _|_|_   _|_|_  ");
+    // println("                                           _|\"\"\"\"\"|_|\"\"\"\"\"|_|\"\"\"\"\"| {======|_|\"\"\"\"\"|_|\"\"\"\"\"|_|\"\"\"\"\"|_|\"\"\"\"\"|_|\"\"\"\"\"| ");
+    // println("                                           \"`-0-0-'\"`-0-0-'\"`-0-0-'./o--000'\"`-0-0-'\"`-0-0-'\"`-0-0-'\"`-0-0-'\"`-0-0-' ");
+    // println("");
+    // println("");
+    // println("");    
 }

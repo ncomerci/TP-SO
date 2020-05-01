@@ -16,17 +16,29 @@ GLOBAL _exception0Handler
 GLOBAL _exception6Handler
 
 GLOBAL _int80Handler
+GLOBAL _int81Handler
 
 EXTERN int80_handler
 
 EXTERN irqDispatcher
 EXTERN int_20
+EXTERN scheduler
+
 EXTERN exceptionDispatcher
 
 SECTION .text
 
 %macro pushState 0
 	push rax
+	pushStateNoRax
+%endmacro
+
+%macro popState 0
+	popStateNoRax
+	pop rax
+%endmacro
+
+%macro pushStateNoRax 0
 	push rbx
 	push rcx
 	push rdx
@@ -43,7 +55,7 @@ SECTION .text
 	push r15
 %endmacro
 
-%macro popState 0
+%macro popStateNoRax 0
 	pop r15
 	pop r14
 	pop r13
@@ -58,7 +70,6 @@ SECTION .text
 	pop rdx
 	pop rcx
 	pop rbx
-	pop rax
 %endmacro
 
 %macro irqHandlerMaster 1
@@ -97,7 +108,6 @@ _hlt:
 _cli:
 	cli
 	ret
-
 
 _sti:
 	sti
@@ -157,7 +167,19 @@ _irq05Handler:
 
 ; Software interruptions
 _int80Handler:
+	pushStateNoRax
 	call int80_handler
+	popStateNoRax
+	iretq
+
+_int81Handler:
+	pushState
+
+	mov rdi, rsp ; rsp
+	call scheduler
+	mov rsp, rax
+
+	popState
 	iretq
 
 ;Zero Division Exception
@@ -167,12 +189,6 @@ _exception0Handler:
 ;Op Code Exception
 _exception6Handler:
 	exceptionHandler 6
-
-haltcpu:
-	cli
-	hlt
-	ret
-
 
 SECTION .bss
 	aux resq 1

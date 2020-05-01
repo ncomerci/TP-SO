@@ -10,23 +10,32 @@ static void functionsHandler();
 static int findFunction(function func);
 static void shiftFunctions(unsigned int idx);
 
+static void pTimersHandler(void);
+static int addTimer(int pid, unsigned int millis);
+static void wait(unsigned int millis);
+
 static periodic_func functions[MAX_FUNCTIONS];
-static int functions_size;
+static unsigned int functions_size;
+
+static process_waiting timers[MAX_PROCESSES];
+static unsigned int processes_waiting_size;
 
 void * timer_handler(void * rsp) {
 	ticks++;
 	functionsHandler();  // Deprecated
-	// printString("RSP now will be: ", 18);
+	pTimersHandler();
+	/*
+	printString("RSP now will be: ", 18);
 	void * new_rsp = scheduler(rsp);
-	// print64Hex((uint64_t) new_rsp);
-	// printNewLine();
+	print64Hex((uint64_t) new_rsp);
 	return new_rsp;
+	*/
+	return scheduler(rsp);
 }
 
 unsigned long ticks_elapsed() {
 	return ticks;
 }
-
 unsigned long seconds_elapsed() {
 	return ticks / PIT_FREQUENCY;
 }
@@ -34,7 +43,7 @@ unsigned long seconds_elapsed() {
 static void functionsHandler() {
 	for (int i = 0; i < functions_size; i++) {
 		functions[i].ticks_left--;
-		if (functions[i].ticks_left == 0) {
+		if (functions[i].ticks_left <= 0) {
 			functions[i].ticks_left = functions[i].ticks;
 			(functions[i].f)();
 		}	
@@ -79,6 +88,44 @@ int addFunction(function func, unsigned int ticks) {
 	return 0;
 }
 
+static void pTimersHandler(void) {
+	for (int i = 0; i < processes_waiting_size; i++) {
+		timers[i].ticks_left--;
+		if (timers[i].ticks_left <= 0) {
+			changeState(timers[i].pid, READY);
+			for (int j = i; j < processes_waiting_size - 1; j++)
+				timers[j] = timers[j+1];
+			processes_waiting_size--;
+		}	
+	}
+}
+
+static int addTimer(int pid, unsigned int millis) {
+	unsigned int i = 0;
+	while (i < processes_waiting_size) { //si ya tiene un timer que lo actualice
+		if (timers[i].pid == pid) {
+			timers[i].ticks_left = ( millis * PIT_FREQUENCY ) / 1000;
+			return 0;
+		}
+		i++;
+	}
+	if (i == MAX_PROCESSES)  // This should never happen
+		return -1;
+		
+	timers[processes_waiting_size].pid = pid;
+	timers[processes_waiting_size].ticks_left = ( millis * PIT_FREQUENCY ) / 1000;
+	processes_waiting_size++;
+	return 0;
+}
+
+static void wait(unsigned int millis) {
+	int pid;
+	getPid(&pid);
+
+	if (addTimer(pid, millis) == 0)
+		changeState(pid, BLOCKED); // No corre mas.
+}
+
 // Returns -1 if arguments aren´t right.
 unsigned long sys_timet(void * option, void * arg1, void * arg2) {
 	switch ((uint64_t) option) {
@@ -94,6 +141,26 @@ unsigned long sys_timet(void * option, void * arg1, void * arg2) {
 		case 4:
 			updateFunction((function) arg1, (uint64_t) arg2);
 			return 0;
+		case 5:
+			wait((unsigned int)(uint64_t) arg1);
+			return 0;
 	}
 	return -1;
 }
+
+/*
+>>> b process.c:49
+Breakpoint 1 at 0x102c69: file process.c, line 49.
+>>> b process.c:81
+Breakpoint 2 at 0x102cf3: file process.c, line 81.
+>>> b commands.c:244
+Breakpoint 3 at 0x4036c7: file commands.c, line 244.
+>>> b wait
+Breakpoint 4 at 0x101619: wait. (2 locations)
+>>> b loop
+Breakpoint 5 at 0x403265: file commands.c, line 173.
+>>> b timet.c:95
+Breakpoint 6 at 0x101535: file timet.c, line 95.
+>>> b timet.c:114
+Breakpoint 7 at 0x101624: file timet.c, line 114.
+*/

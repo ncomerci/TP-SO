@@ -54,6 +54,7 @@ void load_idt() {
   setup_IDT_entry (0x06, (uint64_t) &_exception6Handler);
   
   setup_IDT_entry (0x80, (uint64_t) &_int80Handler); // Soft int handler
+  setup_IDT_entry (0x81, (uint64_t) &_int81Handler); // Scheduler call
 
   // Interrupción de timer tick y de teclado habilitadas
   picMasterMask(0xFC); //los ultimos estan en 0 ;)

@@ -18,6 +18,7 @@ void _exception0Handler(void);
 void _exception6Handler(void);
 
 int _int80Handler(uint64_t sysCallCode, uint64_t arg1, uint64_t arg2);
+int _int81Handler(void);
 
 void _cli(void);
 void _sti(void);

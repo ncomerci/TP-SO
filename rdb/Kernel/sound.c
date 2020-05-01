@@ -26,7 +26,7 @@ void play_timed_sound(uint32_t nFrequence, long duration) {
 }
  
 // Make it shutup
-void nosound() {
+void nosound(void) {
 	uint8_t tmp = _inportb(0x61) & 0xFC;
 	_outportb(0x61, tmp);
 	removeFunction(nosound);
