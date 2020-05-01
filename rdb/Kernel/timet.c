@@ -101,7 +101,15 @@ static void pTimersHandler(void) {
 }
 
 static int addTimer(int pid, unsigned int millis) {
-	if (processes_waiting_size == MAX_PROCESSES)  // This should never happen
+	unsigned int i = 0;
+	while (i < processes_waiting_size) { //si ya tiene un timer que lo actualice
+		if (timers[i].pid == pid) {
+			timers[i].ticks_left = ( millis * PIT_FREQUENCY ) / 1000;
+			return 0;
+		}
+		i++;
+	}
+	if (i == MAX_PROCESSES)  // This should never happen
 		return -1;
 		
 	timers[processes_waiting_size].pid = pid;
@@ -114,8 +122,8 @@ static void wait(unsigned int millis) {
 	int pid;
 	getPid(&pid);
 
-	addTimer(pid, millis);
-	changeState(pid, BLOCKED); // No corre mas.
+	if (addTimer(pid, millis) == 0)
+		changeState(pid, BLOCKED); // No corre mas.
 }
 
 // Returns -1 if arguments aren´t right.

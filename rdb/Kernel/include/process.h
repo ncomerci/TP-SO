@@ -6,7 +6,7 @@
     #define MAX_PROCESSES 50
     #define MAX_NAME_LENGTH 50
     #define MAX_FDS 20
-    #define MAX_STACK_PER_PROCESS (1 << 12) //4KB
+    #define MAX_STACK_PER_PROCESS (1 << 17) //128KB
     #define HALTER_EXTRA_STACK_SPACE 20
     #define INT_PUSH_STATE 5
     #define PUSH_STATE_REGS 15

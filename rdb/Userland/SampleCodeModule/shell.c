@@ -1,5 +1,5 @@
 #include <lib_user.h>
-#include <aracnoid.h>
+//#include <aracnoid.h>
 #include <commands.h>
 #include <shell.h>
 
@@ -48,7 +48,7 @@ static int c;
 // static int aracnoid_saved;
 
 void startShell(){
-    //testMM();
+    testMM();
     user_writing_color = USER_COLOR;
     setBackgroundColor(USER_BACKGROUND_COLOR);
     int real_buff_size = BUFFER_SIZE - strlen(user) - strlen(syst_name);

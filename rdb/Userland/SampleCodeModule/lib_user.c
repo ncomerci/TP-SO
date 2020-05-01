@@ -108,9 +108,11 @@ int updateTimeFunction(function f, unsigned int new_ticks) {
 }
 
 void wait(unsigned int millis) {
-	//_sys_timet((void *) 5, (void *)(uint64_t) millis, 0);
+	_sys_timet((void *) 5, (void *)(uint64_t) millis, 0);
+	/*
 	unsigned int last = getTicks();
 	while ((getTicks() - last) <= ((millis * PIT_FREQUENCY) / 1000));
+	*/
 }
 
 // ----------- RTC ------------

@@ -7,6 +7,7 @@ static void prepareStackProcess(int (*main)(int argc, char ** argv), int argc, c
 static void * getNextProcess(void * rsp);
 static void updateProcess(PCB * pp);
 static void enqueueProcess(PCB * pp);
+static void dequeueProcess(PCB * pp);
 static void initQuantums(void);
 static void createHalter(void);
 
@@ -128,6 +129,8 @@ static void * getNextProcess(void * rsp) {
 
     if (prior <= MAX_PRIORITY) {
         if ((act_queue[prior].first)->state == KILLED || (act_queue[prior].first)->state == BLOCKED) {
+            if (act_queue[prior].last == act_queue[prior].first)
+                act_queue[prior].last = NULL;
             act_queue[prior].first = (act_queue[prior].first)->next_in_queue;
             return getNextProcess(rsp);
         }
@@ -234,6 +237,49 @@ static void enqueueProcess(PCB * pp) {
     exp_queue[pp->priority].last = pp;
 }
 
+static void dequeueProcess(PCB * pp) {
+    if (act_queue == NULL || exp_queue == NULL) {
+        act_queue = queues[actual_queue];
+        exp_queue = queues[1 - actual_queue];
+    }
+
+    // Remove from list
+    unsigned int i = 0;
+    PCB ** last;
+    PCB * aux;
+    while (i < MAX_PRIORITY - MIN_PRIORITY + 1) {
+        last = (act_queue[i].first);
+        if (act_queue[i].first != NULL) {
+            aux = act_queue[i].first;
+            while (aux != NULL && aux != pp) {
+                last = &(aux->next_in_queue);
+                aux = aux->next_in_queue;
+            }
+            if (aux != NULL && aux == pp) {
+                *last = aux->next_in_queue;  // Lo saco de la cola
+                return;
+            }
+        }
+        i++;
+    }
+    i = 0;
+    while (i < MAX_PRIORITY - MIN_PRIORITY + 1) {
+        last = (exp_queue[i].first);
+        if (exp_queue[i].first != NULL) {
+            aux = exp_queue[i].first;
+            while (aux != NULL && aux != pp) {
+                last = &(aux->next_in_queue);
+                aux = aux->next_in_queue;
+            }
+            if (aux != NULL && aux == pp) {
+                *last = aux->next_in_queue;  // Lo saco de la cola
+                return;
+            }
+        }
+        i++;
+    }
+}
+
 int kill(int pid) {
     return changeState(pid, KILLED);
 }
@@ -304,13 +350,8 @@ int changeState(int pid, process_state new_state) {
             }
             else if (last_state == READY && new_state == BLOCKED){
                 processes_ready--;
+                //dequeueProcess(&(processes[i]));
                 if (curr_process != NULL && curr_process->pid == pid) {
-
-                    if (act_queue == NULL || exp_queue == NULL) {
-                        act_queue = queues[actual_queue];
-                        exp_queue = queues[1 - actual_queue];
-                    }
-                    curr_process->state = BLOCKED;
                     curr_process->given_time = 1;
 
                     _sti();
@@ -323,6 +364,7 @@ int changeState(int pid, process_state new_state) {
             else if (new_state == KILLED){
                 if (processes[i].foreground && processes[i].ppid > 0) //if current is not shell
                     changeState(processes[i].ppid, READY); //bring parent back
+                //dequeueProcess(&(processes[i]));
                 processes_alive--;
                 if (last_state == READY)
                     processes_ready--;
