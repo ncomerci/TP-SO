@@ -24,3 +24,46 @@ ls
 make MM=BUDDY
 make clean
 make MM=BUDDY
+cd root
+make all
+make clean
+make all
+make clean
+make all
+make clean
+make all
+make clean
+make all
+make clean
+make all
+make clean 
+make all
+make clean 
+make all
+make clean 
+make all
+make clean 
+make all
+make clean 
+make all
+make clean 
+make all
+make clean 
+make all
+make clean 
+make all
+make clean 
+make all
+make clean 
+make all
+make clean 
+make all
+gdb
+make clean 
+make all
+gdb
+make clean 
+make all
+gdb
+gdb
+gdb
