@@ -110,7 +110,7 @@ void getLocalTime(){
     printColored("Buenos Aires", 0xe37100);
     println(" is:");
     unsigned last_sec = getSecondsElapsed();
-    while ((_sys_read((void *) &c, (void *) 1) != 0) || c != ESC) {
+    while (((c = scanChar()) != 0) || c != ESC) {
         unsigned long actual_sec = getSecondsElapsed();
         if (!started || actual_sec > last_sec) {
             started = 1;
