@@ -31,7 +31,7 @@ int _sys_system(void * arg1, void * arg2, void * arg3, void * arg4);
 int _sys_process(void * arg1, void * arg2, void * arg3, void * arg4, void * arg5);
 int _sys_timet(void * arg1, void * arg2, void * arg3);
 int _sys_rtc(void * arg1);
-int _sys_read(void * arg1);
+int _sys_read(void * arg1, void * arg2);
 int _sys_screen(void * arg1, void * arg2, void * arg3, void * arg4);
 int _sys_video(void * arg1, void * arg2, void * arg3, void * arg4, void * arg5);
 int _sys_sound(void * arg1, void * arg2, void * arg3);

@@ -27,7 +27,7 @@ uint64_t int80_handler(void * sysCallCode, void * arg1, void * arg2, void * arg3
             return sys_rtc(arg1);
 
         case SYS_READ_CODE: //syscall Read
-            return sys_read(arg1);
+            return sys_read(arg1, arg2);
 
         case SYS_SCREEN_CODE: //syscall Screen
             return sys_screen(arg1, arg2, arg3, arg4);

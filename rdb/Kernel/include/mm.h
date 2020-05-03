@@ -2,8 +2,8 @@
     #define _MM_H
 
     #include <lib.h>
-    #define MIN_ADDRESS 0x600000
-    #define MAX_ADDRESS 0x1600000
+    #define MIN_ADDRESS 0x900000
+    #define MAX_ADDRESS 0x1900000
 
     typedef struct mm_stat {
         char * sys_name;  

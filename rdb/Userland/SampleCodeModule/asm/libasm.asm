@@ -70,7 +70,8 @@ _sys_rtc:
     ret
 
 _sys_read:
-    mov rsi, rdi  ; Arguments Shifting
+    mov rdx, rsi  ; Arguments Shifting
+    mov rsi, rdi  
     mov rdi, SYS_READ_CODE
     int 80h
     ret

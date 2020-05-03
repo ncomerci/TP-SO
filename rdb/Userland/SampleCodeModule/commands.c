@@ -28,8 +28,8 @@ void printUserManual(){
     println("- nice <pid> <priority>                --> Changes priority of process with PID <pid> to <priority>.");
     println("- kill <pid>                           --> Kills process with PID <pid>.");
     println("- block <pid>                          --> Switches process PID <pid> between BLOCKED and READY state.");     
-    println("- set                                  --> Sets some properties of the shell.");
     println("- loop                                 --> Creates background process named loop.");  
+    println("- set                                  --> Sets some properties of the shell.");
     println("       + writing_color                 --> Sets user writing color.");
     println("                       + [color_name]");
     println("                       + default");  
@@ -73,7 +73,7 @@ void getLocalTime(){
     printColored("Buenos Aires", 0xe37100);
     println(" is:");
     unsigned last_sec = getSecondsElapsed();
-    while ((_sys_read((void *) &c) != 0) || c != ESC) {
+    while ((_sys_read((void *) &c, (void *) 1) != 0) || c != ESC) {
         unsigned long actual_sec = getSecondsElapsed();
         if (!started || actual_sec > last_sec) {
             started = 1;
