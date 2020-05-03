@@ -5,6 +5,8 @@
 #include <sem.h>
 
 static int findColor(char * color);
+static int semProccess1(int argc, char ** argv);
+static int semProccess2(int argc, char ** argv); 
 
 static char * color_names[] = {"black", "red", "green", "yellow", "blue", "pink", "light_blue", "white"};
 static uint32_t color_rgb[] = {0x000000, 0xFF0000, 0x00FF00, 0xFFFF00, 0x0000FF, 0xFF00FF, 0x00FFFF, 0xFFFFFF};
@@ -17,13 +19,15 @@ static int semProccess1(int argc, char ** argv) {
     int i = 4;
 
     sem = sem_init_open(name, init_val);
-    while (i-- > 0)
-    {
-        sem_wait(sem);
-        printf("Sem Process 1 is active now!\nGiving control to Sem Process 2\n");
-        sem_post(sem);
-    }
-    
+
+    sem_wait(sem);
+    printf("Sem Process 1 is active now!\n");
+
+    wait(2000);
+
+    printf("Sem Process 1 is dead :O\n");
+    sem_post(sem);
+
     sem_close(sem);
     sem_unlink(name);
 
@@ -33,14 +37,16 @@ static int semProccess1(int argc, char ** argv) {
 static int semProccess2(int argc, char ** argv) {
     const char *name = "sem_test";
     sem_id sem = sem_open(name);
-    int i = 4;
 
-    while (i-- > 0)
-    {
-        sem_wait(sem);
-        printf("\nSem Process 2 here!\nGiving control back to Sem Process 1\n");
-        sem_post(sem);
-    }
+    sem_wait(sem);
+    printf("Sem Process 2 here!\n");
+
+    wait(2000);
+
+    printf("Sem Process 2 dead :(\n");
+
+    if (sem_post(sem) < 0)
+        printf("caca\n");
 
     return 0;
 }

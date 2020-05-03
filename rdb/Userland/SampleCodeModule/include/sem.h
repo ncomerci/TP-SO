@@ -3,6 +3,7 @@
 
 #define MAX_SEMAPHORES 15
 #define MAX_PROCESSES_PER_SEMAPHORE 10
+#define SEM_NAME_MAX_LENGTH 30
 
 typedef int sem_id;
 
@@ -18,7 +19,7 @@ typedef struct sem_queue {
 } sem_queue;
 
 typedef struct sem_t {
-    char * name;
+    char name[SEM_NAME_MAX_LENGTH];
     int lock; 
     unsigned int value;
     sem_queue processes[MAX_PROCESSES_PER_SEMAPHORE];

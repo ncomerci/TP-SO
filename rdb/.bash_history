@@ -67,3 +67,43 @@ make all
 gdb
 gdb
 gdb
+cd root
+make clean
+make all
+make clean
+make all
+make clean
+make all
+make clean
+make all
+make clean
+make all
+make clean
+make all
+gdb
+make clean
+make all
+gdb
+make clean
+make all
+gdb
+make clean
+make all
+
+make clean
+make all
+make clean
+make all
+gdb
+make clean
+make all
+make clean
+make all
+make clean
+make all
+exit
+cd root
+make clean
+cd ..
+cd
+make all

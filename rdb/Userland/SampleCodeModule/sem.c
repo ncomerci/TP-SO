@@ -12,7 +12,7 @@ static unsigned int sem_amount = 0;
 sem_id sem_open(const char * name) {
     unsigned int i = 0;
     int pid = getPid();
-    while (i < sem_size && semaphores[i].name != NULL) {
+    while (i < sem_size && semaphores[i].name[0] != '\0') {
         if (strcmp(semaphores[i].name, name) == 0) {
             unsigned int j = 0;
             while (j < semaphores[i].processes_size && semaphores[i].processes[j].pid != -1) {
@@ -23,20 +23,29 @@ sem_id sem_open(const char * name) {
             if (j >= MAX_PROCESSES_PER_SEMAPHORE) {
                 return -1;
             }
-            semaphores[i].processes[j].pid = pid; // Add pid to the processes appended to this semaphore
-            if (semaphores[i].processes_amount == semaphores[i].processes_size)
+            if (j == semaphores[i].processes_size)
                 semaphores[i].processes_size++; 
+            semaphores[i].processes[j].pid = pid; // Add pid to the processes appended to this semaphore
             semaphores[i].processes_amount++;   
             return i;
         }
         i++;
     }
     if (i < MAX_SEMAPHORES) {
-        semaphores[i].name = name;
+        strcpy(semaphores[i].name, name);
+        semaphores[i].first = NULL;
+        semaphores[i].last = NULL;
+        semaphores[i].value = 1;
         semaphores[i].lock = 0;
-        if (sem_amount == sem_size)
+        semaphores[i].processes_waiting = 0;
+        semaphores[i].processes[0].pid = pid;
+        semaphores[i].processes[0].next = NULL;
+        semaphores[i].processes_amount = 1;
+        semaphores[i].processes_size = 1;
+        if (i == sem_size)
             sem_size++;
         sem_amount++;
+        return 0;
     }
     else
         return -1;
@@ -51,7 +60,7 @@ sem_id sem_init_open(const char * name, unsigned int init_val) {
 }
 
 int sem_wait(sem_id sem){
-    if (sem < 0 || sem >= sem_size || semaphores[sem].name == NULL)
+    if (sem < 0 || sem >= sem_size || semaphores[sem].name[0] == '\0')
         return -1; // Semaphore does not exist    
 
     int pid = getPid();
@@ -65,7 +74,9 @@ int sem_wait(sem_id sem){
         changeState(pid, BLOCKED);   
     }
     semaphores[sem].value--;
-    semaphores[sem].lock = 1;
+    semaphores[sem].lock = 0;
+
+    return 0; 
 }
 
 static void enqueue(sem_t * sem, sem_queue * sq) {
@@ -101,12 +112,12 @@ static int getIndexOnSem(int pid, sem_t * sem) {
 }
 
 int sem_post(sem_id sem) {
-    if (sem < 0 || sem >= sem_size || semaphores[sem].name == NULL)
+    if (sem < 0 || sem >= sem_size || semaphores[sem].name[0] == '\0')
         return -1; // Semaphore does not exist
 
     while (semaphores[sem].lock);
     semaphores[sem].value++;
-    semaphores[sem].lock = 1;
+    semaphores[sem].lock = 0;
 
     if (semaphores[sem].processes_waiting > 0) {
         int pid = dequeuePid(&(semaphores[sem]));
@@ -118,7 +129,7 @@ int sem_post(sem_id sem) {
 }
 
 int sem_close(sem_id sem) { //remove a ps from semaphore
-    if (sem < 0 || sem >= sem_size || semaphores[sem].name == NULL)
+    if (sem < 0 || sem >= sem_size || semaphores[sem].name[0] == '\0')
         return -1; // Semaphore does not exist
     int pid = getPid();
     unsigned int i = 0;
@@ -136,7 +147,7 @@ int sem_close(sem_id sem) { //remove a ps from semaphore
 }
 
 int sem_getvalue(sem_id sem, int * sval) { // sval is either 0 is returned; or a negative number whose absolute value is the count of the number of processes and threads currently blocked in sem_wait(3)
-    if (sem < 0 || sem >= sem_size || semaphores[sem].name == NULL)
+    if (sem < 0 || sem >= sem_size || semaphores[sem].name[0] == '\0')
         return -1; // Semaphore does not exist
     *sval = - semaphores[sem].processes_waiting; 
     return (int) semaphores[sem].value; 
@@ -145,8 +156,8 @@ int sem_getvalue(sem_id sem, int * sval) { // sval is either 0 is returned; or a
 int sem_unlink(const char * name){ //remove semaphore
     unsigned int i = 0;
     while (i < sem_size) {
-        if (semaphores[i].name != NULL && strcmp(semaphores[i].name, name) == 0) {
-            semaphores[i].name = NULL;
+        if (semaphores[i].name[0] != '\0' && strcmp(semaphores[i].name, name) == 0) {
+            semaphores[i].name[0] = '\0';
             if (i == sem_size - 1)
                 sem_size--;
             sem_amount--;
