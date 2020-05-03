@@ -1,4 +1,4 @@
-#include <lib.h>
+#include <lib_user.h>
 #include <sem.h>
 
 static sem_t semaphores[MAX_SEMAPHORES];

@@ -25,5 +25,8 @@ void testProcess(void);
 int testProcess1Main(int argc, char **argv);
 int loopMain(int argc, char ** argv);
 int main_test_mm(int argc, char ** argv);
+void testSem(void);
+static int semProccess1(int argc, char ** argv);
+static int semProccess2(int argc, char ** argv);
 
 #endif
