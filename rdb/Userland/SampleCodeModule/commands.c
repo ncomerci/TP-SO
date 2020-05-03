@@ -2,12 +2,48 @@
 #include <stdint.h>
 #include <shell.h>
 #include <lib_user.h>
+#include <sem.h>
 
 static int findColor(char * color);
 
 static char * color_names[] = {"black", "red", "green", "yellow", "blue", "pink", "light_blue", "white"};
 static uint32_t color_rgb[] = {0x000000, 0xFF0000, 0x00FF00, 0xFFFF00, 0x0000FF, 0xFF00FF, 0x00FFFF, 0xFFFFFF};
 static char * processess_states[] = {"READY", "BLOCKED", "KILLED"};
+
+static int semProccess1(int argc, char ** argv) {
+    unsigned int init_val = 1;
+    sem_id sem;
+    const char *name = "sem_test";
+    int i = 4;
+
+    sem = sem_init_open(name, init_val);
+    while (i-- > 0)
+    {
+        sem_wait(sem);
+        printf("Sem Process 1 is active now!\nGiving control to Sem Process 2\n");
+        sem_post(sem);
+    }
+    
+    sem_close(sem);
+    sem_unlink(name);
+
+    return 0;
+}
+
+static int semProccess2(int argc, char ** argv) {
+    const char *name = "sem_test";
+    sem_id sem = sem_open(name);
+    int i = 4;
+
+    while (i-- > 0)
+    {
+        sem_wait(sem);
+        printf("\nSem Process 2 here!\nGiving control back to Sem Process 1\n");
+        sem_post(sem);
+    }
+
+    return 0;
+}
 
 void printUserManual(){
     println(" _   _                ___  ___                        _ "); 
@@ -38,6 +74,7 @@ void printUserManual(){
     //println("       + inv_op_code                   --> Tests Invalid Op-code.");
     println("       + mem                           --> Tests Memory Allocation."); 
     println("       + process                       --> Tests Processes");
+    println("       + sem                           --> Tests Semaphores");
     println("");
 }
 
@@ -73,7 +110,7 @@ void getLocalTime(){
     printColored("Buenos Aires", 0xe37100);
     println(" is:");
     unsigned last_sec = getSecondsElapsed();
-    while ((_sys_read((void *) &c, (void *) 1) != 0) || c != ESC) {
+    while (((c = scanChar()) != 0) || c != ESC) {
         unsigned long actual_sec = getSecondsElapsed();
         if (!started || actual_sec > last_sec) {
             started = 1;
@@ -253,6 +290,15 @@ void testMM(void) {
     printf("Created process pid: %d\n", pid);
 }
 
+void testSem(void) {
+    main_func_t sem1 = {semProccess1, 0, NULL};
+    main_func_t sem2 = {semProccess2, 0, NULL};
+    int pid1 = createProcess(&sem1, "Test Semaphore 1", 0);
+    printf("Sem Proccess 1 pid: %d\n", pid1);
+    int pid2 = createProcess(&sem2, "Test Semaphore 2", 0);
+    printf("Sem Proccess 2 pid: %d\n", pid2);
+}
+
 void test(char * option) {
 
     if (strcmp(option, "mem") == 0)
@@ -261,6 +307,8 @@ void test(char * option) {
         testProcess();
     else if(strcmp(option, "mm") == 0)
         testMM();//testMM();
+    else if(strcmp(option, "sem") == 0)
+        testSem();
     /*
     else if (strcmp(option, "zero_div") == 0)
         testDivException();
