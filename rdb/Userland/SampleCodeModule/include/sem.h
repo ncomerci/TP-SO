@@ -20,7 +20,7 @@ typedef struct sem_queue {
 
 typedef struct sem_t {
     char name[SEM_NAME_MAX_LENGTH];
-    int lock; 
+    char lock; 
     unsigned int value;
     sem_queue processes[MAX_PROCESSES_PER_SEMAPHORE];
     unsigned int processes_amount; //processes not closed 
@@ -30,12 +30,13 @@ typedef struct sem_t {
     sem_queue * last;
 } sem_t;
 
+void spin_lock(char * lock);
+void spin_unlock(char * lock);
 sem_id sem_open(const char * name);
 sem_id sem_init_open(const char * name, unsigned int init_val);
 int sem_wait(sem_id sem);
 int sem_post(sem_id sem);
 int sem_close(sem_id sem);
 int sem_getvalue(sem_id sem, int * sval);
-int sem_unlink(const char * name);
 
 #endif

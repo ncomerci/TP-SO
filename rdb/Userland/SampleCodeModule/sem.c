@@ -68,13 +68,15 @@ int sem_wait(sem_id sem){
     if (idx < 0)
         return -1;
 
-    while (semaphores[sem].lock);
+    spin_lock(&(semaphores[sem].lock));
     if (semaphores[sem].value == 0) {
         enqueue(&(semaphores[sem]), &(semaphores[sem].processes[idx]));
+        spin_unlock(&(semaphores[sem].lock));
         changeState(pid, BLOCKED);   
+        spin_lock(&(semaphores[sem].lock));
     }
     semaphores[sem].value--;
-    semaphores[sem].lock = 0;
+    spin_unlock(&(semaphores[sem].lock));
 
     return 0; 
 }
@@ -115,9 +117,9 @@ int sem_post(sem_id sem) {
     if (sem < 0 || sem >= sem_size || semaphores[sem].name[0] == '\0')
         return -1; // Semaphore does not exist
 
-    while (semaphores[sem].lock);
+    spin_lock(&(semaphores[sem].lock));
     semaphores[sem].value++;
-    semaphores[sem].lock = 0;
+    spin_unlock(&(semaphores[sem].lock));
 
     if (semaphores[sem].processes_waiting > 0) {
         int pid = dequeuePid(&(semaphores[sem]));
@@ -139,6 +141,12 @@ int sem_close(sem_id sem) { //remove a ps from semaphore
             if (i == semaphores[sem].processes_size - 1)
                 semaphores[sem].processes_size--;
             semaphores[sem].processes_amount--;
+            if (semaphores[sem].processes_amount == 0) { // delete semaphore
+                semaphores[sem].name[0] = '\0';
+                if (sem == sem_size - 1)
+                    sem_size--;
+                sem_amount--;
+            }
             return 0;
         }
         i++;
@@ -151,19 +159,4 @@ int sem_getvalue(sem_id sem, int * sval) { // sval is either 0 is returned; or a
         return -1; // Semaphore does not exist
     *sval = - semaphores[sem].processes_waiting; 
     return (int) semaphores[sem].value; 
-}
-
-int sem_unlink(const char * name){ //remove semaphore
-    unsigned int i = 0;
-    while (i < sem_size) {
-        if (semaphores[i].name[0] != '\0' && strcmp(semaphores[i].name, name) == 0) {
-            semaphores[i].name[0] = '\0';
-            if (i == sem_size - 1)
-                sem_size--;
-            sem_amount--;
-            return 0;
-        }
-        i++;
-    }
-    return -1; // semaphore was not found
 }

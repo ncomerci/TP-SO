@@ -29,7 +29,6 @@ static int semProccess1(int argc, char ** argv) {
     sem_post(sem);
 
     sem_close(sem);
-    sem_unlink(name);
 
     return 0;
 }
@@ -47,6 +46,8 @@ static int semProccess2(int argc, char ** argv) {
 
     if (sem_post(sem) < 0)
         printf("caca\n");
+
+    sem_close(sem);
 
     return 0;
 }
