@@ -44,8 +44,7 @@ static int semProccess2(int argc, char ** argv) {
 
     printf("Sem Process 2 dead :(\n");
 
-    if (sem_post(sem) < 0)
-        printf("caca\n");
+    sem_post(sem);
 
     sem_close(sem);
 
