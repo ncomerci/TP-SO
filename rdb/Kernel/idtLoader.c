@@ -35,8 +35,7 @@ void setup_IDT_entry (int index, uint64_t offset) { //recibe el num de interrupc
 
 
 void load_idt() {
-  _cli(); //deshabilito las ints
-  
+
   setup_IDT_entry (0x20, (uint64_t) &_irq00Handler); // Timer tick handler //0x20 timer tick anterior
 
   // Configuro frecuencia PIC
@@ -60,5 +59,4 @@ void load_idt() {
   picMasterMask(0xFC); //los ultimos estan en 0 ;)
   picSlaveMask(0x00);
 
-  _sti(); //las seteo de nuevo
 }

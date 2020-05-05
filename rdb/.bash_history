@@ -107,3 +107,5 @@ make clean
 cd ..
 cd
 make all
+cd
+gdb

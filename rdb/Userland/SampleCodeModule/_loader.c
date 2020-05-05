@@ -12,10 +12,7 @@ int _start() {
 	//Clean BSS
 	memset(&bss, 0, &endOfBinary - &bss);
 	
-	main_func_t scm = {main, 0, NULL};
-	createProcess(&scm, "Shell", 1);
-
-	halt_and_wait();
+	main();
 	return 0;
 }
 

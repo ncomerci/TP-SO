@@ -4,7 +4,7 @@
 #include <shell.h>
 #include <sampleCodeModule.h>
 
-int main(int argc, char ** argv) {
+int main() {
 
 	startShell();
 	return 0;

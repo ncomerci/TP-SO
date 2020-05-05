@@ -1,5 +1,5 @@
 #include <lib_user.h>
-//#include <aracnoid.h>
+#include <aracnoid.h>
 #include <commands.h>
 #include <shell.h>
 
@@ -44,8 +44,8 @@ static int user_string_size;
 
 static int c;
 
-// static gameState aracnoid_save;
-// static int aracnoid_saved;
+static gameState aracnoid_save;
+static int aracnoid_saved;
 
 void startShell(){
     user_writing_color = USER_COLOR;
@@ -226,12 +226,10 @@ static void instructionHandler() {
 
             case 0:
                 if (strcmp(cmd, "aracnoid") == 0) {
-                    printError("Game is in maintenance.\n");
-                    /*
+                    //printError("Game is in maintenance.\n");
                     startAracnoid(&aracnoid_save, &aracnoid_saved);
                     if(aracnoid_saved)
                         printColored("\n                                    Aracnoid is saved! type \"aracnoid\" to resume the game.\n\n", 0x04E798);
-                    */
                     executed = 0;
                 }
                 else

@@ -45,16 +45,15 @@ int main() {
 	init_VM_Driver();
 	init_screen();
 
+	_cli(); //deshabilito las ints
 	load_idt();
 
-	/*
 	main_func_t aux = {(int (*)(int, char **)) sampleCodeModuleAddress, 0, NULL};
-	createProcess(&aux, "SampleCodeModule", 1);
+	int pid;
+	createProcess(&aux, "Shell", 1, &pid);
 
-	_halt_and_wait();
-	*/
-
-	((int (*)(int,char**))sampleCodeModuleAddress)(0, NULL);
+	_sti(); //las seteo de nuevo
+	_int81();
 
 	return 0;
 }
