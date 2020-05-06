@@ -48,6 +48,7 @@ static gameState aracnoid_save;
 static int aracnoid_saved;
 
 void startShell(){
+    changePriority(getPid(), 0);
     user_writing_color = USER_COLOR;
     setBackgroundColor(USER_BACKGROUND_COLOR);
     int real_buff_size = BUFFER_SIZE - strlen(user) - strlen(syst_name);

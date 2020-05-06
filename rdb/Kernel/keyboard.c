@@ -113,7 +113,7 @@ int special_key(uint8_t key) {
 
 // Returns 0 if something has been read
 int sys_read(void * buff, void * count) {
-  unsigned int max_size = (unsigned int) count;
+  unsigned int max_size = (unsigned int)(uint64_t) count;
   if (max_size == 0)
     return 0;
 

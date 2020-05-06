@@ -51,7 +51,7 @@ void free(void * ptr);
 mm_stat getMMStats(void);
 
 // ----------- Process ------------
-typedef enum PROCESS_STATE {READY = 0, BLOCKED, KILLED} process_state;
+typedef enum process_state {READY = 0, BLOCKED, KILLED} process_state;
 
 typedef struct PCB_info {
     char name[MAX_PROCESS_NAME_LENGTH];

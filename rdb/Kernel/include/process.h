@@ -43,7 +43,7 @@
     uint64_t ss;
 } stackProcess;
 
-    typedef enum PROCESS_STATE {READY = 0, BLOCKED, KILLED} process_state;
+    typedef enum process_state {READY = 0, BLOCKED, KILLED} process_state;
 
     typedef struct PCB {
         char name[MAX_NAME_LENGTH];

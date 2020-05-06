@@ -7,7 +7,6 @@ static void prepareStackProcess(int (*main)(int argc, char ** argv), int argc, c
 static void * getNextProcess(void * rsp);
 static void updateProcess(PCB * pp);
 static void enqueueProcess(PCB * pp);
-static void dequeueProcess(PCB * pp);
 static void initQuantums(void);
 static void createHalter(void);
 
@@ -29,11 +28,8 @@ int processes_size = 0; //array size
 int processes_alive = 0; //without the killed ones
 int processes_ready = 0;
 int processes_so_far = 0; //processes created, for the pid to be uique
-int started = 0;
 
 void * scheduler(void * rsp) {
-
-    //printString("scheduler\n", 11);
 
     if (!initialized) {
         initQuantums();
@@ -42,7 +38,6 @@ void * scheduler(void * rsp) {
     }
 
     if (curr_process != NULL || processes_ready > 0) { // curr_process == NULL && process_ready = 0 in case current was blocked
-        //printString("hay proceso\n",13);
         act_queue = queues[actual_queue];
         exp_queue = queues[1 - actual_queue];
 
@@ -67,21 +62,15 @@ void * scheduler(void * rsp) {
                     enqueueProcess(curr_process); // Expires the current process
             }
             else {
-                //printString("Keep running Forest!\n", 22);
                 return rsp; //keep running
             }
         }
-        //printString("proximo proceso\n", 17);
         // get next process
         return getNextProcess(rsp);
     }
 
     else { //there are no processes ready
-        ////printString("no hay proceso\n", 16);
-        if ( started )// If RIP >= sampleCodeModuleAddress => Kernel is not running
-            return halter.rsp;
-        else
-            return rsp;
+        return halter.rsp;
     }
 }
 
@@ -154,9 +143,6 @@ static void * getNextProcess(void * rsp) {
 int createProcess(main_func_t * main_f, char * name, int foreground, int * pid) {
     ////printString("Creando proceso!", 17);
     int i = 0;
-
-    if (!started)
-        started = 1;
 
     while(i < processes_size && processes[i].state != KILLED)
         i++;
@@ -235,49 +221,6 @@ static void enqueueProcess(PCB * pp) {
     if (exp_queue[pp->priority].last != NULL)
         (exp_queue[pp->priority].last)->next_in_queue = pp;
     exp_queue[pp->priority].last = pp;
-}
-
-static void dequeueProcess(PCB * pp) {
-    if (act_queue == NULL || exp_queue == NULL) {
-        act_queue = queues[actual_queue];
-        exp_queue = queues[1 - actual_queue];
-    }
-
-    // Remove from list
-    unsigned int i = 0;
-    PCB ** last;
-    PCB * aux;
-    while (i < MAX_PRIORITY - MIN_PRIORITY + 1) {
-        last = (act_queue[i].first);
-        if (act_queue[i].first != NULL) {
-            aux = act_queue[i].first;
-            while (aux != NULL && aux != pp) {
-                last = &(aux->next_in_queue);
-                aux = aux->next_in_queue;
-            }
-            if (aux != NULL && aux == pp) {
-                *last = aux->next_in_queue;  // Lo saco de la cola
-                return;
-            }
-        }
-        i++;
-    }
-    i = 0;
-    while (i < MAX_PRIORITY - MIN_PRIORITY + 1) {
-        last = (exp_queue[i].first);
-        if (exp_queue[i].first != NULL) {
-            aux = exp_queue[i].first;
-            while (aux != NULL && aux != pp) {
-                last = &(aux->next_in_queue);
-                aux = aux->next_in_queue;
-            }
-            if (aux != NULL && aux == pp) {
-                *last = aux->next_in_queue;  // Lo saco de la cola
-                return;
-            }
-        }
-        i++;
-    }
 }
 
 int kill(int pid) {

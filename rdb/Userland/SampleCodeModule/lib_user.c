@@ -223,8 +223,10 @@ int printf(const char *format, ...) {
 				}
 				printDec(num);
 				break;
+			case 'p': // Si es pointer
+				printf("0x");
 			case 'x': // Si es hexadecimal
-				num = va_arg(pa, unsigned int);
+				num = va_arg(pa, uint64_t);
 				printHex(num);
 				break;
 			case 'X':

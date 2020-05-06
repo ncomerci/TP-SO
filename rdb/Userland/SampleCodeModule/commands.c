@@ -16,7 +16,6 @@ static int semProccess1(int argc, char ** argv) {
     unsigned int init_val = 1;
     sem_id sem;
     const char *name = "sem_test";
-    int i = 4;
 
     sem = sem_init_open(name, init_val);
 
@@ -178,10 +177,10 @@ void testMem(void){
     printf("Copied?: %s\n", line2);
     printMMStats();
     void * aux = malloc((1 << 22) - 8);
-    printf("Malloc returned %d\n", (int) aux);
+    printf("Malloc returned %p\n", (uint64_t) aux);
     printMMStats();
     void * aux2 = malloc(100);
-    printf("Malloc returned %d\n", (int) aux2);
+    printf("Malloc returned %p\n", (uint64_t) aux2);
     printMMStats();
     free(line2);
     printf("Freed line2\n");
@@ -217,8 +216,8 @@ void printProcesses(void) {
         printf("PID: %d\n", info[i].pid);
         printf("PPID: %d\n", info[i].ppid);
         printf("Priority: %d\n", (int) info[i].priority);
-        printf("RBP: %d\n", (int) info[i].rbp);
-        printf("RSP: %d\n", (int) info[i].rsp);
+        printf("RBP: %p\n", (uint64_t) info[i].rbp);
+        printf("RSP: %p\n", (uint64_t) info[i].rsp);
         printf("State: %s\n", processess_states[(int) info[i].state]);
         printf("Foreground: %s\n", (info[i].foreground != 0)?"Yes":"No");
         printf("Time left: %d ticks\n", (int) info[i].given_time);
@@ -291,8 +290,14 @@ int loopMain(int argc, char ** argv) {
 }
 
 void testMM(void) {
-    main_func_t testmm = {main_test_mm, 100, NULL};
-    int pid = createProcess(&testmm, "Test Process", 0);
+    main_func_t testmm = {main_test_mm, 0, NULL};
+    int pid = createProcess(&testmm, "Test MM", 0);
+    printf("Created process pid: %d\n", pid);
+}
+
+void testPS(void) {
+    main_func_t testps = {main_test_process, 0, NULL};
+    int pid = createProcess(&testps, "Test PS", 0);
     printf("Created process pid: %d\n", pid);
 }
 
@@ -313,6 +318,8 @@ void test(char * option) {
         testProcess();
     else if(strcmp(option, "mm") == 0)
         testMM();//testMM();
+    else if (strcmp(option, "ps") == 0)
+        testPS();
     else if(strcmp(option, "sem") == 0)
         testSem();
     /*

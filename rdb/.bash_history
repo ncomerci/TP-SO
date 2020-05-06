@@ -109,3 +109,11 @@ cd
 make all
 cd
 gdb
+cd
+ls
+ls -la
+vim .dckr_gdb
+vim .dckr_gdb.sh
+sed -i -e 's/\r$//' .win_gdb.sh
+sed -i -e 's/\r$//' .dckr_gdb.sh
+sed -i -e 's/\r$//' .dckr_gdb
