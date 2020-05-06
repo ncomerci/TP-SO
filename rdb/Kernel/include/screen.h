@@ -23,6 +23,6 @@ int printBase(uint64_t value, uint32_t base);
 uint32_t uintToBase(uint64_t value, char * buffer, uint32_t base);
 int print64Hex(uint64_t value);
 
-int sys_screen(void * option, void * arg1, void * arg2, void * arg3);
+int sys_screen(void * option, void * arg1, void * arg2);
 
 #endif

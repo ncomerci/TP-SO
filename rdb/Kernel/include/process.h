@@ -5,7 +5,6 @@
 
     #define MAX_PROCESSES 50
     #define MAX_NAME_LENGTH 50
-    #define MAX_FDS 20
     #define MAX_STACK_PER_PROCESS (1 << 17) //128KB
     #define HALTER_EXTRA_STACK_SPACE 20
     #define INT_PUSH_STATE 5
@@ -84,18 +83,31 @@
         char ** argv;
     } main_func_t;
 
+    typedef struct ps_info_t {
+        main_func_t * main;
+        char * name;
+        int foreground;
+    } ps_info_t;
+
+    typedef struct fd_info_t {
+        char * in;
+        char * out;
+    } fd_info_t;
+
     void * scheduler(void * rsp);
 
-    int createProcess(main_func_t * main_f, char * name, int foreground, int * pid);
+    int createProcess(ps_info_t * ps_info, fd_info_t * fd_info, int * pid);
     int kill(int pid);
     int getPid(int * pid);
+    int getCurrentIdx(void);
     int getProcessesAlive(unsigned int * amount);
     int getProcessesInfo(PCB_info * arr, unsigned int max_size, unsigned int * size);
-    int exit();
+    int exit(void);
     int changePriority(int pid, unsigned int new_priority);
     int changeState(int pid, process_state new_state);
     int changeForegroundStatus(int pid, int status);
     int isCurrentForeground(void);
-    int sys_process(void * option, void * arg1, void * arg2, void * arg3, void * arg4); 
+    int sys_process(void * option, void * arg1, void * arg2, void * arg3);
+    int getCurrentIdx(void); 
 
 #endif

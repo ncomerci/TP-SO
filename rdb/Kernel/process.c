@@ -1,6 +1,7 @@
 #include <process.h>
 #include <timet.h>
 #include <screen.h>
+#include <fd.h>
 #include <mm.h>
 
 static void prepareStackProcess(int (*main)(int argc, char ** argv), int argc, char ** argv, void * rbp, void * rsp);
@@ -140,8 +141,18 @@ static void * getNextProcess(void * rsp) {
     }
 }
 
-int createProcess(main_func_t * main_f, char * name, int foreground, int * pid) {
-    ////printString("Creando proceso!", 17);
+int createProcess(ps_info_t * ps_info, fd_info_t * fd_info, int * pid) {
+    
+    if (ps_info == NULL || fd_info == NULL || pid == NULL)
+        return -1;
+
+    main_func_t * main_f = ps_info->main;
+    char * name = ps_info->name;
+    int foreground = ps_info->foreground;
+
+    char * in = fd_info->in;
+    char * out = fd_info->out;
+
     int i = 0;
 
     while(i < processes_size && processes[i].state != KILLED)
@@ -179,6 +190,8 @@ int createProcess(main_func_t * main_f, char * name, int foreground, int * pid) 
         //printString("Process created at index:", 26);
         //printDec(i);
         //printString("\n", 2);
+
+        assignInAndOut(i, in, out);
 
         prepareStackProcess(main_f->f, main_f->argc, main_f->argv, processes[i].rbp, processes[i].rsp);
 
@@ -230,6 +243,12 @@ int kill(int pid) {
 int getPid(int * pid) {
     *pid = curr_process->pid;
     return 0;
+}
+
+int getCurrentIdx(void) {
+    if (curr_process == NULL)
+        return -1;
+    return (( (uint64_t) curr_process - (uint64_t) processes ) / sizeof(PCB));
 }
 
 int getProcessesAlive(unsigned int * amount) {
@@ -356,11 +375,11 @@ int isCurrentForeground(void) {
     return curr_process->foreground;
 }
 
-int sys_process(void * option, void * arg1, void * arg2, void * arg3, void * arg4) {
+int sys_process(void * option, void * arg1, void * arg2, void * arg3) {
     
     switch ((uint64_t) option) {
         case 0:
-            return createProcess((main_func_t *) arg1, (char *) arg2, (int)(uint64_t) arg3, (int *) arg4);
+            return createProcess((ps_info_t *) arg1, (fd_info_t *) arg2, (int *) arg3);
             break;
         case 1:
             return kill((int)(uint64_t) arg1); 

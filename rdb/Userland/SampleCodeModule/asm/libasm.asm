@@ -2,7 +2,7 @@ GLOBAL _sys_system
 GLOBAL _sys_process
 GLOBAL _sys_timet
 GLOBAL _sys_rtc
-GLOBAL _sys_read
+GLOBAL _sys_fd
 GLOBAL _sys_screen
 GLOBAL _sys_video
 GLOBAL _sys_sound
@@ -49,8 +49,7 @@ _sys_system:
     ret   
 
 _sys_process:
-    mov r9, r8    ; Arguments Shifting
-    mov r8, rcx
+    mov r8, rcx   ; Arguments Shifting
     mov rcx, rdx
     mov rdx, rsi
     mov rsi, rdi
@@ -72,16 +71,18 @@ _sys_rtc:
     int 80h
     ret
 
-_sys_read:
-    mov rdx, rsi  ; Arguments Shifting
-    mov rsi, rdi  
-    mov rdi, SYS_READ_CODE
+_sys_fd:
+    mov r9, r8    ; Arguments Shifting
+    mov r8, rcx
+    mov rcx, rdx
+    mov rdx, rsi
+    mov rsi, rdi
+    mov rdi, SYS_FD_CODE
     int 80h
     ret
 
 _sys_screen:
-    mov r8, rcx   ; Arguments Shifting
-    mov rcx, rdx
+    mov rcx, rdx  ; Arguments Shifting
     mov rdx, rsi
     mov rsi, rdi
     mov rdi, SYS_SCREEN_CODE
@@ -180,7 +181,7 @@ SYS_SYSTEM_CODE equ 0
 SYS_PROCESS_CODE equ 1
 SYS_TICKS_CODE equ 2
 SYS_RTC_CODE equ 3
-SYS_READ_CODE equ 4
+SYS_FD_CODE equ 4
 SYS_SCREEN_CODE equ 5
 SYS_VIDEO_CODE equ 6
 SYS_SOUND_CODE equ 7

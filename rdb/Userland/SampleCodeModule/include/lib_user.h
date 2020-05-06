@@ -28,11 +28,11 @@ typedef struct point {
 
 // ----------- Sys Calls ------------
 int _sys_system(void * arg1, void * arg2, void * arg3, void * arg4);
-int _sys_process(void * arg1, void * arg2, void * arg3, void * arg4, void * arg5);
+int _sys_process(void * arg1, void * arg2, void * arg3, void * arg4);
 int _sys_timet(void * arg1, void * arg2, void * arg3);
 int _sys_rtc(void * arg1);
-int _sys_read(void * arg1, void * arg2);
-int _sys_screen(void * arg1, void * arg2, void * arg3, void * arg4);
+int _sys_fd(void * arg1, void * arg2, void * arg3, void * arg4, void * arg5);
+int _sys_screen(void * arg1, void * arg2, void * arg3);
 int _sys_video(void * arg1, void * arg2, void * arg3, void * arg4, void * arg5);
 int _sys_sound(void * arg1, void * arg2, void * arg3);
 
@@ -72,7 +72,18 @@ typedef struct main_func_t {
     char ** argv;
 } main_func_t;
 
-int createProcess(main_func_t * main_f, char * name, int foreground);
+typedef struct ps_info_t {
+    main_func_t * main;
+    char * name;
+    int foreground;
+} ps_info_t;
+
+typedef struct fd_info_t {
+    char * in;
+    char * out;
+} fd_info_t;
+
+int createProcess(main_func_t * main_f, char * name, int foreground, char * in, char * out);
 int kill(int pid);
 int getPid(void);
 unsigned int getProcessesAlive(void);
@@ -142,6 +153,7 @@ unsigned int strlen(const char *str);
 int strcmp (const char * s1, const char * s2);
 int strncmp(const char *s1, const char *s2, unsigned int n);
 int strcpy (char *dst, const char *src);
+int strcat(char *dst, const char *src);
 long int strtoint(char* s);
 int is_num(char *s);
 

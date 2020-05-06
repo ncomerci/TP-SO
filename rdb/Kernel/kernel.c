@@ -49,8 +49,10 @@ int main() {
 	load_idt();
 
 	main_func_t aux = {(int (*)(int, char **)) sampleCodeModuleAddress, 0, NULL};
+	ps_info_t ps_aux = {&aux, "Shell", 1};
+	fd_info_t fd_aux = {NULL, NULL};
 	int pid;
-	createProcess(&aux, "Shell", 1, &pid);
+	createProcess(&ps_aux, &fd_aux, &pid);
 
 	_sti(); //las seteo de nuevo
 	_int81();

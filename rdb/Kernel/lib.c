@@ -49,10 +49,29 @@ void * memcpy(void * destination, const void * source, uint64_t length)
 	return destination;
 }
 
+unsigned int strlen(const char *str) {
+	int i = 0; 
+	while (str[i++] != 0);
+	return i - 1;
+}
+
 int strcpy(char *dst, const char *src) {
 	int i = 0;
 	do {
 		dst[i] = src[i];
 	} while(src[i++] != 0);
 	return 0;
+}
+
+int strcat(char *dst, const char *src) {
+	return strcpy(dst + strlen(dst), src);
+}
+
+int strcmp(const char *s1, const char *s2) {
+    unsigned char c1, c2;
+    while ((c1 = *s1++) == (c2 = *s2++)) {
+        if (c1 == '\0')
+            return 0;
+    }
+    return c1 - c2;
 }

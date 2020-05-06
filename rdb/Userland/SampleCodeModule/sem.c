@@ -10,6 +10,8 @@ static unsigned int sem_size = 0;
 static unsigned int sem_amount = 0; 
 
 sem_id sem_open(const char * name) {
+    if (name == NULL || *name == '\0')
+        return -1;
     unsigned int i = 0;
     int pid = getPid();
     while (i < sem_size && semaphores[i].name[0] != '\0') {

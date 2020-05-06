@@ -26,7 +26,7 @@ static void welcomeMessage(void);
 
 static char inputBuffer[BUFFER_SIZE];
 static char commandsHistory[COMMANDS_BUFFER_SIZE][BUFFER_SIZE];
-static char * commands[] = {"clear", "clock",  "help", "inforeg", "kill", "mem", "nice", "printmem", "ps", "set", "set writing_color", "test", "test mm", "test mem", "test process", "test sem"};
+static char * commands[] = {"clear", "clock",  "help", "inforeg", "kill", "mem", "nice", "printmem", "ps", "set", "set writing_color", "test", "test mm", "test mem", "test pipe", "test process", "test ps", "test sem"};
 static char * void_func[] = {"help", "clock", "inforeg", "clear", "ps", "loop", "mem"};
 static void (*void_commands_func[])(void) = {printUserManual, getLocalTime, printRegistersInfo, clear, printProcesses, loop, printMMStats};
 

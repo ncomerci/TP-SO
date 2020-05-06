@@ -7,6 +7,7 @@
 static int findColor(char * color);
 static int semProccess1(int argc, char ** argv);
 static int semProccess2(int argc, char ** argv); 
+static int pipeProccess(int argc, char ** argv);
 
 static char * color_names[] = {"black", "red", "green", "yellow", "blue", "pink", "light_blue", "white"};
 static uint32_t color_rgb[] = {0x000000, 0xFF0000, 0x00FF00, 0xFFFF00, 0x0000FF, 0xFF00FF, 0x00FFFF, 0xFFFFFF};
@@ -50,6 +51,22 @@ static int semProccess2(int argc, char ** argv) {
     return 0;
 }
 
+static int pipeProccess(int argc, char ** argv) {
+    char c;
+    const int buff_size = 31;
+    char buff[buff_size];
+    int count = 0;
+    while((c = scanChar()) != argv[0][0]) {
+        if(count < buff_size-1)
+            buff[count++] = c;
+    }
+    buff[count++] = '\n';
+    buff[count] = '\0';
+    printf(buff);
+
+    return 0;
+}
+
 void printUserManual(){
     println(" _   _                ___  ___                        _ "); 
     println("| | | |               |  \\/  |                       | |");
@@ -80,6 +97,7 @@ void printUserManual(){
     println("       + mem                           --> Tests Memory Allocation."); 
     println("       + process                       --> Tests Processes");
     println("       + sem                           --> Tests Semaphores");
+    println("       + pipe                          --> Tests Pipes");
     println("");
 }
 
@@ -210,19 +228,9 @@ void printProcesses(void) {
     PCB_info info[MAX_PROCESSES];
     int amount = getProcessesInfo(info, MAX_PROCESSES);
     printf("Processes:\n");
-    for (unsigned int i = 0; i < amount; i++) {
-        printf("\\--- Process number %d ---/\n", i);
-        printf("--> Process Name: %s <--\n", info[i].name);
-        printf("PID: %d\n", info[i].pid);
-        printf("PPID: %d\n", info[i].ppid);
-        printf("Priority: %d\n", (int) info[i].priority);
-        printf("RBP: %p\n", (uint64_t) info[i].rbp);
-        printf("RSP: %p\n", (uint64_t) info[i].rsp);
-        printf("State: %s\n", processess_states[(int) info[i].state]);
-        printf("Foreground: %s\n", (info[i].foreground != 0)?"Yes":"No");
-        printf("Time left: %d ticks\n", (int) info[i].given_time);
-        printf("Quantums: %d\n", (int) info[i].aging);    
-   }
+    printf("PID, PPID, Name, Piority, RBP, RSP, State, Foreground, Time left, Quantums\n");
+    for (unsigned int i = 0; i < amount; i++)
+        printf("%d, %d, %s, %d, %p, %p, %s, %s, %d, %d\n", info[i].pid, info[i].ppid, info[i].name, (int) info[i].priority, (uint64_t) info[i].rbp, (uint64_t) info[i].rsp, processess_states[(int) info[i].state], (info[i].foreground != 0)?"Yes":"No", (int) info[i].given_time, (int) info[i].aging);   
 }
 
 void killProcess(int pid) {
@@ -262,13 +270,13 @@ void changeProcessPriority(int pid, unsigned int priority) {
 
 void testProcess(void) {
     main_func_t testprocess = {testProcess1Main, 100, NULL};
-    int pid = createProcess(&testprocess, "Test Process", 1);
+    int pid = createProcess(&testprocess, "Test Process", 1, NULL, NULL);
     printf("Created process pid: %d\n", pid);
 }
 
 void loop(void) {
     main_func_t loop = {loopMain, 0, NULL};
-    int pid = createProcess(&loop, "Loop", 0);
+    int pid = createProcess(&loop, "Loop", 0, NULL, NULL);
     printf("Created process pid: %d\n", pid);
     //changeState(pid, 1);
     //printf("Process %d %s\n", pid, (kill(pid) == 0)?"Killed":"Not Killed");
@@ -291,23 +299,34 @@ int loopMain(int argc, char ** argv) {
 
 void testMM(void) {
     main_func_t testmm = {main_test_mm, 0, NULL};
-    int pid = createProcess(&testmm, "Test MM", 0);
+    int pid = createProcess(&testmm, "Test MM", 0, NULL, NULL);
     printf("Created process pid: %d\n", pid);
 }
 
 void testPS(void) {
     main_func_t testps = {main_test_process, 0, NULL};
-    int pid = createProcess(&testps, "Test PS", 0);
+    int pid = createProcess(&testps, "Test PS", 0, NULL, NULL);
     printf("Created process pid: %d\n", pid);
 }
 
 void testSem(void) {
     main_func_t sem1 = {semProccess1, 0, NULL};
     main_func_t sem2 = {semProccess2, 0, NULL};
-    int pid1 = createProcess(&sem1, "Test Semaphore 1", 0);
+    int pid1 = createProcess(&sem1, "Test Semaphore 1", 0, NULL, NULL);
     printf("Sem Proccess 1 pid: %d\n", pid1);
-    int pid2 = createProcess(&sem2, "Test Semaphore 2", 0);
+    int pid2 = createProcess(&sem2, "Test Semaphore 2", 0, NULL, NULL);
     printf("Sem Proccess 2 pid: %d\n", pid2);
+}
+
+void testPipe(void){
+    char * pipe1 = "\n";
+    char * pipe2 = "\0";
+    main_func_t pipeps1 = {pipeProccess, 1, &pipe1};
+    main_func_t pipeps2 = {pipeProccess, 1, &pipe2};
+    int pid1 = createProcess(&pipeps1, "Test Pipe 1", 1, NULL, "patito"); //lee de stdin y escribe en patito
+    printf("Pipe Proccess 1 pid: %d\n", pid1);
+    int pid2 = createProcess(&pipeps2, "Test Pipe 2", 0, "patito", NULL); //lee de patito y escribe en stdout
+    printf("Pipe Proccess 2 pid: %d\n", pid2);
 }
 
 void test(char * option) {
@@ -322,6 +341,8 @@ void test(char * option) {
         testPS();
     else if(strcmp(option, "sem") == 0)
         testSem();
+    else if(strcmp(option, "pipe") == 0)
+        testPipe();
     /*
     else if (strcmp(option, "zero_div") == 0)
         testDivException();

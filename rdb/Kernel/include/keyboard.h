@@ -5,7 +5,7 @@
 
 void keyboard_handler(void);
 int special_key(uint8_t key);
-int sys_read(void * buff, void * count);
+int kbRead(char * buff, unsigned int count);
 uint8_t kbGet(void);
 void normalKey(uint8_t aux);
 void shiftedKey(uint8_t aux);

@@ -30,59 +30,61 @@ mm_stat getMMStats(void) {
 
 // ----------- Process ------------
 
-int createProcess(main_func_t * main_f, char * name, int foreground) {
+int createProcess(main_func_t * main_f, char * name, int foreground, char * in, char * out) {
 	int pid;
-	if (_sys_process((void *)(uint64_t) 0, (void *) main_f, (void *) name, (void *)(uint64_t) foreground, (void *) &pid) != 0)
+	ps_info_t ps_aux = {main_f, name, foreground};
+	fd_info_t fd_aux = {in, out};
+	if (_sys_process((void *)(uint64_t) 0, (void *) &ps_aux, (void *) &fd_aux, (void *) &pid) != 0)
 		return -1;
 	return pid;
 }
 
 int kill(int pid) {
 	int aux;
-	if (_sys_process((void *)(uint64_t) 1, (void *)(uint64_t) pid, (void *) &aux, 0, 0) != 0)
+	if (_sys_process((void *)(uint64_t) 1, (void *)(uint64_t) pid, (void *) &aux, 0) != 0)
 		return -1;
 	return aux;
 }
 
 int getPid(void) {
 	int pid;
-	if (_sys_process((void *)(uint64_t) 2, (void *) &pid, 0, 0, 0) != 0)
+	if (_sys_process((void *)(uint64_t) 2, (void *) &pid, 0, 0) != 0)
 		return -1;
 	return pid;
 }
 
 unsigned int getProcessesAlive(void) {
 	unsigned int size;
-	if (_sys_process((void *)(uint64_t) 3, (void *) &size, 0, 0, 0) != 0)
+	if (_sys_process((void *)(uint64_t) 3, (void *) &size, 0, 0) != 0)
 		return -1;
 	return size;
 }
 
 int getProcessesInfo(PCB_info * arr, unsigned int max_size) {
 	unsigned int size;
-	if (_sys_process((void *)(uint64_t) 4, (void *) arr, (void *)(uint64_t) max_size, (void *) &size, 0) != 0)
+	if (_sys_process((void *)(uint64_t) 4, (void *) arr, (void *)(uint64_t) max_size, (void *) &size) != 0)
 		return -1;
 	return size;
 }
 
 int exit(int pid) {
-	return _sys_process((void *)(uint64_t) 5, (void *)(uint64_t) pid, 0, 0, 0);
+	return _sys_process((void *)(uint64_t) 5, (void *)(uint64_t) pid, 0, 0);
 }
 
 int changePriority(int pid, unsigned int new_priority) {
-	return _sys_process((void *)(uint64_t) 6, (void *)(uint64_t) pid, (void *)(uint64_t) new_priority, 0, 0);
+	return _sys_process((void *)(uint64_t) 6, (void *)(uint64_t) pid, (void *)(uint64_t) new_priority, 0);
 }
 
 int changeState(int pid, int new_state) {
-	return _sys_process((void *)(uint64_t) 7, (void *)(uint64_t) pid, (void *)(uint64_t) new_state, 0, 0);
+	return _sys_process((void *)(uint64_t) 7, (void *)(uint64_t) pid, (void *)(uint64_t) new_state, 0);
 }
 
 int changeForegroundStatus(int pid, int state) {
-	return _sys_process((void *)(uint64_t) 8, (void *)(uint64_t) pid, (void *)(uint64_t) state, 0, 0);
+	return _sys_process((void *)(uint64_t) 8, (void *)(uint64_t) pid, (void *)(uint64_t) state, 0);
 }
 
 int getProcessState(int pid, process_state * state) {
-	return _sys_process((void *)(uint64_t) 9, (void *)(uint64_t) pid, (void *) state, 0, 0);
+	return _sys_process((void *)(uint64_t) 9, (void *)(uint64_t) pid, (void *) state, 0);
 }
 
 // ----------- Timet ------------
@@ -140,7 +142,7 @@ int read(char *buffer, unsigned int buff_size) {
 	} 
 	return i;
 	*/
-	return _sys_read((void *) buffer, (void *)(uint64_t) buff_size);
+	return _sys_fd((void *) 1, (void *) 0, (void *) buffer, (void *)(uint64_t) buff_size, 0);
 }
 
 int scan(char *buffer, unsigned int buff_size) { // Make sure u have at least buff_size + 1 to allocate the result string.
@@ -158,32 +160,32 @@ char scanChar() {
 // ----------- Screen ------------
 
 void clearScreen() {
-	_sys_screen(0, 0, 0, 0);
+	_sys_screen(0, 0, 0);
 }
 
 void setBackgroundColor(uint32_t color) {
-	_sys_screen((void *) 5, (void *)(uint64_t) color, 0, 0);
+	_sys_screen((void *) 4, (void *)(uint64_t) color, 0);
 }
 
 void setCursor(unsigned int x, unsigned int y) {
-	_sys_screen((void *) 6, (void *)(uint64_t) x, (void *)(uint64_t) y, 0);
+	_sys_screen((void *) 5, (void *)(uint64_t) x, (void *)(uint64_t) y);
 }
 
 void shiftCursor(int offset) {
 	if (offset > 0)
 		for(int i = 0; i < offset; i++)
-			_sys_screen((void *) 4, (void *)(uint64_t) 1, 0, 0);
+			_sys_screen((void *) 3, (void *)(uint64_t) 1, 0);
 	else if (offset < 0)
 		for(int i = 0; i < -offset; i++)
-			_sys_screen((void *) 4, (void *)(uint64_t) -1, 0, 0);
+			_sys_screen((void *) 3, (void *)(uint64_t) -1, 0);
 }
 
 void showCursor(int status) {
-	_sys_screen((void *) 3, (void *)(uint64_t) status, 0, 0);
+	_sys_screen((void *) 2, (void *)(uint64_t) status, 0);
 }
 
 int write(const char *str, unsigned int str_size, int color) {
-	return _sys_screen((void *) 1, (void *) str, (void *)(uint64_t) str_size, (void *)(uint64_t) color);
+	return _sys_fd((void *) 0, (void *) 1, (void *) str, (void *)(uint64_t) str_size, (void *)(uint64_t) color);
 }
 
 int printColored(const char *str, int color) {
@@ -334,7 +336,7 @@ uint32_t uintToBase(uint64_t value, char * buffer, uint32_t base) {
 }
 
 int deleteChar(void){
-	return _sys_screen((void *)(uint64_t) 2,0,0,0);
+	return _sys_screen((void *)(uint64_t) 1,0,0);
 }
 
 int deleteNChars(int n){
@@ -429,6 +431,10 @@ int strcpy(char *dst, const char *src) {
 		dst[i] = src[i];
 	} while(src[i++] != 0);
 	return 0;
+}
+
+int strcat(char *dst, const char *src) {
+	return strcpy(dst + strlen(dst) + 1, src);
 }
 
 long int strtoint(char* s){

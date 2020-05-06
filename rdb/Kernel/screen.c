@@ -162,28 +162,26 @@ void setBackgroundColor(uint32_t color) {
     BACKGROUND_COLOR = color;
 }
 
-int sys_screen(void * option, void * arg1, void * arg2, void * arg3) {
+int sys_screen(void * option, void * arg1, void * arg2) {
     switch ((uint64_t) option) {
         case 0:
             clearScreen();
             break;
         case 1:
-            printColorString((char *) arg1, (uint64_t) arg2, (uint64_t) arg3);
-            break;
-        case 2:
             deleteLastChar();
             break;
-        case 3:
+        case 2:
             showCursor((uint64_t) arg1);
             break;
-        case 4:
+        case 3:
             shiftCursor((uint64_t) arg1);
             break;
-        case 5:
+        case 4:
             setBackgroundColor((uint64_t) arg1);
             break;
-        case 6:
+        case 5:
             setCursor((uint64_t) arg1, (uint64_t) arg2);
+            break;
     }
     return 0;
 }

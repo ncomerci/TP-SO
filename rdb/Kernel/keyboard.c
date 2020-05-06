@@ -7,8 +7,9 @@
 #define BUFFER_SIZE 128
 
 static char buffer[BUFFER_SIZE];
-static int buffer_size;
-static int waiting_pid;
+static int buffer_size = 0;
+static int buffer_idx = 0;
+static int waiting_pid = 0;
 static int process_waiting = 0;
 
 #define SHIFT_IN_KEY 
@@ -42,8 +43,14 @@ static int SPCL_CODES[] = {BACKS, CTRL_IN, SHIFT_IN, SHIFT_IN, ALT, CAPS, F1, F2
 static func keyHandler[2][2] = {{normalKey, shiftedKey}, //1ra posicion SHIFT, 2da posicion CAPSLOCK
                                 {shiftedKey, normalKey}};
 
-void normalKey(uint8_t aux) { buffer[buffer_size++] = regular_f[aux]; }
-void shiftedKey(uint8_t aux) { buffer[buffer_size++] = with_shift_f[aux]; }
+void normalKey(uint8_t aux) { 
+  buffer[(buffer_idx + buffer_size) % BUFFER_SIZE] = regular_f[aux];
+  buffer_size++;
+}
+void shiftedKey(uint8_t aux) { 
+  buffer[(buffer_idx + buffer_size) % BUFFER_SIZE] = with_shift_f[aux];
+  buffer_size++;
+}
 
 void keyboard_handler(void) {
   uint8_t aux = kbGet();
@@ -70,12 +77,13 @@ void keyboard_handler(void) {
 
   if (spec < 0) {
     if (spec != SHIFT_IN && spec != SHIFT_OUT && spec != CAPS && spec != CTRL_IN && spec != CTRL_OUT) {
-      buffer[buffer_size++] = spec;
+      buffer[(buffer_idx + buffer_size) % BUFFER_SIZE] = spec;
+      buffer_size++;
+      if (process_waiting) {
+        process_waiting = 0;
+        changeState(waiting_pid, READY);
+      }
     }
-    if (process_waiting) {
-    process_waiting = 0;
-    changeState(waiting_pid, READY);
-  }
   }
   else if(aux < 128 && aux > 0) {
     /*
@@ -90,14 +98,14 @@ void keyboard_handler(void) {
     }
     else {
       if (regular_f[aux] >= 'a' && regular_f[aux] <= 'z')
-            keyHandler[SHIFTED][CAPS_LOCKED](aux);
-          else
-            keyHandler[SHIFTED][0](aux);
+        keyHandler[SHIFTED][CAPS_LOCKED](aux);
+      else
+        keyHandler[SHIFTED][0](aux);
+      if (process_waiting) {
+        process_waiting = 0;
+        changeState(waiting_pid, READY);
+      }
     }
-    if (process_waiting) {
-    process_waiting = 0;
-    changeState(waiting_pid, READY);
-  }
   }
 }
 
@@ -112,9 +120,8 @@ int special_key(uint8_t key) {
 }
 
 // Returns 0 if something has been read
-int sys_read(void * buff, void * count) {
-  unsigned int max_size = (unsigned int)(uint64_t) count;
-  if (max_size == 0)
+int kbRead(char * buff, unsigned int count) {
+  if (count == 0)
     return 0;
 
   if (buffer_size <= 0) {
@@ -127,11 +134,15 @@ int sys_read(void * buff, void * count) {
     changeState(pid, BLOCKED);
   }
 
-  unsigned int size = ((max_size < buffer_size)?max_size:buffer_size) * sizeof(char);
-  memcpy(buff, (void *) buffer, size);
-  buffer_size -= size;
-  for (int j = 0; j < buffer_size; j++) {
-      buffer[j] = buffer[j+size]; // Muevo el buffer restante
+  unsigned int size = ((count < buffer_size)?count:buffer_size) * sizeof(char);
+  unsigned int i = 0;
+  while (i < size) {
+      buff[i] = buffer[(buffer_idx + i) % BUFFER_SIZE];
+      i++;
   }
+  
+  buffer_idx = (buffer_idx + i) % BUFFER_SIZE;
+  buffer_size -= size;
+
   return size;
 }
