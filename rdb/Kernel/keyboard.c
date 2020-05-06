@@ -2,11 +2,14 @@
 #include <naiveConsole.h>
 #include <screen.h>
 #include <process.h>
+#include <lib.h>
 
 #define BUFFER_SIZE 128
 
 static char buffer[BUFFER_SIZE];
 static int buffer_size;
+static int waiting_pid;
+static int process_waiting = 0;
 
 #define SHIFT_IN_KEY 
 
@@ -69,8 +72,11 @@ void keyboard_handler(void) {
     if (spec != SHIFT_IN && spec != SHIFT_OUT && spec != CAPS && spec != CTRL_IN && spec != CTRL_OUT) {
       buffer[buffer_size++] = spec;
     }
+    if (process_waiting) {
+    process_waiting = 0;
+    changeState(waiting_pid, READY);
   }
-
+  }
   else if(aux < 128 && aux > 0) {
     /*
     **la idea es que si es una letra, la matriz se encarga de devolver si es minus o mayus
@@ -88,6 +94,10 @@ void keyboard_handler(void) {
           else
             keyHandler[SHIFTED][0](aux);
     }
+    if (process_waiting) {
+    process_waiting = 0;
+    changeState(waiting_pid, READY);
+  }
   }
 }
 
@@ -102,14 +112,26 @@ int special_key(uint8_t key) {
 }
 
 // Returns 0 if something has been read
-int sys_read(void * buff) {
-  if (buffer_size <= 0)
-      return 1;
-  char ans = buffer[0]; // Devuelvo el primer char
-  buffer_size--;
-  for (int j = 0; j < buffer_size; j++) {
-      buffer[j] = buffer[j+1]; // Muevo el buffer restante
+int sys_read(void * buff, void * count) {
+  unsigned int max_size = (unsigned int)(uint64_t) count;
+  if (max_size == 0)
+    return 0;
+
+  if (buffer_size <= 0) {
+    int pid;
+    getPid(&pid);
+    if (isCurrentForeground()) {
+      process_waiting = 1;
+      waiting_pid = pid;
+    }
+    changeState(pid, BLOCKED);
   }
-  * (char *)buff = ans;
-  return 0;
+
+  unsigned int size = ((max_size < buffer_size)?max_size:buffer_size) * sizeof(char);
+  memcpy(buff, (void *) buffer, size);
+  buffer_size -= size;
+  for (int j = 0; j < buffer_size; j++) {
+      buffer[j] = buffer[j+size]; // Muevo el buffer restante
+  }
+  return size;
 }

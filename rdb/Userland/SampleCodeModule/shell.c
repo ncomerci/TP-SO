@@ -1,5 +1,5 @@
 #include <lib_user.h>
-//#include <aracnoid.h>
+#include <aracnoid.h>
 #include <commands.h>
 #include <shell.h>
 
@@ -26,7 +26,7 @@ static void welcomeMessage(void);
 
 static char inputBuffer[BUFFER_SIZE];
 static char commandsHistory[COMMANDS_BUFFER_SIZE][BUFFER_SIZE];
-static char * commands[] = {"clear", "clock",  "help", "inforeg", "kill", "mem", "nice", "printmem", "ps", "set", "set writing_color", "test", "test mm", "test mem", "test process"};
+static char * commands[] = {"clear", "clock",  "help", "inforeg", "kill", "mem", "nice", "printmem", "ps", "set", "set writing_color", "test", "test mm", "test mem", "test process", "test sem"};
 static char * void_func[] = {"help", "clock", "inforeg", "clear", "ps", "loop", "mem"};
 static void (*void_commands_func[])(void) = {printUserManual, getLocalTime, printRegistersInfo, clear, printProcesses, loop, printMMStats};
 
@@ -44,11 +44,11 @@ static int user_string_size;
 
 static int c;
 
-// static gameState aracnoid_save;
-// static int aracnoid_saved;
+static gameState aracnoid_save;
+static int aracnoid_saved;
 
 void startShell(){
-    testMM();
+    changePriority(getPid(), 0);
     user_writing_color = USER_COLOR;
     setBackgroundColor(USER_BACKGROUND_COLOR);
     int real_buff_size = BUFFER_SIZE - strlen(user) - strlen(syst_name);
@@ -227,12 +227,10 @@ static void instructionHandler() {
 
             case 0:
                 if (strcmp(cmd, "aracnoid") == 0) {
-                    printError("Game is in maintenance.\n");
-                    /*
+                    //printError("Game is in maintenance.\n");
                     startAracnoid(&aracnoid_save, &aracnoid_saved);
                     if(aracnoid_saved)
                         printColored("\n                                    Aracnoid is saved! type \"aracnoid\" to resume the game.\n\n", 0x04E798);
-                    */
                     executed = 0;
                 }
                 else

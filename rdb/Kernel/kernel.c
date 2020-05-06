@@ -16,7 +16,7 @@ extern uint8_t endOfKernel;
 static const uint64_t PageSize = 0x1000;
 
 static void * const sampleCodeModuleAddress = (void*)0x400000;
-static void * const sampleDataModuleAddress = (void*)0x500000;
+static void * const sampleDataModuleAddress = (void*)0x800000;
 
 void clearBSS(void * bssAddress, uint64_t bssSize) {
 	memset(bssAddress, 0, bssSize);
@@ -45,16 +45,15 @@ int main() {
 	init_VM_Driver();
 	init_screen();
 
+	_cli(); //deshabilito las ints
 	load_idt();
 
-	/*
 	main_func_t aux = {(int (*)(int, char **)) sampleCodeModuleAddress, 0, NULL};
-	createProcess(&aux, "SampleCodeModule", 1);
+	int pid;
+	createProcess(&aux, "Shell", 1, &pid);
 
-	_halt_and_wait();
-	*/
-
-	((int (*)(int,char**))sampleCodeModuleAddress)(0, NULL);
+	_sti(); //las seteo de nuevo
+	_int81();
 
 	return 0;
 }

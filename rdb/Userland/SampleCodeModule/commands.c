@@ -2,12 +2,53 @@
 #include <stdint.h>
 #include <shell.h>
 #include <lib_user.h>
+#include <sem.h>
 
 static int findColor(char * color);
+static int semProccess1(int argc, char ** argv);
+static int semProccess2(int argc, char ** argv); 
 
 static char * color_names[] = {"black", "red", "green", "yellow", "blue", "pink", "light_blue", "white"};
 static uint32_t color_rgb[] = {0x000000, 0xFF0000, 0x00FF00, 0xFFFF00, 0x0000FF, 0xFF00FF, 0x00FFFF, 0xFFFFFF};
 static char * processess_states[] = {"READY", "BLOCKED", "KILLED"};
+
+static int semProccess1(int argc, char ** argv) {
+    unsigned int init_val = 1;
+    sem_id sem;
+    const char *name = "sem_test";
+
+    sem = sem_init_open(name, init_val);
+
+    sem_wait(sem);
+    printf("Sem Process 1 is active now!\n");
+
+    wait(2000);
+
+    printf("Sem Process 1 is dead :O\n");
+    sem_post(sem);
+
+    sem_close(sem);
+
+    return 0;
+}
+
+static int semProccess2(int argc, char ** argv) {
+    const char *name = "sem_test";
+    sem_id sem = sem_open(name);
+
+    sem_wait(sem);
+    printf("Sem Process 2 here!\n");
+
+    wait(2000);
+
+    printf("Sem Process 2 dead :(\n");
+
+    sem_post(sem);
+
+    sem_close(sem);
+
+    return 0;
+}
 
 void printUserManual(){
     println(" _   _                ___  ___                        _ "); 
@@ -28,8 +69,8 @@ void printUserManual(){
     println("- nice <pid> <priority>                --> Changes priority of process with PID <pid> to <priority>.");
     println("- kill <pid>                           --> Kills process with PID <pid>.");
     println("- block <pid>                          --> Switches process PID <pid> between BLOCKED and READY state.");     
-    println("- set                                  --> Sets some properties of the shell.");
     println("- loop                                 --> Creates background process named loop.");  
+    println("- set                                  --> Sets some properties of the shell.");
     println("       + writing_color                 --> Sets user writing color.");
     println("                       + [color_name]");
     println("                       + default");  
@@ -38,6 +79,7 @@ void printUserManual(){
     //println("       + inv_op_code                   --> Tests Invalid Op-code.");
     println("       + mem                           --> Tests Memory Allocation."); 
     println("       + process                       --> Tests Processes");
+    println("       + sem                           --> Tests Semaphores");
     println("");
 }
 
@@ -73,7 +115,7 @@ void getLocalTime(){
     printColored("Buenos Aires", 0xe37100);
     println(" is:");
     unsigned last_sec = getSecondsElapsed();
-    while ((_sys_read((void *) &c) != 0) || c != ESC) {
+    while (((c = scanChar()) != 0) || c != ESC) {
         unsigned long actual_sec = getSecondsElapsed();
         if (!started || actual_sec > last_sec) {
             started = 1;
@@ -135,10 +177,10 @@ void testMem(void){
     printf("Copied?: %s\n", line2);
     printMMStats();
     void * aux = malloc((1 << 22) - 8);
-    printf("Malloc returned %d\n", (int) aux);
+    printf("Malloc returned %p\n", (uint64_t) aux);
     printMMStats();
     void * aux2 = malloc(100);
-    printf("Malloc returned %d\n", (int) aux2);
+    printf("Malloc returned %p\n", (uint64_t) aux2);
     printMMStats();
     free(line2);
     printf("Freed line2\n");
@@ -174,8 +216,8 @@ void printProcesses(void) {
         printf("PID: %d\n", info[i].pid);
         printf("PPID: %d\n", info[i].ppid);
         printf("Priority: %d\n", (int) info[i].priority);
-        printf("RBP: %d\n", (int) info[i].rbp);
-        printf("RSP: %d\n", (int) info[i].rsp);
+        printf("RBP: %p\n", (uint64_t) info[i].rbp);
+        printf("RSP: %p\n", (uint64_t) info[i].rsp);
         printf("State: %s\n", processess_states[(int) info[i].state]);
         printf("Foreground: %s\n", (info[i].foreground != 0)?"Yes":"No");
         printf("Time left: %d ticks\n", (int) info[i].given_time);
@@ -248,9 +290,24 @@ int loopMain(int argc, char ** argv) {
 }
 
 void testMM(void) {
-    main_func_t testmm = {main_test_mm, 100, NULL};
-    int pid = createProcess(&testmm, "Test Process", 0);
+    main_func_t testmm = {main_test_mm, 0, NULL};
+    int pid = createProcess(&testmm, "Test MM", 0);
     printf("Created process pid: %d\n", pid);
+}
+
+void testPS(void) {
+    main_func_t testps = {main_test_process, 0, NULL};
+    int pid = createProcess(&testps, "Test PS", 0);
+    printf("Created process pid: %d\n", pid);
+}
+
+void testSem(void) {
+    main_func_t sem1 = {semProccess1, 0, NULL};
+    main_func_t sem2 = {semProccess2, 0, NULL};
+    int pid1 = createProcess(&sem1, "Test Semaphore 1", 0);
+    printf("Sem Proccess 1 pid: %d\n", pid1);
+    int pid2 = createProcess(&sem2, "Test Semaphore 2", 0);
+    printf("Sem Proccess 2 pid: %d\n", pid2);
 }
 
 void test(char * option) {
@@ -261,6 +318,10 @@ void test(char * option) {
         testProcess();
     else if(strcmp(option, "mm") == 0)
         testMM();//testMM();
+    else if (strcmp(option, "ps") == 0)
+        testPS();
+    else if(strcmp(option, "sem") == 0)
+        testSem();
     /*
     else if (strcmp(option, "zero_div") == 0)
         testDivException();

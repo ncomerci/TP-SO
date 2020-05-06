@@ -24,3 +24,96 @@ ls
 make MM=BUDDY
 make clean
 make MM=BUDDY
+cd root
+make all
+make clean
+make all
+make clean
+make all
+make clean
+make all
+make clean
+make all
+make clean
+make all
+make clean 
+make all
+make clean 
+make all
+make clean 
+make all
+make clean 
+make all
+make clean 
+make all
+make clean 
+make all
+make clean 
+make all
+make clean 
+make all
+make clean 
+make all
+make clean 
+make all
+make clean 
+make all
+gdb
+make clean 
+make all
+gdb
+make clean 
+make all
+gdb
+gdb
+gdb
+cd root
+make clean
+make all
+make clean
+make all
+make clean
+make all
+make clean
+make all
+make clean
+make all
+make clean
+make all
+gdb
+make clean
+make all
+gdb
+make clean
+make all
+gdb
+make clean
+make all
+
+make clean
+make all
+make clean
+make all
+gdb
+make clean
+make all
+make clean
+make all
+make clean
+make all
+exit
+cd root
+make clean
+cd ..
+cd
+make all
+cd
+gdb
+cd
+ls
+ls -la
+vim .dckr_gdb
+vim .dckr_gdb.sh
+sed -i -e 's/\r$//' .win_gdb.sh
+sed -i -e 's/\r$//' .dckr_gdb.sh
+sed -i -e 's/\r$//' .dckr_gdb

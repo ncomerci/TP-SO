@@ -128,6 +128,7 @@ time_struct getTime() {
 // ----------- Read ------------
 
 int read(char *buffer, unsigned int buff_size) {
+	/*
 	int finished = 0;
 	int i = 0;
 	while (i < buff_size && !finished) { // Mientras no se llene el buffer
@@ -138,6 +139,8 @@ int read(char *buffer, unsigned int buff_size) {
 			finished = 1;
 	} 
 	return i;
+	*/
+	return _sys_read((void *) buffer, (void *)(uint64_t) buff_size);
 }
 
 int scan(char *buffer, unsigned int buff_size) { // Make sure u have at least buff_size + 1 to allocate the result string.
@@ -220,8 +223,10 @@ int printf(const char *format, ...) {
 				}
 				printDec(num);
 				break;
+			case 'p': // Si es pointer
+				printf("0x");
 			case 'x': // Si es hexadecimal
-				num = va_arg(pa, unsigned int);
+				num = va_arg(pa, uint64_t);
 				printHex(num);
 				break;
 			case 'X':

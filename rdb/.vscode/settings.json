@@ -5,6 +5,8 @@
         "shell.h": "c",
         "lib_user.h": "c",
         "stdint.h": "c",
-        "commands.h": "c"
+        "commands.h": "c",
+        "process.h": "c",
+        "screen.h": "c"
     }
 }
