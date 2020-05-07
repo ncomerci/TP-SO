@@ -12,7 +12,6 @@ static void shiftFunctions(unsigned int idx);
 
 static void pTimersHandler(void);
 static int addTimer(int pid, unsigned int millis);
-static void wait(unsigned int millis);
 
 static periodic_func functions[MAX_FUNCTIONS];
 static unsigned int functions_size;
@@ -118,7 +117,7 @@ static int addTimer(int pid, unsigned int millis) {
 	return 0;
 }
 
-static void wait(unsigned int millis) {
+void wait(unsigned int millis) {
 	int pid;
 	getPid(&pid);
 

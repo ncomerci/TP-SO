@@ -25,7 +25,7 @@ int pipeWrite(int gate, char * str, unsigned int str_size) { //post
     
     strcpy(sem_aux_name, pipes[idx].name);
     strcat(sem_aux_name, "r"); 
-    sem_id sem_read = ksem_open(sem_aux_name); 
+    sem_id sem_read = ksem_init_open(sem_aux_name, 0); 
     if(sem_read == -1)
         return -1; 
          
@@ -69,7 +69,7 @@ int pipeRead(int gate, char * buff, unsigned int count) { //wait
 
     strcpy(sem_aux_name, pipes[idx].name);
     strcat(sem_aux_name, "w"); 
-    sem_id sem_write = ksem_open(sem_aux_name); 
+    sem_id sem_write = ksem_init_open(sem_aux_name, 1); 
     if(sem_write == -1 )
         return -1; 
     

@@ -47,7 +47,7 @@ static int c;
 static gameState aracnoid_save;
 static int aracnoid_saved;
 
-void startShell(){
+void startShell(void){
     changePriority(getPid(), 0);
     user_writing_color = USER_COLOR;
     setBackgroundColor(USER_BACKGROUND_COLOR);

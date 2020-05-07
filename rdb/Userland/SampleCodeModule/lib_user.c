@@ -97,7 +97,7 @@ unsigned long getSecondsElapsed() {
 	return _sys_timet((void *) 1, 0, 0);
 }
 
-int addTimeFunction(function f, int arg, unsigned int ticks) {
+int addTimeFunction(function f, unsigned int ticks) {
 	return _sys_timet((void *) 2, (void *) f, (void *)(uint64_t) ticks);
 }
 

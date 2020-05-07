@@ -65,6 +65,5 @@ typedef struct gameState {
 } gameState;
 
 void aracnoid(gameState * save_file, int * saved); // Should it return a save file?
-void updater(void);
 
 #endif

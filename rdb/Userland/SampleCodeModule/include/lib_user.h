@@ -97,7 +97,7 @@ int getProcessState(int pid, process_state * state);
 // ----------- Timet ------------
 unsigned long getTicks(void);
 unsigned long getSecondsElapsed(void);
-int addTimeFunction(function f, int arg, unsigned int ticks);
+int addTimeFunction(function f, unsigned int ticks);
 int updateTimeFunction(function f, unsigned int new_ticks);
 void removeTimeFunction(function f);
 void wait(unsigned int millis);

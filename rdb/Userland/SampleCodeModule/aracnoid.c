@@ -1,6 +1,8 @@
 #include <aracnoid.h>
 #include <lib_user.h>
 
+static int updater(int argc, char ** argv);
+
 #define BACKGROUND_COLOR 0x444444
 
 // Pause Message
@@ -54,6 +56,7 @@ static void move_ball(void);
 static void check_and_move_ball(void);
 static void updateBricks(void);
 static void ball_fell_down(void);
+static int updater(int argc, char ** argv);
 
 static int game_board[SCREEN_HEIGHT][SCREEN_WIDTH];  // Game matrix, containing each pixel from each brick. (Each pixel from the same brick has the same number: the relative position of the brick)
 static int last_bricks[N_BRICKS];
@@ -64,6 +67,8 @@ static int speed;
 static int last_sec;
 static int loaded_save;
 static int showingInfoMessage;
+static main_func_t main_updater;
+static int updater_pid;
 
 uint32_t colors[] = {BACKGROUND_COLOR, 0xC8D6B9, 0x9DBAD5, 0x8FC1A9, 0x769ECB, 0x7CAA98}; // Index represents lives left.
 
@@ -80,8 +85,12 @@ void aracnoid(gameState * save_file, int * saved) { // Debería devolver un save
     initGame();
     setScene();
 
+    main_updater.f = updater;
+    main_updater.argc = 0;
+    main_updater.argv = NULL;
+
     if (!loaded_save)
-        addTimeFunction(updater, 0, PIT_FREQUENCY / FPS); // (60 fps?) FALTA VELOCIDAD DE LA BARRITA EN EL UPDATE
+        updater_pid = createProcess(&main_updater, "Aracnoid Updater", 0, NULL, NULL); // (60 fps?) FALTA VELOCIDAD DE LA BARRITA EN EL UPDATE
     while (gs.remaining_lives && !player_won) {
         if (!loaded_save && !gs.shooted && !showingInfoMessage) {
             showHelpMessage();
@@ -92,13 +101,13 @@ void aracnoid(gameState * save_file, int * saved) { // Debería devolver un save
             if (loaded_save)
                 loaded_save = 0;
             else
-                removeTimeFunction(updater);
+                kill(updater_pid);
             showInfoMessage();
             int aux = pauseMenu(save_file, saved);
             if (aux > 0)
                 return;
             setScene();
-            addTimeFunction(updater, 0, PIT_FREQUENCY / FPS);
+            updater_pid = createProcess(&main_updater, "Aracnoid Updater", 0, NULL, NULL);
         }
         else if (!gs.shooted && last_key == ' ') {
             gs.ball.mov.movingDirX = directionDecision();
@@ -112,7 +121,7 @@ void aracnoid(gameState * save_file, int * saved) { // Debería devolver un save
             }
         }
     }
-    removeTimeFunction(updater);
+    kill(updater_pid);
     finalMessage();
 }
 
@@ -355,7 +364,7 @@ static int directionDecision(void) {
     return (getTicks() % 2)?1:-1;
 }
 
-void updater(void) {
+static int updater(int argc, char ** argv) {
     int secs = getSecondsElapsed();
 
     if (secs > last_sec) {
@@ -387,6 +396,10 @@ void updater(void) {
     move_stick();
     if (gs.shooted)
         move_ball();
+
+    wait(1000 / FPS);
+
+    return 0;
 }
 
 static void move_stick(void) {

@@ -11,6 +11,10 @@ static unsigned int sem_size = 0;
 static unsigned int sem_amount = 0; 
 
 sem_id ksem_open(const char * name) {
+    return ksem_init_open(name, 1);
+}
+
+sem_id ksem_init_open(const char * name, unsigned int init_val) {
     if (name == NULL || *name == '\0')
         return -1;
     unsigned int i = 0;
@@ -46,21 +50,14 @@ sem_id ksem_open(const char * name) {
         semaphores[i].processes[0].next = NULL;
         semaphores[i].processes_amount = 1;
         semaphores[i].processes_size = 1;
+        semaphores[i].value = init_val;
         if (i == sem_size)
             sem_size++;
         sem_amount++;
-        return 0;
+        return i;
     }
     else
         return -1;
-}
-
-sem_id ksem_init_open(const char * name, unsigned int init_val) {
-    sem_id idx = ksem_open(name);
-    if (idx < 0)
-        return idx;
-    semaphores[idx].value = init_val;
-    return idx;
 }
 
 int ksem_wait(sem_id sem){

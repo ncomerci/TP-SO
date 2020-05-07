@@ -17,6 +17,7 @@ typedef struct process_waiting {
 }process_waiting;
 
 typedef struct periodic_func {
+	int pid;
 	function f;
 	int arg;
 	unsigned int ticks;
@@ -32,6 +33,8 @@ unsigned long seconds_elapsed();
 void removeFunction(function func);
 void updateFunction(function func, unsigned int new_ticks);
 int addFunction(function func, unsigned int ticks);
+
+void wait(unsigned int millis);
 
 unsigned long sys_timet(void * option, void * arg1, void * arg2);
 

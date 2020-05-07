@@ -47,7 +47,7 @@ sem_id sem_open(const char * name) {
         if (i == sem_size)
             sem_size++;
         sem_amount++;
-        return 0;
+        return i;
     }
     else
         return -1;

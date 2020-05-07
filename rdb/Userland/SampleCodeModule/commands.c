@@ -4,6 +4,7 @@
 #include <lib_user.h>
 #include <sem.h>
 
+static int clockUpdater(int argc, char ** argv);
 static int findColor(char * color);
 static int semProccess1(int argc, char ** argv);
 static int semProccess2(int argc, char ** argv); 
@@ -12,6 +13,12 @@ static int pipeProccess(int argc, char ** argv);
 static char * color_names[] = {"black", "red", "green", "yellow", "blue", "pink", "light_blue", "white"};
 static uint32_t color_rgb[] = {0x000000, 0xFF0000, 0x00FF00, 0xFFFF00, 0x0000FF, 0xFF00FF, 0x00FFFF, 0xFFFFFF};
 static char * processess_states[] = {"READY", "BLOCKED", "KILLED"};
+
+int i = 0;
+int started = 0;
+time_struct tm = {0, 0, 0};
+unsigned last_sec;
+unsigned long actual_sec;
 
 static int semProccess1(int argc, char ** argv) {
     unsigned int init_val = 1;
@@ -124,36 +131,38 @@ static int findColor(char * color) {
 }
 
 void getLocalTime(){
-    char c;
-    int i = 0;
-    int started = 0;
-    time_struct tm = {0, 0, 0};
     println("(Press ESC to return to shell)\n");
     print("Local time in ");
     printColored("Buenos Aires", 0xe37100);
     println(" is:");
-    unsigned last_sec = getSecondsElapsed();
-    while (((c = scanChar()) != 0) || c != ESC) {
-        unsigned long actual_sec = getSecondsElapsed();
-        if (!started || actual_sec > last_sec) {
-            started = 1;
-            last_sec = actual_sec;
-            tm = getTime();
-            if (i > 0) {
-                deleteNChars(i);
-                i = 0;
-            }
-            i += printDec(tm.hours);
-            print("hs, ");
-            i += printDec(tm.mins);
-            print("m, ");
-            i += printDec(tm.secs);
-            print("s");
-            i += 8; // hs, m, s
+    main_func_t aux = {clockUpdater, 0, NULL};
+    int pid = createProcess(&aux, "Clock Updater", 0, NULL, NULL);
+
+    while ((scanChar() != ESC));
+    println("");
+    println("");
+    kill(pid);
+}
+
+static int clockUpdater(int argc, char ** argv) {
+    i = 0;
+    while (1) {
+        tm = getTime();
+        if (i > 0) {
+            deleteNChars(i);
+            i = 0;
         }
+        i += printDec(tm.hours);
+        print("hs, ");
+        i += printDec(tm.mins);
+        print("m, ");
+        i += printDec(tm.secs);
+        print("s");
+        i += 8; // hs, m, s
+
+        wait(1000);
     }
-    println("");
-    println("");
+    return 0;
 }
 
 void printRegistersInfo(){
@@ -227,7 +236,6 @@ void printMMStats(void) {
 void printProcesses(void) {
     PCB_info info[MAX_PROCESSES];
     int amount = getProcessesInfo(info, MAX_PROCESSES);
-    printf("Processes:\n");
     printf("PID, PPID, Name, Piority, RBP, RSP, State, Foreground, Time left, Quantums\n");
     for (unsigned int i = 0; i < amount; i++)
         printf("%d, %d, %s, %d, %p, %p, %s, %s, %d, %d\n", info[i].pid, info[i].ppid, info[i].name, (int) info[i].priority, (uint64_t) info[i].rbp, (uint64_t) info[i].rsp, processess_states[(int) info[i].state], (info[i].foreground != 0)?"Yes":"No", (int) info[i].given_time, (int) info[i].aging);   
@@ -319,10 +327,9 @@ void testSem(void) {
 }
 
 void testPipe(void){
-    char * pipe1 = "\n";
-    char * pipe2 = "\0";
-    main_func_t pipeps1 = {pipeProccess, 1, &pipe1};
-    main_func_t pipeps2 = {pipeProccess, 1, &pipe2};
+    char * pipe = "\n";
+    main_func_t pipeps1 = {pipeProccess, 1, &pipe};
+    main_func_t pipeps2 = {pipeProccess, 1, &pipe};
     int pid1 = createProcess(&pipeps1, "Test Pipe 1", 1, NULL, "patito"); //lee de stdin y escribe en patito
     printf("Pipe Proccess 1 pid: %d\n", pid1);
     int pid2 = createProcess(&pipeps2, "Test Pipe 2", 0, "patito", NULL); //lee de patito y escribe en stdout
