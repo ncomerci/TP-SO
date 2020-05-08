@@ -446,7 +446,7 @@ void free(void *ptr) {
 
 mm_stat getMMStats( void ) {
 	mm_stat aux;
-  aux.sys_name = sys_name;
+  aux.sys_name = (char *) sys_name;
 	aux.total = MAX_ALLOC;
 	aux.free = free_space;
 	aux.occupied = aux.total - aux.free;

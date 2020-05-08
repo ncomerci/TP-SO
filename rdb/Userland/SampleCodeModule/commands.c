@@ -63,7 +63,7 @@ static int pipeProccess(int argc, char ** argv) {
     const int buff_size = 31;
     char buff[buff_size];
     int count = 0;
-    while((c = scanChar()) != argv[0][0]) {
+    while((c = scanChar()) != '\n') {
         if(count < buff_size-1)
             buff[count++] = c;
     }
@@ -282,6 +282,28 @@ void testProcess(void) {
     printf("Created process pid: %d\n", pid);
 }
 
+void testProcessArgs(void) {
+    char ** args = malloc(6 * sizeof(char *));
+    for (int i = 0; i < 5; i++) {
+        args[i] = malloc(10 * sizeof(char));
+    }
+    strcpy(args[0],"Hola");
+    strcpy(args[1],"Esta");
+    strcpy(args[2],"Es");
+    strcpy(args[3],"Una");
+    strcpy(args[4],"Prueba");
+    strcpy(args[5],NULL);
+
+    main_func_t testprocessargs = {testProcessArgsMain, 5, args};
+    int pid = createProcess(&testprocessargs, "Test Process Arguments", 1, NULL, NULL);
+    printf("Created process pid: %d\n", pid);
+
+    for (int i = 4; i >= 0; i--) {
+        free(args[i]); 
+    }
+    free(args);
+}
+
 void loop(void) {
     main_func_t loop = {loopMain, 0, NULL};
     int pid = createProcess(&loop, "Loop", 0, NULL, NULL);
@@ -294,6 +316,14 @@ int testProcess1Main(int argc, char ** argv) {
     printf("Received %d arguments!\n", argc);
     for (unsigned int i = 0; i < argc; i++)
         printf("Hola! Soy el proceso %d\n", getPid());
+    return 0;
+}
+
+int testProcessArgsMain(int argc, char ** argv) {
+    printf("Received %d arguments:\n", argc);
+    for (unsigned int i = 0; i < argc; i++) {
+        printf("Arg #%d --> \"%s\"\n", i, argv[i]);
+    }
     return 0;
 }
 
@@ -327,9 +357,9 @@ void testSem(void) {
 }
 
 void testPipe(void){
-    char * pipe = "\n";
-    main_func_t pipeps1 = {pipeProccess, 1, &pipe};
-    main_func_t pipeps2 = {pipeProccess, 1, &pipe};
+    char argv[][1] = {{'\n'}}; 
+    main_func_t pipeps1 = {pipeProccess, 1, (char **)argv};
+    main_func_t pipeps2 = {pipeProccess, 1, (char **)argv};
     int pid1 = createProcess(&pipeps1, "Test Pipe 1", 1, NULL, "patito"); //lee de stdin y escribe en patito
     printf("Pipe Proccess 1 pid: %d\n", pid1);
     int pid2 = createProcess(&pipeps2, "Test Pipe 2", 0, "patito", NULL); //lee de patito y escribe en stdout
@@ -342,6 +372,8 @@ void test(char * option) {
         testMem();
     else if(strcmp(option, "process") == 0)
         testProcess();
+    else if(strcmp(option, "process_args") == 0)
+        testProcessArgs();
     else if(strcmp(option, "mm") == 0)
         testMM();//testMM();
     else if (strcmp(option, "ps") == 0)

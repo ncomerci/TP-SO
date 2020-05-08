@@ -43,7 +43,6 @@ sem_id ksem_init_open(const char * name, unsigned int init_val) {
         strcpy(semaphores[i].name, name);
         semaphores[i].first = NULL;
         semaphores[i].last = NULL;
-        semaphores[i].value = 1;
         semaphores[i].lock = 0;
         semaphores[i].processes_waiting = 0;
         semaphores[i].processes[0].pid = pid;
