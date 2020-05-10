@@ -1,4 +1,5 @@
 #include <keyboard.h>
+#include <interrupts.h>
 #include <naiveConsole.h>
 #include <screen.h>
 #include <process.h>
@@ -93,8 +94,10 @@ void keyboard_handler(void) {
     if (CTRLED && regular_f[aux] == 'c') {
       int pid;
       getPid(&pid);
-      if (pid > 1 && isCurrentForeground()) // Not shell
+      if (pid > 1 && isCurrentForeground()) { // Not shell
+        _outportb(0x20, 0x20);
         changeState(pid, KILLED);
+      }
     }
     else {
       if (regular_f[aux] >= 'a' && regular_f[aux] <= 'z')
@@ -103,6 +106,7 @@ void keyboard_handler(void) {
         keyHandler[SHIFTED][0](aux);
       if (process_waiting) {
         process_waiting = 0;
+        _outportb(0x20, 0x20);
         changeState(waiting_pid, READY);
       }
     }

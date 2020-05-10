@@ -21,6 +21,7 @@ static void test_processes(){
   uint8_t rq;
   uint8_t alive = 0;
   uint8_t action;
+  int rounds = 0;
 
   while (1){
 
@@ -38,7 +39,7 @@ static void test_processes(){
       }
     }
 
-    printf("%d processes alive", alive);
+   
 
     // Randomly kills, blocks or unblocks processes until every one has been killed
     while (alive > 0){
@@ -64,7 +65,7 @@ static void test_processes(){
                 printf("Error blocking process\n");       // TODO: Port this as required
                 return;
               }
-              p_rqs[rq].state = BLOCKED; 
+              p_rqs[rq].state = BLOCKED;
             }
             break;
         }
@@ -81,7 +82,7 @@ static void test_processes(){
         }
     }
 
-    printf("Finished Round\n"); 
+    printf("Finished Round number %d\n", ++rounds); 
   }
 }
 

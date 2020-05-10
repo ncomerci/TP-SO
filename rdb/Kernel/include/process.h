@@ -68,7 +68,7 @@
         int foreground;
         process_state state;
         unsigned int priority;
-        unsigned int given_time;
+        int given_time;
         unsigned int aging; 
     } PCB_info;
 

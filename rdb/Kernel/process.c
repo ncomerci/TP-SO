@@ -1,3 +1,4 @@
+
 #include <process.h>
 #include <timet.h>
 #include <screen.h>
@@ -11,24 +12,24 @@ static void enqueueProcess(PCB * pp);
 static void initQuantums(void);
 static void createHalter(void);
 
-stackProcess stackModel = {15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 0x8, 0x202, 0, 0};
-PCB processes[MAX_PROCESSES];
+static stackProcess stackModel = {15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 0x8, 0x202, 0, 0};
+static PCB processes[MAX_PROCESSES];
 
-PCB halter;
-uint64_t halterStack[(INT_PUSH_STATE + PUSH_STATE_REGS) + HALTER_EXTRA_STACK_SPACE];
+static PCB halter;
+static uint64_t halterStack[(INT_PUSH_STATE + PUSH_STATE_REGS) + HALTER_EXTRA_STACK_SPACE];
 
-QUEUE_HD queues[2][MAX_PRIORITY - MIN_PRIORITY + 1];
-int actual_queue = 0;
-QUEUE_HD * act_queue = NULL; //queue with active processes
-QUEUE_HD * exp_queue = NULL; //queue with those processes that have expired their quantum or are new or priority changed
-unsigned quantum[MAX_PRIORITY - MIN_PRIORITY + 1];
-int initialized = 0;
-PCB * curr_process = NULL;
-unsigned int prior = 0;
-int processes_size = 0; //array size
-int processes_alive = 0; //without the killed ones
-int processes_ready = 0;
-int processes_so_far = 0; //processes created, for the pid to be uique
+static QUEUE_HD queues[2][MAX_PRIORITY - MIN_PRIORITY + 1];
+static int actual_queue = 0;
+static QUEUE_HD * act_queue = NULL; //queue with active processes
+static QUEUE_HD * exp_queue = NULL; //queue with those processes that have expired their quantum or are new or priority changed
+static unsigned quantum[MAX_PRIORITY - MIN_PRIORITY + 1];
+static int initialized = 0;
+static PCB * curr_process = NULL;
+static unsigned int prior = 0;
+static int processes_size = 0; //array size
+static int processes_alive = 0; //without the killed ones
+static int processes_ready = 0;
+static int processes_so_far = 0; //processes created, for the pid to be uique
 
 void * scheduler(void * rsp) {
 
@@ -51,7 +52,7 @@ void * scheduler(void * rsp) {
                 // update aging
                 (curr_process->aging)++;
 
-                updateProcess(curr_process);
+                updateProcess(curr_process); //delete it from act queue
                 curr_process->rsp = rsp;
 
                 #ifdef _RR_AGING_ 
@@ -59,10 +60,19 @@ void * scheduler(void * rsp) {
                     changePriority(curr_process->pid, (prior < MAX_PRIOR)? prior+1 : prior);
                 #endif
 
-                if (curr_process->state != BLOCKED) // Blocked current process
+                if (curr_process->state == BLOCKED)
+                    processes_ready--;
+                else // Blocked current process
                     enqueueProcess(curr_process); // Expires the current process
+
+                if (processes_ready <= 0) {
+                    curr_process = NULL;
+                    _outportb(0x20, 0x20);
+                    return halter.rsp;
+                }
             }
             else {
+                _outportb(0x20, 0x20);
                 return rsp; //keep running
             }
         }
@@ -123,12 +133,12 @@ static void * getNextProcess(void * rsp) {
                 act_queue[prior].last = NULL;
             act_queue[prior].first = (act_queue[prior].first)->next_in_queue;
             return getNextProcess(rsp);
-        }
-        //printString("proceso encontrado\n", 20);
-        curr_process = act_queue[prior].first;
-        //printString("proceso seleccionado\n", 22);
+        } 
+
+        curr_process = act_queue[prior].first; 
+
         curr_process->given_time = quantum[prior];
-        //printString("time given\n", 12);
+   
         return curr_process->rsp;  
     }
 
@@ -181,7 +191,7 @@ int createProcess(ps_info_t * ps_info, fd_info_t * fd_info, int * pid) {
 
         // 8, 0      1000 o 0000       -> 111111111111111111000 & 11101  -> 11000
 
-        processes[i].rbp = (void *)(((uint64_t) processes[i].stack + MAX_STACK_PER_PROCESS) & -8);
+       processes[i].rbp = (void *)(((uint64_t) processes[i].stack + MAX_STACK_PER_PROCESS) & -8);
         processes[i].rsp = (void *) (processes[i].rbp - (INT_PUSH_STATE + PUSH_STATE_REGS) * sizeof(uint64_t));
 
         if (i >= processes_size)
@@ -299,7 +309,7 @@ int changePriority(int pid, unsigned int new_priority) {
 int changeState(int pid, process_state new_state) {
     for(int i=0; i < processes_size; i++){
         if(processes[i].pid == pid) {
-            int last_state = processes[i].state;
+            process_state last_state = processes[i].state;
 
             if (last_state == new_state || last_state == KILLED)
                 return -1;
@@ -311,29 +321,32 @@ int changeState(int pid, process_state new_state) {
                 processes_ready++;
             }
             else if (last_state == READY && new_state == BLOCKED){
-                processes_ready--;
-                //dequeueProcess(&(processes[i]));
+
                 if (curr_process != NULL && curr_process->pid == pid) {
                     curr_process->given_time = 1;
-
+                    _outportb(0x20, 0x20);
                     _sti();
+
                     _int81(); //wait for the next ps
                 }
                 else {
+                    processes_ready--;
                     updateProcess(&(processes[i]));
                 }
             }
             else if (new_state == KILLED){
                 if (processes[i].foreground && processes[i].ppid > 0) //if current is not shell
                     changeState(processes[i].ppid, READY); //bring parent back
-                //dequeueProcess(&(processes[i]));
+
                 processes_alive--;
                 if (last_state == READY)
                     processes_ready--;
+
                 if (curr_process != NULL && curr_process->pid == pid) {
                     updateProcess(&(processes[i]));
                     curr_process = NULL;
                     free(processes[i].stack);
+                    _outportb(0x20, 0x20);
                     _sti();
                     _int81();
                 }
