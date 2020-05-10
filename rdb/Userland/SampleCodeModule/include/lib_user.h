@@ -14,6 +14,9 @@
 #define MAX_PROCESS_NAME_LENGTH 50
 #define MAX_PROCESSES 50 
 
+#define PRINTF_BUFF_SIZE 512
+#define SSCANF_AUX_BUFFER_SIZE 50
+
 #define NULL ((void *) 0)
 
 enum SPECIAL_KEYS {SHIFT_IN = -20, SHIFT_OUT, CAPS, BACKS, ENTER, ESC, CTRL_IN, CTRL_OUT, ALT,F1, F2, ARROW_UP, ARROW_LEFT,ARROW_RIGHT, ARROW_DOWN, INS, DEL};
@@ -115,6 +118,7 @@ int read(char *buffer, unsigned int buff_size);
 int scan(char *buffer, unsigned int buff_size);
 uint64_t *getRegisters(void);
 char scanChar();
+int sscanf(const char *str, const char *format, ...);
 
 // ----------- Screen ------------
 void clearScreen(void);
@@ -127,6 +131,7 @@ int putChar(char c);
 int putColoredChar(char c, int color);
 int print(const char *str); 
 int printf(const char* fmt,...);
+int sprintf(char * buff,const char* fmt,...);
 int printColored(const char *str, int color);
 int printError(const char *str);
 int println(const char *str);
@@ -155,6 +160,7 @@ int strncmp(const char *s1, const char *s2, unsigned int n);
 int strcpy (char *dst, const char *src);
 int strcat(char *dst, const char *src);
 long int strtoint(char* s);
+uint64_t strtoint_base(char* s, unsigned int base);
 int is_num(char *s);
 
 // Importados de naiveConsole

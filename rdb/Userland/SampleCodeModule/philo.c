@@ -1,140 +1,140 @@
-/*
 #include <philo.h>
+#include <test_util.h>
 #include <lib_user.h>
-#include <sem.h> 
-  
-//BASE: https://www.geeksforgeeks.org/dining-philosopher-problem-using-semaphores/
 
-#define N 5 
-#define THINKING 2 
-#define HUNGRY 1 
-#define EATING 0 
-#define LEFT (phnum + 4) % N 
-#define RIGHT (phnum + 1) % N 
-#define MAX_BUFF_SIZE 20  
+static void think(state_t * state);
+static void eat(state_t * state);
+static int take_sticks( philo_t * philo, unsigned int n_philos );
+static int drop_sticks( philo_t * philo, unsigned int n_philos );
 
-int state[N]; 
-int phil[N] = { 0, 1, 2, 3, 4 }; 
-  
-sem_t mutex; 
-sem_t S[N]; 
-  
-void test(int phnum) 
-{ 
-    if (state[phnum] == HUNGRY 
-        && state[LEFT] != EATING 
-        && state[RIGHT] != EATING) { 
-        // state that eating 
-        state[phnum] = EATING; 
-  
-        wait(2); 
-  
-        printf("Philosopher %d takes fork %d and %d\n", 
-                      phnum + 1, LEFT + 1, phnum + 1); 
-  
-        printf("Philosopher %d is Eating\n", phnum + 1); 
-  
-        // sem_post(&S[phnum]) has no effect 
-        // during takefork 
-        // used to wake up hungry philosophers 
-        // during putfork 
-        sem_post(&S[phnum]); 
-    } 
-} 
-  
-// take up chopsticks 
-void take_fork(int phnum) 
-{ 
-  
-    sem_wait(&mutex); 
-  
-    // state that hungry 
-    state[phnum] = HUNGRY; 
-  
-    printf("Philosopher %d is Hungry\n", phnum + 1); 
-  
-    // eat if neighbours are not eating 
-    test(phnum); 
-  
-    sem_post(&mutex); 
-  
-    // if unable to eat wait to be signalled 
-    sem_wait(&S[phnum]); 
-  
-    wait(1); 
-} 
-  
-// put down chopsticks 
-void put_fork(int phnum) 
-{ 
-  
-    sem_wait(&mutex); 
-  
-    // state that thinking 
-    state[phnum] = THINKING; 
-  
-    printf("Philosopher %d putting fork %d and %d down\n", 
-           phnum + 1, LEFT + 1, phnum + 1); 
-    printf("Philosopher %d is thinking\n", phnum + 1); 
-  
-    test(LEFT); 
-    test(RIGHT); 
-  
-    sem_post(&mutex); 
-} 
-  
-int philospher(int argc, char ** argv) 
-{ 
-    void * aux_p;
-    int* i;
+static sem_id sticks[MAX_PHILOS];
 
-    while (1) { 
-  
-        sscanf(argv[0], "%p", &aux_p);
-        i = (int *) aux_p; 
-  
-        wait(1); 
-  
-        take_fork(*i); 
-  
-        //sleep(0); 
-  
-        put_fork(*i); 
-    } 
-} 
-  
-int main() 
-{ 
-  
-    int i; 
-    char aux_buff[MAX_BUFF_SIZE];
-    main_func_t aux;
-    aux.f = philospher;
-    aux.argc = 1;
-    aux.argv = malloc(2 * sizeof(char *));
-    aux.argv[0] = malloc(1 * sizeof(char));
-
-    
-    int philo_pids[N]; 
-  
-    // initialize the semaphores
-    sem_init_open(&mutex, 1); // Replace &mutex for a name
-  
-    for (i = 0; i < N; i++) 
-  
-        sem_init_open(&S[i], 0); // Replace &S[i] for a name 
-  
-    for (i = 0; i < N; i++) { 
-  
-        // create philosopher processes
-        sprintf(aux_buff, "%p", &phil[i]); // We gotta make a sprintf
-        strcpy(aux.argv[0], aux_buff);
-        philo_pids[i] = createProcess(&aux, "Philosopher", 0, NULL, NULL); 
-  
-        printf("Philosopher %d is thinking\n", i + 1); 
-    } 
-  
-    for (i = 0; i < N; i++) 
-        pthread_join(philo_pids[i], NULL); // Que hace esto??? 
+// How a philosopher thinks.
+static void think(state_t * state) {
+    *state = THINKING; 
+    wait(GetUniform(10000));
 }
-*/
+
+// How a philosopher eats.
+static void eat(state_t * state) {
+    *state = EATING;
+    wait(GetUniform(5000));
+}
+
+
+static int take_sticks( philo_t * philo, unsigned int n_philos ) {
+    philo->state = HUNGRY;
+    int philo_number = philo->table_pos;
+    unsigned int left_stick_idx = (philo_number) % n_philos; 
+    unsigned int right_stick_idx = (philo_number + 1) % n_philos; 
+
+    if (philo_number % 2 == 0) {
+        //first take right stick
+        
+        sem_wait(sticks[right_stick_idx]);  //wait for it to be free
+        philo->hands.right = right_stick_idx; 
+        sem_wait(sticks[left_stick_idx]);
+        philo->hands.left= left_stick_idx; 
+        
+    }else{
+        //first take left stick
+        sem_wait(sticks[left_stick_idx]);
+        philo->hands.left= left_stick_idx;
+        //then take right stick 
+        sem_wait(sticks[right_stick_idx]);
+        philo->hands.right = right_stick_idx;
+    }
+    
+    return 0;    
+}
+ 
+static int take(int idx, sem_id * hand){
+
+    if(sem_wait(sticks[idx]) == -1) {
+        return -1;
+    } 
+    *hand = idx; 
+
+    return 0;
+}
+ 
+static int drop_sticks( philo_t * philo, unsigned int n_philos ){
+    int philo_number = philo->table_pos;
+    unsigned int left_stick_idx = (philo_number) % n_philos; 
+    unsigned int right_stick_idx = (philo_number + 1) % n_philos; 
+    
+    sem_post(sticks[left_stick_idx]);
+    philo->hands.left = -1; 
+    sem_post(sticks[right_stick_idx]);   
+    philo->hands.right = -1;
+
+    return 0;
+}
+
+static int addPhilo(){
+    return 0;
+}
+
+static int removePhilo(){
+    return 0;
+}
+
+static int philo_main(int argc, char ** argv) {
+    philo_t * me;
+    unsigned int * act_size;
+    sscanf(argv[0], "%p", me);
+    sscanf(argv[1], "%p", act_size);
+
+    while(1){
+        take_sticks(me, *act_size);
+        eat(&(me->state));
+        drop_sticks(me, *act_size);
+        think(&(me->state));
+    }
+
+    return 0;
+}
+
+static int thinking_philos_main(int argc, char ** argv) {
+    int n_philos; 
+    char ** args[MAX_PHILOS];
+    philo_t philos[MAX_PHILOS]; 
+    int c;
+    
+    for (unsigned int i = 0; i < n_philos; i++) {
+        args[i] = malloc(2 * sizeof(char *));
+        args[i][0] = malloc(sizeof(char));
+        args[i][1] = malloc(sizeof(char));
+        args[i][2] = NULL;
+    }
+
+    main_func_t f_aux = {philo_main, 2, NULL};
+
+    for (unsigned int i = 0; i < n_philos; i++) {
+        char sem_name[SEM_NAME_MAX_LENGTH];
+        sprintf(sem_name, "Stick %d", i);
+        sticks[i] = sem_init_open(sem_name, 1);
+    }
+
+    for (unsigned int i = 0; i < n_philos; i++) {
+        char philo_name[PHILO_NAME_MAX_LENGTH];
+        sprintf(philo_name, "Philo %d", i);
+        sprintf(args[i][0], "%p", (void *) &(philos[i]));
+        sprintf(args[i][1], "%p", (void *) &n_philos);
+        f_aux.argv = args;
+        philos[i].pid = createProcess(&f_aux, philo_name, 0, NULL, NULL);
+    }
+
+    while ((c = scanChar()) != ESC) {
+        if (c == 'a')
+            addPhilo();
+        else if (c == 'r')
+            removePhilo();
+    }
+
+    for (unsigned int i = 0; i < n_philos; i++)
+        kill(philos[i].pid);
+
+    return 0;
+}
+ 

@@ -2,8 +2,10 @@
 #include <lib_user.h>
 
 static char buffer[64] = { '0' };
+static char printf_buffer[PRINTF_BUFF_SIZE];
 
 static void _64Hexfill(int n, char * buffer);
+static int wrapSprintf(char * buff, const char *format, va_list pa);
 
 // ----------- System ------------
 
@@ -157,6 +159,138 @@ char scanChar() {
 	return c;
 }
 
+int sscanf(const char *str, const char *format, ...) {
+
+	va_list pa;  // Lista de parámetros
+    va_start(pa, format);
+
+    char *tmp;
+	char **tmp_buff;
+	char aux[SSCANF_AUX_BUFFER_SIZE];
+	uint64_t * num_p;
+	int negative = 0;
+	int size;
+
+    while (*format != '\0' && *str != '\0') {
+        if (*format != '%') {
+			str++;
+            format++;
+            continue;
+        }
+		format++;
+		if (*str == '\0')
+			return -1; 
+
+		switch(*format) {
+			case 'd': // Si es un decimal
+				num_p = va_arg(pa, uint64_t *);
+				if (*str == '-') {
+					negative = 1;
+					str++;
+				}
+				size = 0;
+				while (*str >= '0' && *str <= '9') {
+					aux[size++] = *(str++);
+				}
+				if (*str != ' ' && *str != '\0') {
+					va_end(pa);
+					return -1;
+				}
+				aux[size++] = '\0';
+				*num_p = strtoint_base(aux, 10);
+				if (negative) {
+					*num_p = - (*num_p);
+					negative = 0;
+				}
+				break;
+			case 'p': // Si es pointer
+				if (*format++ != '0')
+					return -1;
+				if (*format++ != 'x')
+					return -1;
+			case 'x': // Si es hexadecimal
+				num_p = va_arg(pa, uint64_t *);
+				if (*str == '-') {
+					negative = 1;
+					str++;
+				}
+				size = 0;
+				while ((*str >= '0' && *str <= '9') || (*str >= 'a' && *str <= 'f') || (*str >= 'A' && *str <= 'F')) {
+					aux[size++] = *(str++);
+				}
+				if (*str != ' ' && *str != '\0') {
+					va_end(pa);
+					return -1;
+				}
+				aux[size++] = '\0';
+				*num_p = strtoint_base(aux, 16);
+				if (negative) {
+					*num_p = - (*num_p);
+					negative = 0;
+				}
+				break;
+			case 'X':
+				num_p = va_arg(pa, uint64_t *);
+				if (*str == '-') {
+					negative = 1;
+					str++;
+				}
+				size = 0;
+				while (*str >= '0' && *str <= '9') {
+					aux[size++] = *(str++);
+				}
+				if (*str != ' ' && *str != '\0') {
+					va_end(pa);
+					return -1;
+				}
+				aux[size++] = '\0';
+				*num_p = strtoint_base(aux, 10);
+				if (negative) {
+					*num_p = - (*num_p);
+					negative = 0;
+				}
+				break;
+			case 'o': // Si es octal
+				num_p = va_arg(pa, uint64_t *);
+				if (*str == '-') {
+					negative = 1;
+					str++;
+				}
+				size = 0;
+				while (*str >= '0' && *str <= '9') {
+					aux[size++] = *(str++);
+				}
+				if (*str != ' ' && *str != '\0') {
+					va_end(pa);
+					return -1;
+				}
+				aux[size++] = '\0';
+				*num_p = strtoint_base(aux, 8);
+				if (negative) {
+					*num_p = - (*num_p);
+					negative = 0;
+				}
+				break;
+			case 'c':
+				tmp = va_arg(pa, char *);
+				*tmp = *(str++);
+				break;
+			case 's':
+				tmp_buff = va_arg(pa, char **);
+				size = 0;
+				while (*str != ' ') {
+					(*tmp_buff)[size++] = *(str++);
+				}
+				(*tmp_buff)[size++] = '\0';
+				break;
+		}
+        format++;
+    }
+
+    va_end(pa);
+    return 0;
+}
+
 // ----------- Screen ------------
 
 void clearScreen() {
@@ -200,6 +334,7 @@ int print(const char *str) {
 	return printColored(str, WHITE_COLOR);
 }
 
+/*
 int printf(const char *format, ...) {
     va_list pa;  // Lista de parámetros
     va_start(pa, format);
@@ -253,6 +388,83 @@ int printf(const char *format, ...) {
 
     va_end(pa);
     return 0;
+}
+*/
+
+int printf(const char *format, ...) {
+    va_list pa;  // Lista de parámetros
+    va_start(pa, format);
+	int size = wrapSprintf(printf_buffer, format, pa);
+    va_end(pa);
+
+    return write(printf_buffer, size, WHITE_COLOR);
+}
+
+int sprintf(char * buff, const char *format, ...) {
+    va_list pa;  // Lista de parámetros
+    va_start(pa, format);
+	int ret = wrapSprintf(buff, format, pa);
+    va_end(pa);
+    return ret;
+}
+
+static int wrapSprintf(char * buff, const char *format, va_list pa) {
+	unsigned int i = 0;
+    char *tmp;
+	int num;
+	int size;
+
+    while (*format != '\0') {
+        if (*format != '%') {
+            buff[i++] = *format;
+            format++;
+            continue;
+        }
+
+        format++;
+
+		switch(*format) {
+			case 'd': // Si es un decimal
+				num = va_arg(pa, int);
+				if (num < 0) {
+					buff[i++] = '-'; // Agrego signo
+					num = -num; // Convierto en positivo
+				}
+				size = uintToBase(num, buff + i, 10);
+				i += size;
+				break;
+			case 'p': // Si es pointer
+				buff[i++] = '0';
+				buff[i++] = 'x';
+			case 'x': // Si es hexadecimal
+				num = va_arg(pa, uint64_t);
+				size = uintToBase(num, buff + i, 16);
+				i += size;
+				break;
+			case 'X':
+				num = va_arg(pa, unsigned int);
+				size = uintToBase(num, buff + i, 16);
+				_64Hexfill(16 - size, buff + i);
+				i += 16;
+				break;
+			case 'o': // Si es octal
+				num = va_arg(pa, unsigned int);
+				size = uintToBase(num, buff + i, 8);
+				i += size;
+				break;
+			case 'c':
+				num = va_arg(pa, int);
+				buff[i++] = num;
+				break;
+			case 's':
+				tmp = va_arg(pa, char *);
+				size = strcat(buff + i, tmp);
+				break;
+		}
+        format++;
+    }
+	printf_buffer[i++] = '\0';
+	return i;
 }
 
 int putChar(char c) {
@@ -430,7 +642,7 @@ int strcpy(char *dst, const char *src) {
 	do {
 		dst[i] = src[i];
 	} while(src[i++] != 0);
-	return 0;
+	return i;
 }
 
 int strcat(char *dst, const char *src) {
@@ -438,16 +650,55 @@ int strcat(char *dst, const char *src) {
 }
 
 long int strtoint(char* s){
-	long int num = 0;
+	return strtoint_base(s, 10);
+}
+
+uint64_t strtoint_base(char* s, unsigned int base){
+	uint64_t num = 0;
 	int neg = 0; 
 	int i = 0;
+	int rest = 0;
 
-	if (s[i] == '-') {
+	if (base == 10 && s[i] == '-') {
 		neg = 1;
 		i++;
 	}
-    while (s[i]) { 
-        num = num * 10 + s[i] - '0'; 
+    while (s[i]) {
+		num = num * base; 
+        if (base <= 10) 
+			rest = s[i] - '0';
+		else if (base == 16) {
+			switch(s[i]) {
+				case 'a':
+				case 'A':
+					rest = 10;
+					break;
+				case 'b':
+				case 'B':
+					rest = 11;
+					break;
+				case 'c':
+				case 'C':
+					rest = 12;
+					break;
+				case 'd':
+				case 'D':
+					rest = 13;
+					break;
+				case 'e':
+				case 'E':
+					rest = 14;
+					break;
+				case 'f':
+				case 'F':
+					rest = 15;
+					break;
+				default:
+					rest = s[i] - '0';
+					break;
+			}
+		} 
+		num += rest;
 		i++;
 	}
 	
@@ -456,6 +707,9 @@ long int strtoint(char* s){
 
     return num; 
 }
+
+
+
 
 int is_num(char *s) {
 	int i = 0;
