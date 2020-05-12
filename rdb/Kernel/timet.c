@@ -11,7 +11,7 @@ static int findFunction(function func);
 static void shiftFunctions(unsigned int idx);
 
 static void pTimersHandler(void);
-static int addTimer(int pid, unsigned int millis);
+static int addTimer(uint64_t pid, unsigned int millis);
 
 static periodic_func functions[MAX_FUNCTIONS];
 static unsigned int functions_size;
@@ -99,7 +99,7 @@ static void pTimersHandler(void) {
 	}
 }
 
-static int addTimer(int pid, unsigned int millis) {
+static int addTimer(uint64_t pid, unsigned int millis) {
 	unsigned int i = 0;
 	while (i < processes_waiting_size) { //si ya tiene un timer que lo actualice
 		if (timers[i].pid == pid) {
@@ -118,7 +118,7 @@ static int addTimer(int pid, unsigned int millis) {
 }
 
 void wait(unsigned int millis) {
-	int pid;
+	uint64_t pid;
 	getPid(&pid);
 
 	if (addTimer(pid, millis) == 0)

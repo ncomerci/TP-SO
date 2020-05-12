@@ -10,7 +10,7 @@
 static char buffer[BUFFER_SIZE];
 static int buffer_size = 0;
 static int buffer_idx = 0;
-static int waiting_pid = 0;
+static uint64_t waiting_pid = 0;
 static int process_waiting = 0;
 
 #define SHIFT_IN_KEY 
@@ -92,7 +92,7 @@ void keyboard_handler(void) {
     **pero si no es letra, solo depende de si está o no presionado el SHIFT
     */
     if (CTRLED && regular_f[aux] == 'c') {
-      int pid;
+      uint64_t pid;
       getPid(&pid);
       if (pid > 1 && isCurrentForeground()) { // Not shell
         _outportb(0x20, 0x20);
@@ -129,7 +129,7 @@ int kbRead(char * buff, unsigned int count) {
     return 0;
 
   if (buffer_size <= 0) {
-    int pid;
+    uint64_t pid;
     getPid(&pid);
     if (isCurrentForeground()) {
       process_waiting = 1;

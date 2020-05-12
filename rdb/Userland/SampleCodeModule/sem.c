@@ -1,9 +1,9 @@
 #include <lib_user.h>
 #include <sem.h>
 
-static int getIndexOnSem(int pid, sem_t *sem);
+static int getIndexOnSem(uint64_t pid, sem_t *sem);
 static void enqueue(sem_t *sem, sem_queue *sq);
-static int dequeuePid(sem_t *sem);
+static uint64_t dequeuePid(sem_t *sem);
 
 static sem_t semaphores[MAX_SEMAPHORES];
 static unsigned int sem_size = 0;
@@ -19,7 +19,9 @@ sem_id sem_init_open(const char *name, unsigned int init_val)
     if (name == NULL || *name == '\0')
         return -1;
     unsigned int i = 0;
-    int pid = getPid();
+    uint64_t pid;
+    if (getPid(&pid) < 0)
+        return -1;
     while (i < sem_size && semaphores[i].name[0] != '\0')
     {
         if (strcmp(semaphores[i].name, name) == 0)
@@ -69,7 +71,10 @@ int sem_wait(sem_id sem)
     if (sem < 0 || sem >= sem_size || semaphores[sem].name[0] == '\0')
         return -1; // Semaphore does not exist
 
-    int pid = getPid();
+    uint64_t pid;
+    if (getPid(&pid) < 0)
+        return -1;
+
     int idx = getIndexOnSem(pid, &(semaphores[sem]));
     if (idx < 0)
         return -1;
@@ -104,11 +109,11 @@ static void enqueue(sem_t *sem, sem_queue *sq)
     sem->processes_waiting++;
 }
 
-static int dequeuePid(sem_t *sem)
+static uint64_t dequeuePid(sem_t *sem)
 {
     if (sem->first == NULL)
         return -1;
-    int pid = (sem->first)->pid;
+    uint64_t pid = (sem->first)->pid;
     if (sem->last == sem->first)
         sem->last = NULL;
     sem->first = (sem->first)->next;
@@ -116,7 +121,7 @@ static int dequeuePid(sem_t *sem)
     return pid;
 }
 
-static int getIndexOnSem(int pid, sem_t *sem)
+static int getIndexOnSem(uint64_t pid, sem_t *sem)
 {
     for (unsigned int j = 0; j < sem->processes_size && (sem->processes)[j].pid != -1; j++)
     {
@@ -137,7 +142,7 @@ int sem_post(sem_id sem)
 
     if (semaphores[sem].processes_waiting > 0)
     {
-        int pid = dequeuePid(&(semaphores[sem]));
+        uint64_t pid = dequeuePid(&(semaphores[sem]));
         if (pid < 0)
             return -1; // Failed at dequeuing
         changeState(pid, READY);
@@ -149,7 +154,9 @@ int sem_close(sem_id sem)
 { //remove a ps from semaphore
     if (sem < 0 || sem >= sem_size || semaphores[sem].name[0] == '\0')
         return -1; // Semaphore does not exist
-    int pid = getPid();
+    uint64_t pid;
+    if (getPid(&pid) < 0)
+        return -1;
     unsigned int i = 0;
     while (i < semaphores[sem].processes_size)
     {

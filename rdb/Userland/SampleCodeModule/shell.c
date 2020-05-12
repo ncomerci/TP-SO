@@ -48,7 +48,12 @@ static gameState aracnoid_save;
 static int aracnoid_saved;
 
 void startShell(void){
-    changePriority(getPid(), 0);
+    uint64_t shellPid;
+    if (getPid(&shellPid) < 0) {
+        printf("getPid Failed");
+        return;
+    }
+    changePriority(shellPid, 0);
     user_writing_color = USER_COLOR;
     setBackgroundColor(USER_BACKGROUND_COLOR);
     int real_buff_size = BUFFER_SIZE - strlen(user) - strlen(syst_name);

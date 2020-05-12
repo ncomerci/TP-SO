@@ -49,8 +49,8 @@
         void * stack;
         void * rsp;
         void * rbp;
-        int pid;
-        int ppid;
+        uint64_t pid;
+        uint64_t ppid;
         int foreground;
         process_state state;
         unsigned int priority;
@@ -63,8 +63,8 @@
         char name[MAX_NAME_LENGTH];
         void * rsp;
         void * rbp;
-        int pid;
-        int ppid;
+        uint64_t pid;
+        uint64_t ppid;
         int foreground;
         process_state state;
         unsigned int priority;
@@ -96,16 +96,16 @@
 
     void * scheduler(void * rsp);
 
-    int createProcess(ps_info_t * ps_info, fd_info_t * fd_info, int * pid);
-    int kill(int pid);
-    int getPid(int * pid);
+    int createProcess(ps_info_t * ps_info, fd_info_t * fd_info, uint64_t * pid);
+    int kill(uint64_t pid);
+    int getPid(uint64_t * pid);
     int getCurrentIdx(void);
-    int getProcessesAlive(unsigned int * amount);
-    int getProcessesInfo(PCB_info * arr, unsigned int max_size, unsigned int * size);
+    int getProcessesAlive(uint64_t * amount);
+    int getProcessesInfo(PCB_info * arr, uint64_t max_size, uint64_t * size);
     int exit(void);
-    int changePriority(int pid, unsigned int new_priority);
-    int changeState(int pid, process_state new_state);
-    int changeForegroundStatus(int pid, int status);
+    int changePriority(uint64_t pid, unsigned int new_priority);
+    int changeState(uint64_t pid, process_state new_state);
+    int changeForegroundStatus(uint64_t pid, int status);
     int isCurrentForeground(void);
     int sys_process(void * option, void * arg1, void * arg2, void * arg3);
     int getCurrentIdx(void); 

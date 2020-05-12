@@ -1,6 +1,7 @@
 #ifndef _PHI_H
 #define _PHI_H
 
+    #include <lib_user.h>
     #include <sem.h> 
 
     #define MAX_PHILOS 5    // How many philosophers are dining tonight.
@@ -21,7 +22,7 @@
     typedef struct philo_t{
         state_t state; 
         hands_t hands; 
-        int pid; 
+        uint64_t pid; 
         int table_pos; 
     }philo_t;
 

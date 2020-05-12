@@ -60,8 +60,8 @@ typedef struct PCB_info {
     char name[MAX_PROCESS_NAME_LENGTH];
     void * rsp;
     void * rbp;
-    int pid;
-    int ppid;
+    uint64_t pid;
+    uint64_t ppid;
     int foreground;
     process_state state;
     unsigned int priority;
@@ -86,16 +86,16 @@ typedef struct fd_info_t {
     char * out;
 } fd_info_t;
 
-int createProcess(main_func_t * main_f, char * name, int foreground, char * in, char * out);
-int kill(int pid);
-int getPid(void);
-unsigned int getProcessesAlive(void);
-int getProcessesInfo(PCB_info * arr, unsigned int max_size);
-int exit(int pid);
-int changePriority(int pid, unsigned int new_priority);
-int changeState(int pid, int new_state);
-int changeForegroundStatus(int pid, int state);
-int getProcessState(int pid, process_state * state);
+int createProcess(main_func_t * main_f, char * name, int foreground, char * in, char * out, uint64_t * pid);
+int kill(uint64_t pid);
+int getPid(uint64_t * pid);
+uint64_t getProcessesAlive(void);
+uint64_t getProcessesInfo(PCB_info * arr, uint64_t max_size);
+int exit(uint64_t pid);
+int changePriority(uint64_t pid, unsigned int new_priority);
+int changeState(uint64_t pid, int new_state);
+int changeForegroundStatus(uint64_t pid, int state);
+int getProcessState(uint64_t pid, process_state * state);
 
 // ----------- Timet ------------
 unsigned long getTicks(void);

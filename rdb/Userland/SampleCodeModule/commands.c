@@ -136,7 +136,12 @@ void getLocalTime(){
     printColored("Buenos Aires", 0xe37100);
     println(" is:");
     main_func_t aux = {clockUpdater, 0, NULL};
-    int pid = createProcess(&aux, "Clock Updater", 0, NULL, NULL);
+    
+    uint64_t pid;
+    if (createProcess(&aux, "Clock Updater", 0, NULL, NULL, &pid) < 0) {
+        printf("Create process failed\n");
+        return;
+    }
 
     while ((scanChar() != ESC));
     println("");
@@ -238,17 +243,17 @@ void printProcesses(void) {
     int amount = getProcessesInfo(info, MAX_PROCESSES);
     printf("PID, PPID, Name, Piority, RBP, RSP, State, Foreground, Time left, Quantums\n");
     for (unsigned int i = 0; i < amount; i++)
-        printf("%d, %d, %s, %d, %p, %p, %s, %s, %d, %d\n", info[i].pid, info[i].ppid, info[i].name, (int) info[i].priority, (uint64_t) info[i].rbp, (uint64_t) info[i].rsp, processess_states[(int) info[i].state], (info[i].foreground != 0)?"Yes":"No", (int) info[i].given_time, (int) info[i].aging);   
+        printf("%d, %d, %s, %d, %p, %p, %s, %s, %d, %d\n", (int) info[i].pid, (int) info[i].ppid, info[i].name, (int) info[i].priority, (uint64_t) info[i].rbp, (uint64_t) info[i].rsp, processess_states[(int) info[i].state], (info[i].foreground != 0)?"Yes":"No", (int) info[i].given_time, (int) info[i].aging);   
 }
 
-void killProcess(int pid) {
+void killProcess(uint64_t pid) {
     if (pid == 1)
         printColored("not_that_dummy though\n", color_rgb[1]);
     else
         printf("Process %s\n", (kill(pid) == 0)?"killed":"not found");
 }
 
-void block(int pid){
+void block(uint64_t pid){
     if(pid == 1){
          printColored("not_that_dummy though\n", color_rgb[1]);
     }else{
@@ -267,7 +272,7 @@ void block(int pid){
    
 }
 
-void changeProcessPriority(int pid, unsigned int priority) {
+void changeProcessPriority(uint64_t pid, unsigned int priority) {
 
     int aux = changePriority(pid, priority);
     if (aux != 0)
@@ -278,8 +283,12 @@ void changeProcessPriority(int pid, unsigned int priority) {
 
 void testProcess(void) {
     main_func_t testprocess = {testProcess1Main, 100, NULL};
-    int pid = createProcess(&testprocess, "Test Process", 1, NULL, NULL);
-    printf("Created process pid: %d\n", pid);
+    uint64_t pid;
+    if (createProcess(&testprocess, "Test Process", 1, NULL, NULL, &pid) < 0) {
+        printf("Create Process Failed\n");
+        return;
+    }
+    printf("Created process pid: %d\n", (int) pid);
 }
 
 void testProcessArgs(void) {
@@ -295,8 +304,12 @@ void testProcessArgs(void) {
     strcpy(args[5],NULL);
 
     main_func_t testprocessargs = {testProcessArgsMain, 5, args};
-    int pid = createProcess(&testprocessargs, "Test Process Arguments", 1, NULL, NULL);
-    printf("Created process pid: %d\n", pid);
+    uint64_t pid;
+    if (createProcess(&testprocessargs, "Test Process Arguments", 1, NULL, NULL, &pid) < 0){
+        printf("Create Process Failed\n");
+        return;
+    }
+    printf("Created process pid: %d\n", (int) pid);
 
     for (int i = 4; i >= 0; i--) {
         free(args[i]); 
@@ -306,16 +319,25 @@ void testProcessArgs(void) {
 
 void loop(void) {
     main_func_t loop = {loopMain, 0, NULL};
-    int pid = createProcess(&loop, "Loop", 0, NULL, NULL);
-    printf("Created process pid: %d\n", pid);
+    uint64_t pid;
+    if (createProcess(&loop, "Loop", 0, NULL, NULL, &pid) < 0){
+        printf("Create Process Failed\n");
+        return;
+    }
+    printf("Created process pid: %d\n", (int) pid);
     //changeState(pid, 1);
     //printf("Process %d %s\n", pid, (kill(pid) == 0)?"Killed":"Not Killed");
 }
 
 int testProcess1Main(int argc, char ** argv) {
+    uint64_t pid;
     printf("Received %d arguments!\n", argc);
-    for (unsigned int i = 0; i < argc; i++)
-        printf("Hola! Soy el proceso %d\n", getPid());
+    for (unsigned int i = 0; i < argc; i++) {
+        getPid(&pid);
+        printf("Sent");
+        return;
+    }
+    printf("Hola! Soy el proceso %d\n", (int) pid);
     return 0;
 }
 
@@ -328,42 +350,71 @@ int testProcessArgsMain(int argc, char ** argv) {
 }
 
 int loopMain(int argc, char ** argv) {
+    uint64_t pid;
     for (unsigned int i = 0; 1 ; i++) {
         wait(1000);
-        printf("%d - Soy el proceso id: %d!\n", i, getPid());
+        if (getPid(&pid) < 0) {
+            printf("getPid failed\n");
+            return -1;
+        }
+        printf("%d - Soy el proceso id: %d!\n", i, (int) pid);
     }
     return 0;
 }
 
 void testMM(void) {
     main_func_t testmm = {main_test_mm, 0, NULL};
-    int pid = createProcess(&testmm, "Test MM", 0, NULL, NULL);
-    printf("Created process pid: %d\n", pid);
+    uint64_t pid;
+    if (createProcess(&testmm, "Test MM", 0, NULL, NULL, &pid) < 0){
+        printf("Create Process Failed\n");
+        return;
+    }
+    printf("Created process pid: %d\n", (int) pid);
 }
 
 void testPS(void) {
     main_func_t testps = {main_test_process, 0, NULL};
-    int pid = createProcess(&testps, "Test PS", 0, NULL, NULL);
-    printf("Created process pid: %d\n", pid);
+    uint64_t pid;
+    if (createProcess(&testps, "Test PS", 0, NULL, NULL, &pid) < 0){
+        printf("Create Process Failed\n");
+        return;
+    }
+    printf("Created process pid: %d\n", (int) pid);
 }
 
 void testSem(void) {
     main_func_t sem1 = {semProccess1, 0, NULL};
     main_func_t sem2 = {semProccess2, 0, NULL};
-    int pid1 = createProcess(&sem1, "Test Semaphore 1", 0, NULL, NULL);
-    printf("Sem Proccess 1 pid: %d\n", pid1);
-    int pid2 = createProcess(&sem2, "Test Semaphore 2", 0, NULL, NULL);
-    printf("Sem Proccess 2 pid: %d\n", pid2);
+    uint64_t pid1;
+    uint64_t pid2;
+    if (createProcess(&sem1, "Test Semaphore 1", 0, NULL, NULL, &pid1) < 0) {
+        printf("Create Process Failed\n");
+        return;
+    }
+    printf("Sem Proccess 1 pid: %d\n", (int) pid1);
+    if (createProcess(&sem2, "Test Semaphore 2", 0, NULL, NULL, &pid2) < 0) {
+        printf("Create Process Failed\n");
+        return;
+    }
+    printf("Sem Proccess 2 pid: %d\n", (int) pid2);
 }
 
 void testPipe(void){
     char argv[][1] = {{'\n'}}; 
+    uint64_t pid1;
+    uint64_t pid2;
     main_func_t pipeps1 = {pipeProccess, 1, (char **)argv};
     main_func_t pipeps2 = {pipeProccess, 1, (char **)argv};
-    int pid1 = createProcess(&pipeps1, "Test Pipe 1", 1, NULL, "patito"); //lee de stdin y escribe en patito
-    printf("Pipe Proccess 1 pid: %d\n", pid1);
-    int pid2 = createProcess(&pipeps2, "Test Pipe 2", 0, "patito", NULL); //lee de patito y escribe en stdout
-    printf("Pipe Proccess 2 pid: %d\n", pid2);
+    if (createProcess(&pipeps1, "Test Pipe 1", 1, NULL, "patito", &pid1) < 0) { //lee de stdin y escribe en patito
+        printf("Create Process Failed\n");
+        return;
+    }
+    printf("Pipe Proccess 1 pid: %d\n", (int) pid1);
+    if (createProcess(&pipeps2, "Test Pipe 2", 0, "patito", NULL, &pid2) < 0) { //lee de patito y escribe en stdout
+        printf("Create Process Failed\n");
+        return;
+    }
+    printf("Pipe Proccess 2 pid: %d\n", (int) pid2);
 }
 
 void test(char * option) {

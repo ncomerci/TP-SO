@@ -197,11 +197,11 @@ static void * getNextProcess(void * rsp){
     return p->rsp;
 }
 
-int kill(int pid) {
+int kill(uint64_t pid) {
     return changeState(pid, KILLED);
 }
 
-int getPid(int * pid) {
+int getPid(uint64_t * pid) {
     *pid = curr_process->pid;
     return 0;
 }
@@ -242,11 +242,11 @@ int exit() {
     return kill(curr_process->pid);
 }
 
-int changePriority(int pid, unsigned int new_priority){
+int changePriority(uint64_t pid, unsigned int new_priority){
     return 0;
 }
 
-int changeState(int pid, process_state new_state) {
+int changeState(uint64_t pid, process_state new_state) {
     for(unsigned int i = 0; i < processes_size; i++){
         if(processes[i].pid == pid) {
             int last_state = processes[i].state;
@@ -298,7 +298,7 @@ int changeState(int pid, process_state new_state) {
     return -1; 
 }
 
-int changeForegroundStatus(int pid, int status) {
+int changeForegroundStatus(uint64_t pid, int status) {
     for(int i=0; i < processes_size; i++){
         if(processes[i].pid == pid) {
             if (processes[i].state == KILLED)
@@ -310,7 +310,7 @@ int changeForegroundStatus(int pid, int status) {
     return -1; 
 }
 
-int getProcessState(int pid, process_state * state) {
+int getProcessState(uint64_t pid, process_state * state) {
     for(int i=0; i < processes_size; i++){
         if(processes[i].pid == pid) {
             *state = processes[i].state; 

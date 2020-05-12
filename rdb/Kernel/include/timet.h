@@ -12,12 +12,12 @@
 typedef void (*function)(void);
 
 typedef struct process_waiting {
-	int pid;
+	uint64_t pid;
 	unsigned int ticks_left;
 }process_waiting;
 
 typedef struct periodic_func {
-	int pid;
+	uint64_t pid;
 	function f;
 	int arg;
 	unsigned int ticks;

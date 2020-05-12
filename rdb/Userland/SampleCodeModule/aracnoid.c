@@ -90,7 +90,7 @@ void aracnoid(gameState * save_file, int * saved) { // Debería devolver un save
     main_updater.argv = NULL;
 
     if (!loaded_save)
-        updater_pid = createProcess(&main_updater, "Aracnoid Updater", 0, NULL, NULL); // (60 fps?) FALTA VELOCIDAD DE LA BARRITA EN EL UPDATE
+        createProcess(&main_updater, "Aracnoid Updater", 0, NULL, NULL, &updater_pid); // (60 fps?) FALTA VELOCIDAD DE LA BARRITA EN EL UPDATE
     while (gs.remaining_lives && !player_won) {
         if (!loaded_save && !gs.shooted && !showingInfoMessage) {
             showHelpMessage();
@@ -107,7 +107,7 @@ void aracnoid(gameState * save_file, int * saved) { // Debería devolver un save
             if (aux > 0)
                 return;
             setScene();
-            updater_pid = createProcess(&main_updater, "Aracnoid Updater", 0, NULL, NULL);
+            createProcess(&main_updater, "Aracnoid Updater", 0, NULL, NULL, &updater_pid);
         }
         else if (!gs.shooted && last_key == ' ') {
             gs.ball.mov.movingDirX = directionDecision();

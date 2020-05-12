@@ -32,61 +32,57 @@ mm_stat getMMStats(void) {
 
 // ----------- Process ------------
 
-int createProcess(main_func_t * main_f, char * name, int foreground, char * in, char * out) {
-	int pid;
+int createProcess(main_func_t * main_f, char * name, int foreground, char * in, char * out, uint64_t * pid) {
 	ps_info_t ps_aux = {main_f, name, foreground};
 	fd_info_t fd_aux = {in, out};
-	if (_sys_process((void *)(uint64_t) 0, (void *) &ps_aux, (void *) &fd_aux, (void *) &pid) != 0)
+	if (_sys_process((void *)(uint64_t) 0, (void *) &ps_aux, (void *) &fd_aux, (void *) pid) != 0)
 		return -1;
-	return pid;
+	return 0;
 }
 
-int kill(int pid) {
+int kill(uint64_t pid) {
 	int aux;
-	if (_sys_process((void *)(uint64_t) 1, (void *)(uint64_t) pid, (void *) &aux, 0) != 0)
+	if (_sys_process((void *)(uint64_t) 1, (void *) pid, (void *) &aux, 0) != 0)
 		return -1;
 	return aux;
 }
 
-int getPid(void) {
-	int pid;
-	if (_sys_process((void *)(uint64_t) 2, (void *) &pid, 0, 0) != 0)
-		return -1;
-	return pid;
+int getPid(uint64_t * pid) {
+	return _sys_process((void *)(uint64_t) 2, (void *) &pid, 0, 0);
 }
 
-unsigned int getProcessesAlive(void) {
-	unsigned int size;
+uint64_t getProcessesAlive(void) {
+	uint64_t size;
 	if (_sys_process((void *)(uint64_t) 3, (void *) &size, 0, 0) != 0)
 		return -1;
 	return size;
 }
 
-int getProcessesInfo(PCB_info * arr, unsigned int max_size) {
-	unsigned int size;
-	if (_sys_process((void *)(uint64_t) 4, (void *) arr, (void *)(uint64_t) max_size, (void *) &size) != 0)
+uint64_t getProcessesInfo(PCB_info * arr, uint64_t max_size) {
+	uint64_t size;
+	if (_sys_process((void *)(uint64_t) 4, (void *) arr, (void *) max_size, (void *) &size) != 0)
 		return -1;
 	return size;
 }
 
-int exit(int pid) {
-	return _sys_process((void *)(uint64_t) 5, (void *)(uint64_t) pid, 0, 0);
+int exit(uint64_t pid) {
+	return _sys_process((void *)(uint64_t) 5, (void *) pid, 0, 0);
 }
 
-int changePriority(int pid, unsigned int new_priority) {
-	return _sys_process((void *)(uint64_t) 6, (void *)(uint64_t) pid, (void *)(uint64_t) new_priority, 0);
+int changePriority(uint64_t pid, unsigned int new_priority) {
+	return _sys_process((void *)(uint64_t) 6, (void *) pid, (void *)(uint64_t) new_priority, 0);
 }
 
-int changeState(int pid, int new_state) {
-	return _sys_process((void *)(uint64_t) 7, (void *)(uint64_t) pid, (void *)(uint64_t) new_state, 0);
+int changeState(uint64_t pid, int new_state) {
+	return _sys_process((void *)(uint64_t) 7, (void *) pid, (void *)(uint64_t) new_state, 0);
 }
 
-int changeForegroundStatus(int pid, int state) {
-	return _sys_process((void *)(uint64_t) 8, (void *)(uint64_t) pid, (void *)(uint64_t) state, 0);
+int changeForegroundStatus(uint64_t pid, int state) {
+	return _sys_process((void *)(uint64_t) 8, (void *) pid, (void *)(uint64_t) state, 0);
 }
 
-int getProcessState(int pid, process_state * state) {
-	return _sys_process((void *)(uint64_t) 9, (void *)(uint64_t) pid, (void *) state, 0);
+int getProcessState(uint64_t pid, process_state * state) {
+	return _sys_process((void *)(uint64_t) 9, (void *) pid, (void *) state, 0);
 }
 
 // ----------- Timet ------------
@@ -458,7 +454,8 @@ static int wrapSprintf(char * buff, const char *format, va_list pa) {
 				break;
 			case 's':
 				tmp = va_arg(pa, char *);
-				size = strcat(buff + i, tmp);
+				size = strcpy(buff + i, tmp) - 1;
+				i += size;
 				break;
 		}
         format++;

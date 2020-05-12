@@ -51,7 +51,7 @@ int main() {
 	main_func_t aux = {(int (*)(int, char **)) sampleCodeModuleAddress, 0, NULL};
 	ps_info_t ps_aux = {&aux, "Shell", 1};
 	fd_info_t fd_aux = {NULL, NULL};
-	int pid;
+	uint64_t pid;
 	createProcess(&ps_aux, &fd_aux, &pid);
 
 	_sti(); //las seteo de nuevo

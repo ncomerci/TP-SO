@@ -14,7 +14,7 @@ typedef int sem_id;
 //
 
 typedef struct sem_queue {
-   int pid;
+   uint64_t pid;
    struct sem_queue * next;
 } sem_queue;
 

@@ -12,7 +12,7 @@ int endless_loop(int argc, char ** argv){
 static void test_processes(void);
 
 typedef struct P_rq{
-  uint32_t pid;
+  uint64_t pid;
   process_state state;
 }p_rq;
 
@@ -28,9 +28,8 @@ static void test_processes(){
     // Create MAX_PROCESSES processes
     for(rq = 0; rq < MAX_TESTED_PROCESSES; rq++){
       main_func_t endfun = {endless_loop, 0, NULL};
-      p_rqs[rq].pid = createProcess(&endfun, "Endless Loop", 0, NULL, NULL);  // TODO: Port this call as required
 
-      if (p_rqs[rq].pid == -1){                           // TODO: Port this as required
+      if (createProcess(&endfun, "Endless Loop", 0, NULL, NULL, &(p_rqs[rq].pid)) == -1){                           // TODO: Port this as required
         printf("Error creating process\n");               // TODO: Port this as required
         return;
       }else{

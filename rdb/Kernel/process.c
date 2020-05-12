@@ -26,10 +26,10 @@ static unsigned quantum[MAX_PRIORITY - MIN_PRIORITY + 1];
 static int initialized = 0;
 static PCB * curr_process = NULL;
 static unsigned int prior = 0;
-static int processes_size = 0; //array size
-static int processes_alive = 0; //without the killed ones
-static int processes_ready = 0;
-static int processes_so_far = 0; //processes created, for the pid to be uique
+static uint64_t processes_size = 0; //array size
+static uint64_t processes_alive = 0; //without the killed ones
+static uint64_t processes_ready = 0;
+static uint64_t processes_so_far = 0; //processes created, for the pid to be uique
 
 void * scheduler(void * rsp) {
 
@@ -81,6 +81,7 @@ void * scheduler(void * rsp) {
     }
 
     else { //there are no processes ready
+        _outportb(0x20, 0x20);
         return halter.rsp;
     }
 }
@@ -151,7 +152,7 @@ static void * getNextProcess(void * rsp) {
     }
 }
 
-int createProcess(ps_info_t * ps_info, fd_info_t * fd_info, int * pid) {
+int createProcess(ps_info_t * ps_info, fd_info_t * fd_info, uint64_t * pid) {
     
     if (ps_info == NULL || fd_info == NULL || pid == NULL)
         return -1;
@@ -246,11 +247,11 @@ static void enqueueProcess(PCB * pp) {
     exp_queue[pp->priority].last = pp;
 }
 
-int kill(int pid) {
+int kill(uint64_t pid) {
     return changeState(pid, KILLED);
 }
 
-int getPid(int * pid) {
+int getPid(uint64_t * pid) {
     *pid = curr_process->pid;
     return 0;
 }
@@ -261,12 +262,12 @@ int getCurrentIdx(void) {
     return (( (uint64_t) curr_process - (uint64_t) processes ) / sizeof(PCB));
 }
 
-int getProcessesAlive(unsigned int * amount) {
+int getProcessesAlive(uint64_t * amount) {
     *amount = processes_alive;
     return 0; 
 }
 
-int getProcessesInfo(PCB_info * arr, unsigned int max_size, unsigned int * size) {
+int getProcessesInfo(PCB_info * arr, uint64_t max_size, uint64_t * size) {
     unsigned int j = 0;
     for (unsigned int i = 0; i < processes_size && j < max_size; i++) {
         if (processes[i].state != KILLED) {
@@ -291,7 +292,7 @@ int exit() {
     return kill(curr_process->pid);
 }
 
-int changePriority(int pid, unsigned int new_priority) {
+int changePriority(uint64_t pid, unsigned int new_priority) {
     
     if(new_priority >= MIN_PRIORITY && new_priority <=MAX_PRIORITY){
         for(int i=0; i < processes_size; i++){
@@ -306,7 +307,7 @@ int changePriority(int pid, unsigned int new_priority) {
     return -1; 
 }
 
-int changeState(int pid, process_state new_state) {
+int changeState(uint64_t pid, process_state new_state) {
     for(int i=0; i < processes_size; i++){
         if(processes[i].pid == pid) {
             process_state last_state = processes[i].state;
@@ -360,7 +361,7 @@ int changeState(int pid, process_state new_state) {
     return -1; 
 }
 
-int changeForegroundStatus(int pid, int status) {
+int changeForegroundStatus(uint64_t pid, int status) {
     for(int i=0; i < processes_size; i++){
         if(processes[i].pid == pid) {
             if (processes[i].state == KILLED)
@@ -372,7 +373,7 @@ int changeForegroundStatus(int pid, int status) {
     return -1; 
 }
 
-int getProcessState(int pid, process_state * state) {
+int getProcessState(uint64_t pid, process_state * state) {
     for(int i=0; i < processes_size; i++){
         if(processes[i].pid == pid) {
             *state = processes[i].state; 
@@ -392,34 +393,34 @@ int sys_process(void * option, void * arg1, void * arg2, void * arg3) {
     
     switch ((uint64_t) option) {
         case 0:
-            return createProcess((ps_info_t *) arg1, (fd_info_t *) arg2, (int *) arg3);
+            return createProcess((ps_info_t *) arg1, (fd_info_t *) arg2, (uint64_t *) arg3);
             break;
         case 1:
-            return kill((int)(uint64_t) arg1); 
+            return kill((uint64_t) arg1); 
             break;
         case 2:
-            return getPid((int *) arg1);
+            return getPid((uint64_t *) arg1);
             break;
         case 3:
-            return getProcessesAlive((unsigned int *) arg1);
+            return getProcessesAlive((uint64_t *) arg1);
             break;
         case 4:
-            return getProcessesInfo((PCB_info *) arg1, (unsigned int)(uint64_t) arg2, (unsigned int *) arg3);  
+            return getProcessesInfo((PCB_info *) arg1, (uint64_t) arg2, (uint64_t *) arg3);  
             break;
         case 5:
             return exit(); 
             break;
         case 6:
-            return changePriority((int)(uint64_t) arg1, (int)(uint64_t) arg2);
+            return changePriority((uint64_t) arg1, (unsigned int)(uint64_t) arg2);
             break;
         case 7:
-            return changeState((int)(uint64_t) arg1, (process_state)(uint64_t) arg2); 
+            return changeState((uint64_t) arg1, (process_state)(uint64_t) arg2); 
             break;
         case 8:
-            return changeForegroundStatus((int)(uint64_t) arg1, (int)(uint64_t) arg2);
+            return changeForegroundStatus((uint64_t) arg1, (int)(uint64_t) arg2);
             break;
         case 9:
-            return getProcessState((int)(uint64_t) arg1, (process_state *) arg2);
+            return getProcessState((uint64_t) arg1, (process_state *) arg2);
             break;
     }
     return 0;

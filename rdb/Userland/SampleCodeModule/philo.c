@@ -121,8 +121,8 @@ static int thinking_philos_main(int argc, char ** argv) {
         sprintf(philo_name, "Philo %d", i);
         sprintf(args[i][0], "%p", (void *) &(philos[i]));
         sprintf(args[i][1], "%p", (void *) &n_philos);
-        f_aux.argv = args;
-        philos[i].pid = createProcess(&f_aux, philo_name, 0, NULL, NULL);
+        f_aux.argv = args[i];
+        createProcess(&f_aux, philo_name, 0, NULL, NULL, &philos[i].pid);
     }
 
     while ((c = scanChar()) != ESC) {
