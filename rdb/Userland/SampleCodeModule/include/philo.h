@@ -6,6 +6,7 @@
 
     #define MAX_PHILOS 5    // How many philosophers are dining tonight.
     #define PHILO_NAME_MAX_LENGTH 30
+    #define MAX_ARG_LENGTH 50
     
     // The philosophers are arranged around a circular table. These macros compute the index of the
     // philosopher on the left and right respectively of the given philosopher.
@@ -23,9 +24,14 @@
         state_t state; 
         hands_t hands; 
         uint64_t pid; 
-        int table_pos; 
+        unsigned int table_pos; 
     }philo_t;
 
-  
+    typedef struct philos_info_t{
+        sem_id sticks[MAX_PHILOS];
+        unsigned int n_philos; 
+        philo_t philos[MAX_PHILOS];
+        int finished;
+    }philos_info_t;
 
 #endif

@@ -29,7 +29,49 @@ static unsigned int prior = 0;
 static uint64_t processes_size = 0; //array size
 static uint64_t processes_alive = 0; //without the killed ones
 static uint64_t processes_ready = 0;
-static uint64_t processes_so_far = 0; //processes created, for the pid to be uique
+static uint64_t processes_so_far = 0; //processes created, for the pid to be unique
+
+static uint64_t isValidProcess(PCB *p){
+  if (!p) return 1;
+
+  int i;
+  for (i = 0; i < MAX_PROCESSES ; i++)
+    if (p == &processes[i]) return 1;
+
+  return 0;
+}
+
+static uint64_t checkQueue(QUEUE_HD *p){
+  //vacia
+  if (p->first == NULL && p->last == NULL) return 1;
+
+  //Uno NULL y el otro no
+  if (p->first == NULL || p->last == NULL) return 0;
+
+  PCB *pcb_p = p->first;
+  int count = 0;
+
+  //desde first debo llegar a last en menos de MAX_PROCESSES pasos y last->next_in_queue debe ser NULL
+  while(pcb_p != p->last && count < MAX_PROCESSES){
+    if (pcb_p == NULL || !isValidProcess(pcb_p)) return 0;
+    pcb_p = pcb_p->next_in_queue;
+    count++;
+  }
+
+  if (pcb_p == p->last && isValidProcess(pcb_p) && pcb_p->next_in_queue == NULL) return 1;
+
+  return 0;
+}
+
+static uint64_t checkQueues(){
+   int i;
+   for (i = 0; i < MAX_PRIORITY - MIN_PRIORITY + 1; i++){
+     if (!checkQueue(&queues[0][i])) return 0;
+     if (!checkQueue(&queues[1][i])) return 0;
+   }
+  return 1;
+}
+
 
 void * scheduler(void * rsp) {
 
