@@ -21,7 +21,6 @@ static void test_processes(){
   uint8_t rq;
   uint8_t alive = 0;
   uint8_t action;
-  int rounds = 0;
 
   while (1){
 

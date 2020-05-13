@@ -2,6 +2,7 @@
 #define _CMDS_H
 
 #include <aracnoid.h>
+#include <philo.h>
 
 void startAracnoid(gameState * save_file, int * saved);
 void printUserManual(void); 
@@ -29,6 +30,9 @@ int testProcessArgsMain(int argc, char ** argv);
 int loopMain(int argc, char ** argv);
 int main_test_mm(int argc, char ** argv);
 int main_test_process(int argc, char ** argv);
-void testSem(void); 
+int main_test_prior(int argc, char ** argv);
+int main_test_sync(int argc, char ** argv);
+void testSem(void);
+void philosDiningProblem(void); 
 
 #endif

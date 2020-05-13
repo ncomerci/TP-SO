@@ -9,6 +9,8 @@ static int findColor(char * color);
 static int semProccess1(int argc, char ** argv);
 static int semProccess2(int argc, char ** argv); 
 static int pipeProccess(int argc, char ** argv);
+static void testPrior(void);
+static void testSync(void);
 
 static char * color_names[] = {"black", "red", "green", "yellow", "blue", "pink", "light_blue", "white"};
 static uint32_t color_rgb[] = {0x000000, 0xFF0000, 0x00FF00, 0xFFFF00, 0x0000FF, 0xFF00FF, 0x00FFFF, 0xFFFFFF};
@@ -74,6 +76,18 @@ static int pipeProccess(int argc, char ** argv) {
     return 0;
 }
 
+static void testSync(void) {
+    main_func_t f_sync = {main_test_sync, 0, NULL};
+    uint64_t pid;
+    createProcess(&f_sync, "Test Sync", 0, NULL, NULL, &pid);
+}
+
+static void testPrior(void) {
+    main_func_t f_prior= {main_test_prior, 0, NULL};
+    uint64_t pid;
+    createProcess(&f_prior, "Test Prior", 0, NULL, NULL, &pid);
+}
+
 void printUserManual(){
     println(" _   _                ___  ___                        _ "); 
     println("| | | |               |  \\/  |                       | |");
@@ -94,6 +108,7 @@ void printUserManual(){
     println("- kill <pid>                           --> Kills process with PID <pid>.");
     println("- block <pid>                          --> Switches process PID <pid> between BLOCKED and READY state.");     
     println("- loop                                 --> Creates background process named loop.");  
+    println("- phylo                                --> Prints philosophers dining:use \"a\" to add a philosopher and \"r\" to remove one");
     println("- set                                  --> Sets some properties of the shell.");
     println("       + writing_color                 --> Sets user writing color.");
     println("                       + [color_name]");
@@ -432,6 +447,10 @@ void test(char * option) {
         testSem();
     else if(strcmp(option, "pipe") == 0)
         testPipe();
+    else if(strcmp(option, "prior") == 0)
+        testPrior();
+    else if(strcmp(option, "sync") == 0)
+        testSync();
     /*
     else if (strcmp(option, "zero_div") == 0)
         testDivException();
@@ -440,6 +459,30 @@ void test(char * option) {
     */
     else
         println("Invalid testing.");
+}
+
+void philosDiningProblem(void) {
+    int cant;
+    char buff[5];
+    int c;
+    unsigned int i;
+    do {       
+        i = 0;
+        printf("Enter initial amount of philosophers:\n");
+        while (i < 5 && (c = scanChar()) != '\n') {
+            buff[i++] = (char) c;
+            putChar(c);
+        }
+        buff[i] = '\0';
+    } while(sscanf(buff, "%d", &cant) < 0);
+    char ** args = malloc(2 * sizeof(char *));
+    args[0] = malloc(5 * sizeof(char));
+    args[1] = NULL;
+    sprintf(args[0], "%d", cant);
+    main_func_t f_philos = {thinking_philos_main, 1, args};
+    uint64_t pid;
+    printf("\n--> Philos Running with %d philosophers <--\n--> Press <a> to Add Philosophers <--\n--> Press <r> to Remove Philosophers <--\n", cant);
+    createProcess(&f_philos, "philo problem", 1, NULL, NULL, &pid);
 }
 
 void testInvOpCode() {

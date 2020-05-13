@@ -156,6 +156,21 @@ int ksem_close(sem_id sem) { //remove a ps from semaphore
     return -1; // process was not found on semaphore
 }
 
+int ksem_destroy(sem_id sem) {
+    if (sem < 0 || sem >= sem_size || semaphores[sem].name[0] == '\0')
+        return -1; // Semaphore does not exist
+
+    unsigned int i = 0;
+    while (i < semaphores[sem].processes_size) {
+        semaphores[sem].name[0] = '\0';
+        if (sem == sem_size - 1)
+            sem_size--;
+        sem_amount--;
+        i++;
+    }
+    return -1; // process was not found on semaphore
+}
+
 int ksem_getvalue(sem_id sem, int * sval) { // sval is either 0 is returned; or a negative number whose absolute value is the count of the number of processes and threads currently blocked in sem_wait(3)
     if (sem < 0 || sem >= sem_size || semaphores[sem].name[0] == '\0')
         return -1; // Semaphore does not exist

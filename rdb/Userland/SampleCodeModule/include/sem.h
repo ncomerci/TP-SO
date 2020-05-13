@@ -38,5 +38,6 @@ int sem_wait(sem_id sem);
 int sem_post(sem_id sem);
 int sem_close(sem_id sem);
 int sem_getvalue(sem_id sem, int * sval);
+int sem_destroy(sem_id sem);
 
 #endif

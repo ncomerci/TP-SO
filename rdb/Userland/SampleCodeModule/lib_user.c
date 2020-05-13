@@ -2,7 +2,6 @@
 #include <lib_user.h>
 
 static char buffer[64] = { '0' };
-static char printf_buffer[PRINTF_BUFF_SIZE];
 
 static void _64Hexfill(int n, char * buffer);
 static int wrapSprintf(char * buff, const char *format, va_list pa);
@@ -200,9 +199,9 @@ int sscanf(const char *str, const char *format, ...) {
 				}
 				break;
 			case 'p': // Si es pointer
-				if (*format++ != '0')
+				if (*str++ != '0')
 					return -1;
-				if (*format++ != 'x')
+				if (*str++ != 'x')
 					return -1;
 			case 'x': // Si es hexadecimal
 				num_p = va_arg(pa, uint64_t *);
@@ -388,6 +387,7 @@ int printf(const char *format, ...) {
 */
 
 int printf(const char *format, ...) {
+	static char printf_buffer[PRINTF_BUFF_SIZE];
     va_list pa;  // Lista de parámetros
     va_start(pa, format);
 	int size = wrapSprintf(printf_buffer, format, pa);
@@ -460,7 +460,7 @@ static int wrapSprintf(char * buff, const char *format, va_list pa) {
 		}
         format++;
     }
-	printf_buffer[i++] = '\0';
+	buff[i++] = '\0';
 	return i;
 }
 

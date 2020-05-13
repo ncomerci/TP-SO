@@ -26,9 +26,9 @@ static void welcomeMessage(void);
 
 static char inputBuffer[BUFFER_SIZE];
 static char commandsHistory[COMMANDS_BUFFER_SIZE][BUFFER_SIZE];
-static char * commands[] = {"clear", "clock",  "help", "inforeg", "kill", "mem", "nice", "printmem", "ps", "set", "set writing_color", "test", "test mm", "test mem", "test pipe", "test process", "test process_args", "test ps", "test sem"};
-static char * void_func[] = {"help", "clock", "inforeg", "clear", "ps", "loop", "mem"};
-static void (*void_commands_func[])(void) = {printUserManual, getLocalTime, printRegistersInfo, clear, printProcesses, loop, printMMStats};
+static char * commands[] = {"clear", "clock", "help", "inforeg", "kill", "mem", "nice", "phylo", "printmem", "ps", "set", "set writing_color", "test", "test mm", "test mem", "test pipe", "test prior", "test process", "test process_args", "test ps", "test sem", "test sync"};
+static char * void_func[] = {"help", "clock", "inforeg", "clear", "ps", "loop","phylo", "mem"};
+static void (*void_commands_func[])(void) = {printUserManual, getLocalTime, printRegistersInfo, clear, printProcesses, loop, philosDiningProblem, printMMStats};
 
 static char * user = "not_so_dummie_user";
 static char * syst_name = "@rdb: ";
@@ -236,6 +236,10 @@ static void instructionHandler() {
                     startAracnoid(&aracnoid_save, &aracnoid_saved);
                     if(aracnoid_saved)
                         printColored("\n                                    Aracnoid is saved! type \"aracnoid\" to resume the game.\n\n", 0x04E798);
+                    executed = 0;
+                }
+                else if(strcmp(cmd, "phylo") == 0){
+                    philosDiningProblem();
                     executed = 0;
                 }
                 else
