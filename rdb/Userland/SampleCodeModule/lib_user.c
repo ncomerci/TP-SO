@@ -48,7 +48,7 @@ int kill(uint64_t pid) {
 }
 
 int getPid(uint64_t * pid) {
-	return _sys_process((void *)(uint64_t) 2, (void *) &pid, 0, 0);
+	return _sys_process((void *)(uint64_t) 2, (void *) pid, 0, 0);
 }
 
 uint64_t getProcessesAlive(void) {

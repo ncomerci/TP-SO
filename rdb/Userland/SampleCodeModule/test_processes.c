@@ -7,7 +7,7 @@ int endless_loop(int argc, char ** argv){
   while(1);
 }
 
-#define MAX_TESTED_PROCESSES 10 //Should be around 80% of the the processes handled by the kernel
+#define MAX_TESTED_PROCESSES 40 //Should be around 80% of the the processes handled by the kernel
 
 static void test_processes(void);
 
@@ -80,8 +80,6 @@ static void test_processes(){
           p_rqs[rq].state = READY; 
         }
     }
-
-    printf("Finished Round number %d\n", ++rounds); 
   }
 }
 

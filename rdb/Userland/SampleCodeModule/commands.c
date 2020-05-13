@@ -331,13 +331,12 @@ void loop(void) {
 
 int testProcess1Main(int argc, char ** argv) {
     uint64_t pid;
+    if (getPid(&pid) < 0)
+        return -1;
     printf("Received %d arguments!\n", argc);
     for (unsigned int i = 0; i < argc; i++) {
-        getPid(&pid);
-        printf("Sent");
-        return;
+        printf("Hey, im process %d!\n", (int) pid);
     }
-    printf("Hola! Soy el proceso %d\n", (int) pid);
     return 0;
 }
 

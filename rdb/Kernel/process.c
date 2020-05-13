@@ -16,7 +16,7 @@ static stackProcess stackModel = {15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2
 static PCB processes[MAX_PROCESSES];
 
 static PCB halter;
-static uint64_t halterStack[(INT_PUSH_STATE + PUSH_STATE_REGS) + HALTER_EXTRA_STACK_SPACE];
+static uint64_t halterStack[HALTER_STACK];
 
 static QUEUE_HD queues[2][MAX_PRIORITY - MIN_PRIORITY + 1];
 static int actual_queue = 0;
@@ -120,8 +120,6 @@ static void updateProcess(PCB * pp) {
         if (act_queue[prior].last == curr_process)
             act_queue[prior].last = NULL;
     }
-    
-    pp->next_in_queue = NULL;
 }
 
 static void * getNextProcess(void * rsp) {
@@ -244,7 +242,9 @@ static void enqueueProcess(PCB * pp) {
 
     if (exp_queue[pp->priority].last != NULL)
         (exp_queue[pp->priority].last)->next_in_queue = pp;
+
     exp_queue[pp->priority].last = pp;
+    pp->next_in_queue = NULL;
 }
 
 int kill(uint64_t pid) {

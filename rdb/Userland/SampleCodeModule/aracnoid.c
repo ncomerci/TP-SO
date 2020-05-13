@@ -68,7 +68,7 @@ static int last_sec;
 static int loaded_save;
 static int showingInfoMessage;
 static main_func_t main_updater;
-static int updater_pid;
+static uint64_t updater_pid;
 
 uint32_t colors[] = {BACKGROUND_COLOR, 0xC8D6B9, 0x9DBAD5, 0x8FC1A9, 0x769ECB, 0x7CAA98}; // Index represents lives left.
 
