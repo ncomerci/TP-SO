@@ -94,6 +94,9 @@ void printUserManual(){
     println("- kill <pid>                           --> Kills process with PID <pid>.");
     println("- block <pid>                          --> Switches process PID <pid> between BLOCKED and READY state.");     
     println("- loop                                 --> Creates background process named loop.");  
+    println("- wc                                   --> Count input lines"); 
+    println("- filter                               --> Filter vowels from input"); 
+    println("- cat                                  --> Prints input");
     println("- set                                  --> Sets some properties of the shell.");
     println("       + writing_color                 --> Sets user writing color.");
     println("                       + [color_name]");
@@ -329,6 +332,53 @@ void loop(void) {
     //printf("Process %d %s\n", pid, (kill(pid) == 0)?"Killed":"Not Killed");
 }
 
+void printInput(void){
+    char c;
+    int i=0;
+    char filteredInput[100]; 
+
+    while( (c= scanChar()) != ESC){
+        if(c != '\n')
+            filteredInput[i++] = c; 
+        else{
+            filteredInput[i] = '\0'; 
+            i=0;
+            printf("%s\n", filteredInput); 
+        }
+    }
+}
+
+
+void countLines(void){
+    int lines= 0; 
+    int c; 
+    while( (c=scanChar()) != ESC ){
+        if(c == '\n')
+            lines++;
+    }
+
+    printf("%d", lines); 
+}
+
+static int isVowel(int c){
+     if(c == 'a' || c=='e' || c == 'i' || c == 'o' || c == 'u' || c == 'A' || c=='E' || c == 'I' || c == 'O' || c == 'U')
+        return 1;
+    return 0;
+ }
+
+ void filterVowels(void){
+     char c;
+     int i=0;
+    char filteredInput[100]; 
+     while( (c= scanChar()) != '\n'){
+         if(isVowel(c) == 0)
+            filteredInput[i++] = c; 
+     }
+     filteredInput[i] = '\0'; 
+     printf("%s", filteredInput); 
+ }
+
+ 
 int testProcess1Main(int argc, char ** argv) {
     uint64_t pid;
     printf("Received %d arguments!\n", argc);

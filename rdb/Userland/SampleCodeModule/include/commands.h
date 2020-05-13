@@ -30,5 +30,9 @@ int loopMain(int argc, char ** argv);
 int main_test_mm(int argc, char ** argv);
 int main_test_process(int argc, char ** argv);
 void testSem(void); 
+void countLines(void);
+void filterVowels(void);
+void printInput(void); 
+
 
 #endif
