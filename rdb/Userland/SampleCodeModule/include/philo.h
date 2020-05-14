@@ -4,7 +4,7 @@
     #include <lib_user.h>
     #include <sem.h> 
 
-    #define MAX_PHILOS 15    // How many philosophers are dining tonight.
+    #define MAX_PHILOS 35    // How many philosophers are dining tonight.
     #define PHILO_NAME_MAX_LENGTH 30
     #define MAX_ARG_LENGTH 50
     

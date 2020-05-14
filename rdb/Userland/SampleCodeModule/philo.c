@@ -2,9 +2,11 @@
 #include <test_util.h>
 #include <lib_user.h>
 
-static int viewer_main(int argc, char ** argv); 
-static void think(state_t * state, sem_id state_lock, sem_id viewer_sem);
-static void eat(state_t * state, sem_id state_lock, sem_id viewer_sem);
+static int viewer_main(int argc, char ** argv);
+static int equals(int * v1, int * v2, unsigned int size);
+static int checkState(int * state, unsigned int size);
+static void think();
+static void eat();
 static int take_sticks( philo_t * philo, sem_id left, sem_id right, sem_id state_lock, sem_id viewer_sem);
 static int drop_sticks( philo_t * philo, sem_id left, sem_id right, sem_id state_lock, sem_id viewer_sem);
 static void initializePhilos(philo_t * philos, unsigned int n_philos);
@@ -13,44 +15,55 @@ static int removePhilo(philos_info_t * info);
 
 
 // How a philosopher thinks.
-static void think(state_t * state, sem_id state_lock, sem_id viewer_sem) {
-    *state = THINKING;
-    sem_post(viewer_sem);
+static void think() {
     wait(GetUniform(2000));
 }
 
 // How a philosopher eats.
 static void eat(state_t * state, sem_id state_lock, sem_id viewer_sem) {
-    *state = EATING;
-    sem_post(viewer_sem);
     wait(GetUniform(1000));
 }
 
-static int take_sticks(philo_t * philo, sem_id left, sem_id right, sem_id state_lock, sem_id viewer_sem) {
-    philo->state = HUNGRY;  
+static int take_sticks(philo_t * philo, sem_id left, sem_id right, sem_id state_lock, sem_id viewer_sem) { 
 
     if (philo->table_pos % 2 == 0) {
         //first take right stick
         sem_wait(right);  //wait for it to be free
         philo->hands.right = right; 
-        printf("Philo %d take right stick (stick sem_id n: %d)\n", philo->table_pos, right);
+        //printf("Philo %d take right stick (stick sem_id n: %d)\n", philo->table_pos, right);
+
+        wait(GetUniform(1000));
 
         //then take left stick
 
         sem_wait(left);
+
+        sem_wait(state_lock);
+        philo->state = EATING;
+        sem_post(state_lock);
+        sem_post(viewer_sem);
+
         philo->hands.left = left;
-        printf("Philo %d take left stick (stick sem_id n: %d)\n", philo->table_pos, left);
+        //printf("Philo %d take left stick (stick sem_id n: %d)\n", philo->table_pos, left);
         
     }else{
         //first take left stick 
         sem_wait(left);
         philo->hands.left = left; 
-        printf("Philo %d take left stick (stick sem_id n: %d)\n", philo->table_pos, left);
+        //printf("Philo %d take left stick (stick sem_id n: %d)\n", philo->table_pos, left);
+
+        wait(GetUniform(1000));
 
         //then take right stick 
         sem_wait(right);  //wait for it to be free
+
+        sem_wait(state_lock);
+        philo->state = EATING;
+        sem_post(state_lock);
+        sem_post(viewer_sem);
+
         philo->hands.right = right; 
-        printf("Philo %d take right stick (stick sem_id n: %d)\n", philo->table_pos, right);
+        //printf("Philo %d take right stick (stick sem_id n: %d)\n", philo->table_pos, right);
     }
 
     return 0;    
@@ -70,25 +83,41 @@ static int drop_sticks(philo_t * philo, sem_id left, sem_id right, sem_id state_
     
     if (philo->table_pos % 2 == 0) {
         philo->hands.left = -1;
-        sem_post(left);
-        printf("Philo %d drop left stick (stick sem_id n: %d)\n", philo->table_pos, left);
 
-        //wait(1000);
+        sem_wait(state_lock);
+
+        sem_post(left);
+
+        philo->state = THINKING;
+        sem_post(state_lock);
+        sem_post(viewer_sem);
+
+        //printf("Philo %d drop left stick (stick sem_id n: %d)\n", philo->table_pos, left);
+
+        wait(GetUniform(1000));
 
         philo->hands.right = -1;
         sem_post(right);
-        printf("Philo %d drop right stick (stick sem_id n: %d)\n", philo->table_pos, right);
+        //printf("Philo %d drop right stick (stick sem_id n: %d)\n", philo->table_pos, right);
     }
     else {
         philo->hands.right = -1;
-        sem_post(right);
-        printf("Philo %d drop right stick (stick sem_id n: %d)\n", philo->table_pos, right);
 
-        //wait(1000);
+        sem_wait(state_lock);
+
+        sem_post(right);
+
+        philo->state = THINKING;
+        sem_post(state_lock);
+        sem_post(viewer_sem);
+
+        //printf("Philo %d drop right stick (stick sem_id n: %d)\n", philo->table_pos, right);
+
+        wait(GetUniform(1000));
 
         philo->hands.left = -1;
         sem_post(left);
-        printf("Philo %d drop left stick (stick sem_id n: %d)\n", philo->table_pos, left);
+        //printf("Philo %d drop left stick (stick sem_id n: %d)\n", philo->table_pos, left);
     }   
 
     return 0;
@@ -130,7 +159,7 @@ static int philo_main(int argc, char ** argv) {
     while(1){
 
         n = *n_philos;
-        printf("Philo %d is hungry\n", me->table_pos);
+        //printf("Philo %d is hungry\n", me->table_pos);
         sprintf(left_stick_name, "Stick %d", (me->table_pos) % n);
         sprintf(right_stick_name, "Stick %d", ((me->table_pos) + 1) % n);
 
@@ -138,10 +167,10 @@ static int philo_main(int argc, char ** argv) {
         right_stick_sem = sem_open(right_stick_name);
 
         take_sticks(me, left_stick_sem, right_stick_sem, state_lock, viewer_sem);
-        printf("Philo %d is going to eat\n", me->table_pos);
+        //printf("Philo %d is going to eat\n", me->table_pos);
         eat(&(me->state), state_lock, viewer_sem);
         drop_sticks(me, left_stick_sem, right_stick_sem, state_lock, viewer_sem);
-        printf("Philo %d is going to think\n", me->table_pos); 
+        //printf("Philo %d is going to think\n", me->table_pos); 
         think(&(me->state), state_lock, viewer_sem);
         sem_close(left_stick_sem);
         sem_close(right_stick_sem);
@@ -171,6 +200,7 @@ int thinking_philos_main(int argc, char ** argv) {
 
     main_func_t f_aux = {philo_main, 2, NULL};
 
+    sem_id state_lock = sem_open("state_lock");
     sem_id viewer_sem = sem_open("philo_viewer");
     uint64_t viewer_pid;
 
@@ -180,8 +210,6 @@ int thinking_philos_main(int argc, char ** argv) {
     main_func_t f_viewer = {viewer_main, 1, viewer_args};
 
     sprintf(viewer_args[0], "%p", &info);
-
-    createProcess(&f_viewer, "Philo Viewer", 0, NULL, NULL, &viewer_pid);
 
     for (unsigned int i = 0; i < info.n_philos; i++) {
         char sem_name[SEM_NAME_MAX_LENGTH];
@@ -198,6 +226,8 @@ int thinking_philos_main(int argc, char ** argv) {
         f_aux.argv = args[i];
         createProcess(&f_aux, philo_name, 0, NULL, NULL, &info.philos[i].pid);
     }
+
+    createProcess(&f_viewer, "Philo Viewer", 0, NULL, NULL, &viewer_pid);
 
     while ((c = scanChar()) != ESC) {
         if (c == 'a')
@@ -229,6 +259,7 @@ int thinking_philos_main(int argc, char ** argv) {
         sem_destroy(info.sticks[i]);
 
     sem_destroy(viewer_sem);
+    sem_destroy(state_lock);
 
     return 0;
 }
@@ -245,12 +276,15 @@ static void initializePhilos(philo_t * philos, unsigned int n_philos) {
 
 static int viewer_main(int argc, char ** argv) {
     philos_info_t * info;
-    int sval;
+    //int sval;
     sscanf(argv[0], "%p", &info);
 
     unsigned int i;
     unsigned int n;
-    int states[MAX_PHILOS];
+    int states[2][MAX_PHILOS] = {{0}, {0}};
+    int actual_state = 0;
+    int * last_state;
+    int * state;
 
     sem_id viewer_sem = sem_init_open("philo_viewer", 0);
     sem_id state_lock = sem_open("state_lock");
@@ -259,8 +293,24 @@ static int viewer_main(int argc, char ** argv) {
         sem_wait(viewer_sem); //in case a philo is changing state
 
         n = info->n_philos;
+        last_state = states[actual_state];
+        state = states[1 - actual_state];
 
         sem_wait(state_lock);
+
+        for(i = 0; i < info->n_philos; i++)
+            state[i] = (info->philos)[i].state == EATING;
+        
+        sem_post(state_lock);
+
+        if (!equals(state, last_state, n) == 0) {
+            if (checkState(state, n) != 0)
+                printf("An error ocurred. Two processes eating together!\n");
+            for(i = 0; i < info->n_philos; i++)
+                printf("%s ", (state[i])?"E":".");
+            printf("\n");
+            actual_state = 1 - actual_state;
+        }
 
         /*
         for (i = 0; i < info->n_philos; i++) {
@@ -281,4 +331,18 @@ static int viewer_main(int argc, char ** argv) {
 
     return 0;
     
+}
+
+static int equals(int * v1, int * v2, unsigned int size) {
+    for (int i = 0; i < size; i++)
+        if (v1[i] - v2[i] != 0)
+            return v1[i] - v2[i];
+    return 0;
+}
+
+static int checkState(int * state, unsigned int size) {
+    for (int i = 0; i < size; i++)
+        if (state[i] && state[(i+1)%size])
+            return -1;
+    return 0;
 }

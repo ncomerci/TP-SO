@@ -1,7 +1,7 @@
 #ifndef _SEM_H
 #define _SEM_H
 
-#define MAX_SEMAPHORES 15
+#define MAX_SEMAPHORES 40
 #define MAX_PROCESSES_PER_SEMAPHORE 10
 #define SEM_NAME_MAX_LENGTH 30
 
