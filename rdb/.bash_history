@@ -117,3 +117,51 @@ vim .dckr_gdb.sh
 sed -i -e 's/\r$//' .win_gdb.sh
 sed -i -e 's/\r$//' .dckr_gdb.sh
 sed -i -e 's/\r$//' .dckr_gdb
+cd 
+make clean
+make all
+gdb
+gdb
+clear
+clear
+clear
+cd
+make clena
+make clean
+make all
+make clean
+make all
+make clean
+make all
+make clean
+make all
+make clean
+make all
+make clean
+make all
+make clean
+make all
+make clean
+make all
+make clean
+make all
+make clean
+make all
+make clean
+make all
+make clean
+make all
+make clean
+make all
+make clean
+make all
+make clean
+make all
+make clean
+make all
+make clean
+make all
+make clean
+make all
+make clean
+make all

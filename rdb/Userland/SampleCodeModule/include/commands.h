@@ -34,5 +34,9 @@ int main_test_prior(int argc, char ** argv);
 int main_test_sync(int argc, char ** argv);
 void testSem(void);
 void philosDiningProblem(void); 
+void countLines(void);
+void filterVowels(void);
+void printInput(void); 
+
 
 #endif

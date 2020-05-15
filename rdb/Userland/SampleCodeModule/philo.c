@@ -1,4 +1,5 @@
 #include <philo.h>
+#include <commands.h>
 #include <test_util.h>
 #include <lib_user.h>
 
@@ -331,6 +332,8 @@ int thinking_philos_main(int argc, char ** argv) {
         else if (c == 'x')
             for(unsigned int i = 0; i < info.n_philos; i++)
                 kill(info.philos[i].pid);
+        else if (c == 'p')
+            printProcesses();
     }
     //finish process 
 

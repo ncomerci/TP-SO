@@ -1,26 +1,27 @@
 #include <stdint.h>
+#include <sem.h>
+#include <lib_user.h> 
 
-static uint64_t my_create_process(char * name){
-  /*uint16_t pid; 
-  main_func_t test_ps = {endless_loop, 0, NULL};
-  createProcess( &test_ps,name, 0, NULL, NULL, &pid);
-  return pid; */
+static uint64_t my_create_process(int (f)(int, char**), char * name){
+  uint64_t pid = 0; 
+  main_func_t f_ps = {f, 0, NULL};
+  createProcess( &f_ps, name, 0, NULL, NULL, &pid); //CHECKEAR ERROR!!!!!
+  return pid;
 }
 
-static uint64_t my_sem_open(char *sem_id, uint64_t initialValue){
-
-  return 0;
+static uint64_t my_sem_open(char *name, uint64_t initialValue){
+  return sem_init_open(name, (unsigned int) initialValue);
 }
 
-static uint64_t my_sem_wait(char *sem_id){
+static uint64_t my_sem_wait(sem_id sem_id){
   return sem_wait(sem_id);
 }
 
-static uint64_t my_sem_post(char *sem_id){
+static uint64_t my_sem_post(sem_id sem_id){
   return sem_post(sem_id);
 }
 
-static uint64_t my_sem_close(char *sem_id){
+static uint64_t my_sem_close(sem_id sem_id){
   return sem_close(sem_id);
 }
 
@@ -36,75 +37,85 @@ static void slowInc(uint64_t *p, uint64_t inc){
   *p = aux;
 }
 
-static void my_process_inc(){
+static int my_process_inc(int argc, char ** argv){
   uint64_t i;
+  sem_id sem;
 
-  if (!my_sem_open(SEM_ID, 1)){
+  if ((sem = my_sem_open(SEM_ID, 1)) < 0){
     printf("ERROR OPENING SEM\n");
-    return;
+    return -1;
   }
   
   for (i = 0; i < N; i++){
-    my_sem_wait(SEM_ID);
+    my_sem_wait(sem);
     slowInc(&global, 1);
-    my_sem_post(SEM_ID);
+    my_sem_post(sem);
   }
 
-  my_sem_close(SEM_ID);
+  my_sem_close(sem);
   
   printf("Final value: %d\n", global);
+
+  return 0;
 }
 
-static void my_process_dec(){
+static int my_process_dec(int argc, char ** argv){
   uint64_t i;
+  sem_id sem; 
 
-  if (!my_sem_open(SEM_ID, 1)){
+  if ((sem = my_sem_open(SEM_ID, 1)) < 0){
     printf("ERROR OPENING SEM\n");
-    return;
+    return -1;
   }
   
   for (i = 0; i < N; i++){
-    my_sem_wait(SEM_ID);
+    my_sem_wait(sem);
     slowInc(&global, -1);
-    my_sem_post(SEM_ID);
+    my_sem_post(sem);
   }
 
-  my_sem_close(SEM_ID);
+  my_sem_close(sem);
 
   printf("Final value: %d\n", global);
+
+  return 0;
 }
 
 static void test_sync(){
   uint64_t i;
-
+  
   global = 0;
 
   printf("CREATING PROCESSES...\n");
 
   for(i = 0; i < TOTAL_PAIR_PROCESSES; i++){
-    my_create_process("my_process_inc");
-    my_create_process("my_process_dec");
+    my_create_process(my_process_inc, "my_process_inc");
+    my_create_process(my_process_dec,"my_process_dec");
   }
   
   // The last one should print 0
 }
 
-static void my_process_inc_no_sem(){
+static int my_process_inc_no_sem(int argc, char ** argv){
   uint64_t i;
   for (i = 0; i < N; i++){
     slowInc(&global, 1);
   }
 
   printf("Final value: %d\n", global);
+
+  return 0;
 }
 
-static void my_process_dec_no_sem(){
+static int my_process_dec_no_sem(int argc, char ** argv){
   uint64_t i;
   for (i = 0; i < N; i++){
     slowInc(&global, -1);
   }
 
   printf("Final value: %d\n", global);
+
+  return 0;
 }
 
 static void test_no_sync(){
@@ -115,8 +126,8 @@ static void test_no_sync(){
   printf("CREATING PROCESSES...\n");
 
   for(i = 0; i < TOTAL_PAIR_PROCESSES; i++){
-    my_create_process("my_process_inc_no_sem");
-    my_create_process("my_process_dec_no_sem");
+    my_create_process(my_process_inc_no_sem, "my_process_inc_no_sem");
+    my_create_process(my_process_dec_no_sem, "my_process_dec_no_sem");
   }
 
   // The last one should not print 0

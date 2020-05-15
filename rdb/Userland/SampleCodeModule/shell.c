@@ -242,6 +242,18 @@ static void instructionHandler() {
                     philosDiningProblem();
                     executed = 0;
                 }
+                else if(strcmp(cmd, "wc") == 0) {
+                    countLines();
+                    executed = 0;
+                }
+                else if(strcmp(cmd, "filter") == 0) {
+                    filterVowels();
+                    executed = 0;
+                }
+                else if(strcmp(cmd, "cat") == 0) {
+                    printInput();
+                    executed = 0;
+                }
                 else
                     executed = command_launch(cmd);
                 break;
