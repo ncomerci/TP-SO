@@ -165,3 +165,47 @@ make clean
 make all
 make clean
 make all
+cd
+make clean
+make all
+make clean
+make clean
+make all
+make clean
+make all
+make clean
+make all
+make clean
+make all
+make clean
+make all
+make clean
+make all
+make clean
+make all
+make clean
+make all
+make clean
+make all
+make clean
+make all
+make clean
+make all
+make clean
+make all
+make clean
+make all
+make all
+make clean
+make all
+make clean
+make all
+make all
+make clean
+make all
+gdb
+cd rdb
+clear
+make clean
+make all
+gdb

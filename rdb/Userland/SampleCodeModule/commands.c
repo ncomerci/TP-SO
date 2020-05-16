@@ -11,6 +11,7 @@ static int semProccess2(int argc, char ** argv);
 static int pipeProccess(int argc, char ** argv);
 static void testPrior(void);
 static void testSync(void);
+static int isVowel(int c); 
 
 static char * color_names[] = {"black", "red", "green", "yellow", "blue", "pink", "light_blue", "white"};
 static uint32_t color_rgb[] = {0x000000, 0xFF0000, 0x00FF00, 0xFFFF00, 0x0000FF, 0xFF00FF, 0x00FFFF, 0xFFFFFF};
@@ -351,7 +352,7 @@ void loop(void) {
 void printInput(void){
     char c;
     int i=0;
-    char filteredInput[100]; 
+    char filteredInput[MAX_BUFFER]; 
 
     while( (c= scanChar()) != ESC){
         if(c != '\n')
@@ -385,7 +386,7 @@ static int isVowel(int c){
  void filterVowels(void){
      char c;
      int i=0;
-    char filteredInput[100]; 
+    char filteredInput[MAX_BUFFER]; 
      while( (c= scanChar()) != '\n'){
          if(isVowel(c) == 0)
             filteredInput[i++] = c; 

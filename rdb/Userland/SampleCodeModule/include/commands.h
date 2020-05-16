@@ -4,6 +4,8 @@
 #include <aracnoid.h>
 #include <philo.h>
 
+#define MAX_BUFFER 100
+
 void startAracnoid(gameState * save_file, int * saved);
 void printUserManual(void); 
 void getLocalTime(void);

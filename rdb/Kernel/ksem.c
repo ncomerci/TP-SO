@@ -2,27 +2,27 @@
 #include <process.h>
 #include <ksem.h>
 
-static int getIndexOnSem(uint64_t pid, sem_t * sem);
+static uint64_t getIndexOnSem(uint64_t pid, sem_t * sem);
 static void enqueue(sem_t * sem, sem_queue * sq);
 static uint64_t dequeuePid(sem_t * sem);
 
 static sem_t semaphores[MAX_SEMAPHORES];
-static unsigned int sem_size = 0; 
-static unsigned int sem_amount = 0; 
+static uint64_t sem_size = 0; 
+static uint64_t sem_amount = 0; 
 
 sem_id ksem_open(const char * name) {
     return ksem_init_open(name, 1);
 }
 
-sem_id ksem_init_open(const char * name, unsigned int init_val) {
+sem_id ksem_init_open(const char * name, uint64_t init_val) {
     if (name == NULL || *name == '\0')
         return -1;
-    unsigned int i = 0;
+    uint64_t i = 0;
     uint64_t pid;
     getPid(&pid);
     while (i < sem_size && semaphores[i].name[0] != '\0') {
         if (strcmp(semaphores[i].name, name) == 0) {
-            unsigned int j = 0;
+            uint64_t j = 0;
             while (j < semaphores[i].processes_size && semaphores[i].processes[j].pid != -1) {
                 if(semaphores[i].processes[j].pid == pid) // Process already opened this semaphore
                     return -1;
@@ -65,8 +65,8 @@ int ksem_wait(sem_id sem){
 
     uint64_t pid;
     getPid(&pid);
-    int idx = getIndexOnSem(pid, &(semaphores[sem]));
-    if (idx < 0)
+    uint64_t idx = getIndexOnSem(pid, &(semaphores[sem]));
+    if (idx >= sem->processes_size)
         return -1;
 
     spin_lock(&(semaphores[sem].lock));
@@ -106,12 +106,13 @@ static uint64_t dequeuePid(sem_t * sem) {
     return pid;
 }   
 
-static int getIndexOnSem(uint64_t pid, sem_t * sem) {
-    for (unsigned int j = 0; j < sem->processes_size && (sem->processes)[j].pid != -1; j++) {
+static uint64_t getIndexOnSem(uint64_t pid, sem_t * sem) {
+    uint64_t j;
+    for (j = 0; j < sem->processes_size && (sem->processes)[j].pid != -1; j++) {
         if((sem->processes)[j].pid == pid)
             return j; 
     }
-    return -1;
+    return j;
 }
 
 int ksem_post(sem_id sem) {
@@ -136,7 +137,7 @@ int ksem_close(sem_id sem) { //remove a ps from semaphore
         return -1; // Semaphore does not exist
     uint64_t pid;
     getPid(&pid);
-    unsigned int i = 0;
+    uint64_t i = 0;
     while (i < semaphores[sem].processes_size) {
         if (semaphores[sem].processes[i].pid == pid) {
             semaphores[sem].processes[i].pid = -1;
@@ -160,7 +161,7 @@ int ksem_destroy(sem_id sem) {
     if (sem < 0 || sem >= sem_size || semaphores[sem].name[0] == '\0')
         return -1; // Semaphore does not exist
 
-    unsigned int i = 0;
+    uint64_t i = 0;
     while (i < semaphores[sem].processes_size) {
         semaphores[sem].name[0] = '\0';
         if (sem == sem_size - 1)
@@ -171,9 +172,9 @@ int ksem_destroy(sem_id sem) {
     return -1; // process was not found on semaphore
 }
 
-int ksem_getvalue(sem_id sem, int * sval) { // sval is either 0 is returned; or a negative number whose absolute value is the count of the number of processes and threads currently blocked in sem_wait(3)
+uint64_t ksem_getvalue(sem_id sem, int * sval) { // sval is either 0 is returned; or a negative number whose absolute value is the count of the number of processes and threads currently blocked in sem_wait(3)
     if (sem < 0 || sem >= sem_size || semaphores[sem].name[0] == '\0')
         return -1; // Semaphore does not exist
     *sval = - semaphores[sem].processes_waiting; 
-    return (int) semaphores[sem].value; 
+    return semaphores[sem].value; 
 }
