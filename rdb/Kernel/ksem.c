@@ -183,10 +183,34 @@ uint64_t ksem_getvalue(sem_id sem, int * sval) { // sval is either 0 is returned
 }
 
 int ksem_get_semaphores_amount(unsigned int * size) {
+    *size = sem_amount;
     return 0;
 }
 
-int ksem_get_semaphores_info(sem_info * arg1, unsigned int max_size, unsigned int * size) {
+int ksem_get_semaphores_info(sem_info * arr, unsigned int max_size, unsigned int * size) {
+    unsigned int j = 0;
+    unsigned int k = 0;
+    sem_queue * it;
+    
+    for(unsigned int i = 0 ; (i < sem_size) && (j < sem_amount); i++) {
+        if (semaphores[i].name[0] != '\0') {
+            strcpy(arr[j].name, semaphores[i].name); 
+            arr[j].value = semaphores[i].value;
+            k = 0;
+            while ( it != NULL ) {
+                arr[j].processes_waiting[k] = it->pid; 
+                it = it->next;
+                k++;
+            } 
+            arr[j].processes_waiting_amount = k;
+            arr[j].id = i; 
+
+            j++; 
+        }
+    }
+
+    *size = j; 
+
     return 0;
 }
 

@@ -31,10 +31,11 @@
     } sem_t;
 
     typedef struct sem_info {
-    sem_id id;
-    char name[SEM_NAME_MAX_LENGTH];
-    uint64_t value;
-    unsigned int processes_waiting;
+        sem_id id;
+        char name[SEM_NAME_MAX_LENGTH];
+        uint64_t value;
+        unsigned int processes_waiting[MAX_PROCESSES_PER_SEMAPHORE];
+        unsigned int processes_waiting_amount;
     }sem_info;
 
     void spin_lock(char * lock);
@@ -47,7 +48,7 @@
     uint64_t ksem_getvalue(sem_id sem, int * sval);
     int ksem_destroy(sem_id sem);
     int ksem_get_semaphores_amount(unsigned int * size);
-    int ksem_get_semaphores_info(sem_info * arg1, unsigned int max_size, unsigned int * size);
+    int ksem_get_semaphores_info(sem_info * arr, unsigned int max_size, unsigned int * size);
     int sys_ksem(void * option, void * arg2, void * arg3, void * arg4);
 
 #endif

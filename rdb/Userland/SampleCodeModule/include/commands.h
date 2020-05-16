@@ -6,6 +6,8 @@
 
 #define MAX_BUFFER 100
 
+typedef enum {KERNEL, USER} sem_location;
+
 void startAracnoid(gameState * save_file, int * saved);
 void printUserManual(void); 
 void getLocalTime(void);
@@ -34,12 +36,14 @@ int main_test_mm(int argc, char ** argv);
 int main_test_process(int argc, char ** argv);
 int main_test_prior(int argc, char ** argv);
 int main_test_sync(int argc, char ** argv);
+int main_countLines(int argc, char**argv);
+int main_filterVowels(int argc, char**argv);
+int main_printInput(int argc, char**argv); 
 void testSem(void);
 void philosDiningProblem(void); 
-void countLines(void);
-void filterVowels(void);
-void printInput(void); 
-void printSemaphores(void); 
-
+void printBothSemaphores(void);
+void printSemaphores(sem_location loc);
+void printPipes(void); 
+void shCommand(char params[MAX_PARAMS][LONGEST_PARAM]);
 
 #endif

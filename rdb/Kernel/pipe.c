@@ -177,7 +177,7 @@ void printPipes( pipe_info * arr , uint64_t * size){
         arr[j].blocked_processes = pipes[i].blocked_processes;
         strcpy(arr[j].name, pipes[i].name);   
         j++;
-
+    }
     
     *size = j; 
 

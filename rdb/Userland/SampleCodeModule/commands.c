@@ -4,6 +4,7 @@
 #include <lib_user.h>
 #include <sem.h>
 
+static int processCreation(int (func)(int argc, char**argv), int argc, char**argv, char* name, int foreground, char *in, char *out, uint64_t *pid);
 static int clockUpdater(int argc, char ** argv);
 static int findColor(char * color);
 static int semProccess1(int argc, char ** argv);
@@ -89,45 +90,63 @@ static void testPrior(void) {
     createProcess(&f_prior, "Test Prior", 0, NULL, NULL, &pid);
 }
 
+/*
+    System: inforeg, printmem, mem, sem, pipe
+    Process: ps, nice, kill, block
+    Apps: loop, phylo, wc, filter, cat, clock, sh
+    Screen: clear, set
+    Testing: test
+*/
+
 void printUserManual(){
-    println(" _   _                ___  ___                        _ "); 
-    println("| | | |               |  \\/  |                       | |");
-    println("| | | |___  ___ _ __  | .  . | __ _ _ __  _   _  __ _| |");
-    println("| | | / __|/ _ \\ '__| | |\\/| |/ _` | '_ \\| | | |/ _` | |");
-    println("| |_| \\__ \\  __/ |    | |  | | (_| | | | | |_| | (_| | |");
-    println(" \\___/|___/\\___|_|    \\_|  |_/\\__,_|_| |_|\\__,_|\\__,_|_|");
-    println("");
-    println("Commands are listed below:\n");
-    //println("- aracnoid                             --> A classic brick breaker like game.");
-    println("- clock                                --> Information about the local time in Buenos Aires.");
-    println("- inforeg                              --> Prints registers status.");
-    println("- printmem <starting_point>            --> Prints RAM status, starting at <starting_point>.");
-    println("- mem                                  --> Prints managed memory status");
-    println("- sem                                  --> Prints semaphores info."); 
-    println("- pipe                                 --> Prints pipes info."); 
-    println("- clear                                --> Clear shell screen.");
-    println("- ps                                   --> Show living processes info.");
-    println("- nice <pid> <priority>                --> Changes priority of process with PID <pid> to <priority>.");
-    println("- kill <pid>                           --> Kills process with PID <pid>.");
-    println("- block <pid>                          --> Switches process PID <pid> between BLOCKED and READY state.");     
-    println("- loop                                 --> Creates background process named loop.");  
-    println("- phylo                                --> Prints philosophers dining:use \"a\" to add a philosopher and \"r\" to remove one");
-    println("- wc                                   --> Count input lines"); 
-    println("- filter                               --> Filter vowels from input"); 
-    println("- cat                                  --> Prints input");
-    println("- set                                  --> Sets some properties of the shell.");
-    println("       + writing_color                 --> Sets user writing color.");
-    println("                       + [color_name]");
-    println("                       + default");  
-    println("- test                                 --> Tests exceptions.");
-    //println("       + zero_div                      --> Tests Zero-Division.");
-    //println("       + inv_op_code                   --> Tests Invalid Op-code.");
-    println("       + mem                           --> Tests Memory Allocation."); 
-    println("       + process                       --> Tests Processes");
-    println("       + sem                           --> Tests Semaphores");
-    println("       + pipe                          --> Tests Pipes");
-    println("       + sync                          --> Tests Synchro");
-    println("");
+    printf(" _   _                ___  ___                        _ \n"); 
+    printf("| | | |               |  \\/  |                       | |\n");
+    printf("| | | |___  ___ _ __  | .  . | __ _ _ __  _   _  __ _| |\n");
+    printf("| | | / __|/ _ \\ '__| | |\\/| |/ _` | '_ \\| | | |/ _` | |\n");
+    printf("| |_| \\__ \\  __/ |    | |  | | (_| | | | | |_| | (_| | |\n");
+    printf(" \\___/|___/\\___|_|    \\_|  |_/\\__,_|_| |_|\\__,_|\\__,_|_|\n");
+    printf("\n");
+    printf("Commands are listed below:\n\n");
+    printf("- sh <app calls>                       --> Shell calls with \"&\" and \"|\" for using with specific applications named down here.\n");
+    printf("                  > wc\n");
+    printf("                  > cat\n");
+    printf("                  > filter\n");
+    printf("                  > phylo\n");
+    printf("                  > loop\n");
+    printf(" < -- Remember not to use keyboard input consuming apps with background, this apps will get blocked -- >");
+    //printf("- aracnoid                             --> A classic brick breaker like game.\n");
+    printf("- clock                                --> Information about the local time in Buenos Aires.\n");
+    printf("- inforeg                              --> Prints registers status.\n");
+    printf("- printmem <starting_point>            --> Prints RAM status, starting at <starting_point>.\n");
+    printf("- mem                                  --> Prints managed memory status.\n");
+    printf("- sem                                  --> Prints semaphores info.\n"); 
+    printf("- pipe                                 --> Prints pipes info.\n"); 
+    printf("- clear                                --> Clear shell screen.\n");
+    printf("- ps                                   --> Show living processes info.\n");
+    printf("- nice <pid> <priority>                --> Changes priority of process with PID <pid> to <priority>.\n");
+    printf("- kill <pid>                           --> Kills process with PID <pid>.\n");
+    printf("- block <pid>                          --> Switches process PID <pid> between BLOCKED and READY state.\n");     
+    printf("- loop                                 --> Creates background process named loop.\n");  
+    printf("- phylo                                --> Prints philosophers dining:use \"a\" to add a philosopher and \"r\" to remove one\n");
+    printf("- wc                                   --> Count input lines\n"); 
+    printf("- filter                               --> Filter vowels from input\n"); 
+    printf("- cat                                  --> Prints input\n");
+    printf("- set                                  --> Sets some properties of the shell.\n");
+    printf("       + writing_color                 --> Sets user writing color.\n");
+    printf("                       + [color_name]\n");
+    printf("                       + default\n");  
+    printf("- test                                 --> Tests exceptions.\n");
+    //printf("       + zero_div                      --> Tests Zero-Division.\n");
+    //printf("       + inv_op_code                   --> Tests Invalid Op-code.\n");
+    printf("       + mm                            --> Stress Tests Memory Allocation.\n"); 
+    printf("       + mem                           --> Tests Memory Allocation.\n");
+    printf("       + ps                            --> Stress Tests Processes.\n"); 
+    printf("       + process                       --> Tests Processes\n");
+    printf("       + prior                         --> Tests Process Priorities\n");
+    printf("       + sync                          --> Tests Synchro\n");
+    printf("       + sem                           --> Tests Semaphores\n");
+    printf("       + pipe                          --> Tests Pipes\n");
+    printf("\n");
 }
 
 void command_set(char * option, char * color) {
@@ -216,23 +235,35 @@ void printMemoryStatus(long int offset){
     }
 }
 
-void printSemaphores(void){
-    printf("User Semaphores\n"); 
+void printBothSemaphores(void) {
+    printSemaphores(USER);
+    printSemaphores(KERNEL);
+}
+
+void printSemaphores(sem_location loc) {
     sem_info info[MAX_SEMAPHORES]; 
     uint64_t amount; 
-    getSemaphoresInfo(info, &amount);
-    printf("ID  NAME    VALUE   PROCESSES WAITING\n"); 
-    for(unsigned int i = 0 ; i < amount ; i++ ){
-        printf("%d      %s       %d      %d\n", info[i].id, info[i].name, info[i].value, info[i].processes_waiting); 
+    switch(loc) {
+        case KERNEL:
+            printf("Kernel Semaphores\n"); 
+            ksem_get_semaphores_info(info, &amount);
+            break;
+        case USER:
+            printf("User Semaphores\n"); 
+            sem_get_semaphores_info(info, &amount);
+            break;
     }
-
-    printf("Kernel Semaphores\n"); 
-
+    printf("ID; NAME; VALUE; PROCESSES WAITING\n"); 
+    for(unsigned int i = 0 ; i < amount ; i++ ) {
+        printf("%d; %s; %d; {", info[i].id, info[i].name, (int) info[i].value);
+        for(unsigned int j = 0; j < info[i].processes_waiting_amount; j++)
+            printf("%d", (int) info[i].processes_waiting[j]);
+        printf("}\n");  
+    } 
 }
 
-void printPipes(){
-
-}
+// void printPipes(){ 
+// }
 
 void startAracnoid(gameState * save_file, int * saved) {
     aracnoid(save_file, saved);
@@ -281,9 +312,9 @@ void printMMStats(void) {
 void printProcesses(void) {
     PCB_info info[MAX_PROCESSES];
     int amount = getProcessesInfo(info, MAX_PROCESSES);
-    printf("PID, PPID, Name, Piority, RBP, RSP, State, Foreground, Time left, Quantums\n");
+    printf("PID; PPID; Name; Piority; RBP; RSP; State; Foreground; Time left; Quantums\n");
     for (unsigned int i = 0; i < amount; i++)
-        printf("%d, %d, %s, %d, %p, %p, %s, %s, %d, %d\n", (int) info[i].pid, (int) info[i].ppid, info[i].name, (int) info[i].priority, (uint64_t) info[i].rbp, (uint64_t) info[i].rsp, processess_states[(int) info[i].state], (info[i].foreground != 0)?"Yes":"No", (int) info[i].given_time, (int) info[i].aging);   
+        printf("%d; %d; %s; %d; %p; %p; %s; %s; %d; %d\n", (int) info[i].pid, (int) info[i].ppid, info[i].name, (int) info[i].priority, (uint64_t) info[i].rbp, (uint64_t) info[i].rsp, processess_states[(int) info[i].state], (info[i].foreground != 0)?"Yes":"No", (int) info[i].given_time, (int) info[i].aging);   
 }
 
 void killProcess(uint64_t pid) {
@@ -360,7 +391,7 @@ void testProcessArgs(void) {
 void loop(void) {
     main_func_t loop = {loopMain, 0, NULL};
     uint64_t pid;
-    if (createProcess(&loop, "Loop", 0, NULL, NULL, &pid) < 0){
+    if (createProcess(&loop, "Loop", 1, NULL, NULL, &pid) < 0){
         printf("Create Process Failed\n");
         return;
     }
@@ -369,7 +400,7 @@ void loop(void) {
     //printf("Process %d %s\n", pid, (kill(pid) == 0)?"Killed":"Not Killed");
 }
 
-void printInput(void){
+int main_printInput(int argc, char**argv){ //ARREGLAR
     char c;
     int i=0;
     char filteredInput[MAX_BUFFER]; 
@@ -383,10 +414,12 @@ void printInput(void){
             printf("%s\n", filteredInput); 
         }
     }
+
+    return 0;
 }
 
 
-void countLines(void){
+int main_countLines(int argc, char**argv){
     int lines= 0; 
     int c; 
     while( (c=scanChar()) != ESC ){
@@ -394,7 +427,8 @@ void countLines(void){
             lines++;
     }
 
-    printf("%d", lines); 
+    printf("%d", lines);
+    return 0; 
 }
 
 static int isVowel(int c){
@@ -403,7 +437,7 @@ static int isVowel(int c){
     return 0;
  }
 
- void filterVowels(void){
+ int main_filterVowels(int argc, char**argv){
      char c;
      int i=0;
     char filteredInput[MAX_BUFFER]; 
@@ -413,6 +447,7 @@ static int isVowel(int c){
      }
      filteredInput[i] = '\0'; 
      printf("%s", filteredInput); 
+     return 0;
  }
 
  
@@ -555,6 +590,58 @@ void philosDiningProblem(void) {
     uint64_t pid;
     printf("\n--> Philos Running with %d philosophers <--\n--> Press <a> to Add Philosophers <--\n--> Press <r> to Remove Philosophers <--\n", cant);
     createProcess(&f_philos, "philo problem", 1, NULL, NULL, &pid);
+}
+
+static int processCreation(int (func)(int argc, char**argv), int argc, char**argv, char* name, int foreground, char *in, char *out, uint64_t *pid) {
+    main_func_t f = {func, argc, argv};
+    return createProcess(&f, name, foreground, in, out, pid);
+}
+
+void shCommand(char params[MAX_PARAMS][LONGEST_PARAM]) {
+    
+    char operator = params[1][0];
+    if(operator != '&' || operator != '|') {
+        printError("ERROR: second argument must be & or |\n");
+        return;
+    }
+
+    char *main_func[] = {"cat", "wc", "filter", "loop","phylo"};
+    int (*main_commands_func[])(int argc, char**argv) = {main_printInput, main_countLines, main_filterVowels, loopMain, thinking_philos_main};
+    int i, j;
+    int size = sizeof(main_func)/sizeof(char *);
+    char err[100];
+    uint64_t pid;
+
+    for(i = 0; i < size && strcmp(params[0], main_func[i]) != 0 ; i++);
+
+    if(i == size) {
+        sprintf(err, "%s: command not found\n", params[0])
+        printError(err);
+        return;
+    }
+
+    if(operator == '&') {
+        
+        if(i <= 2) {
+            sprintf(err, "ERROR: %s cannot be followed by &\n", main_func[i])
+            printError(err);
+            return;
+        }
+        
+        int aux = processCreation(main_commands_func[i], 1, "5", main_func[i], 0, NULL, NULL, &pid); //el "5" es para que philos arranque con 5
+        
+        if(aux < 0) {
+            sprintf(err, "ERROR: %s cannot be created\n", main_func[i])
+            printError(err);
+            return;
+        }
+    }
+    // else {
+
+        
+    // }
+
+    
 }
 
 void testInvOpCode() {

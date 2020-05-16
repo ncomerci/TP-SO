@@ -204,19 +204,27 @@ uint64_t sem_getvalue(sem_id sem, int *sval)
     return (uint64_t)semaphores[sem].value;
 }
 
-void getSemaphoresInfo(sem_info * arr, uint64_t * size){
-  
-    unsigned int j = 0; 
+void sem_get_semaphores_info(sem_info * arr, uint64_t * size){
+    unsigned int j = 0;
+    unsigned int k = 0;
+    sem_queue * it;
     
-    for(unsigned int i = 0 ; i < sem_amount; i++){
-        strcpy(arr[j].name, semaphores[i].name); 
-        arr[j].value = semaphores[i].value; 
-        arr[j].processes_waiting = semaphores[i].processes_waiting; 
-        arr[j].id = i; 
-        
-        j++; 
+    for(unsigned int i = 0 ; (i < sem_size) && (j < sem_amount); i++) {
+        if (semaphores[i].name[0] != '\0') {
+            strcpy(arr[j].name, semaphores[i].name); 
+            arr[j].value = semaphores[i].value;
+            k = 0;
+            while ( it != NULL ) {
+                arr[j].processes_waiting[k] = it->pid; 
+                it = it->next;
+                k++;
+            } 
+            arr[j].processes_waiting_amount = k;
+            arr[j].id = i; 
+
+            j++; 
+        }
     }
 
     *size = j; 
-
 }

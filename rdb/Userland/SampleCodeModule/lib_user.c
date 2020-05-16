@@ -1,5 +1,20 @@
 #include <stdint.h>
 #include <lib_user.h>
+#include <sem.h>
+
+/*
+	SysCalls
+	System
+	Process
+	Timet
+	RTC
+	Reading
+	Screen
+	Video
+	Sound
+	KSem
+	Strings
+*/
 
 static char buffer[64] = { '0' };
 
@@ -40,10 +55,7 @@ int createProcess(main_func_t * main_f, char * name, int foreground, char * in, 
 }
 
 int kill(uint64_t pid) {
-	int aux;
-	if (_sys_process((void *)(uint64_t) 1, (void *) pid, (void *) &aux, 0) != 0)
-		return -1;
-	return aux;
+	return _sys_process((void *)(uint64_t) 1, (void *) pid, 0, 0);
 }
 
 int getPid(uint64_t * pid) {
@@ -52,15 +64,13 @@ int getPid(uint64_t * pid) {
 
 uint64_t getProcessesAlive(void) {
 	uint64_t size;
-	if (_sys_process((void *)(uint64_t) 3, (void *) &size, 0, 0) != 0)
-		return -1;
+	_sys_process((void *)(uint64_t) 3, (void *) &size, 0, 0);
 	return size;
 }
 
 uint64_t getProcessesInfo(PCB_info * arr, uint64_t max_size) {
 	uint64_t size;
-	if (_sys_process((void *)(uint64_t) 4, (void *) arr, (void *) max_size, (void *) &size) != 0)
-		return -1;
+	_sys_process((void *)(uint64_t) 4, (void *) arr, (void *) max_size, (void *) &size);
 	return size;
 }
 
@@ -591,11 +601,11 @@ void drawSquare(int x, int y, unsigned int l, uint32_t color) {
 #define BEEP_FREQ 350
 
 void play_timed_sound(uint32_t freq, long duration) {
-	_sys_sound((void *)(uint64_t) 2, (void *)(uint64_t) freq, (void *)(uint64_t) duration);
+	_sys_sound(2, (void *)(uint64_t) freq, (void *)(uint64_t) duration);
 }
 
 void play_sound(uint32_t freq) {
-	_sys_sound((void *)(uint64_t) 1, (void *)(uint64_t) freq, 0);
+	_sys_sound(1, (void *)(uint64_t) freq, 0);
 }
 
 void shut_sounds() {
@@ -604,6 +614,52 @@ void shut_sounds() {
 
 void beeps(uint32_t freq) {
 	play_timed_sound(freq, 1);
+}
+
+// ----------- Kernel Semaphores ------------
+
+sem_id ksem_init_open(char * name, uint64_t init_val) {
+	sem_id aux;
+	_sys_ksem(0, (void *) name, (void *) init_val, (void *) &aux);
+	return aux;
+}
+
+sem_id ksem_open(char * name) {
+	return ksem_init_open(name, 1);
+}
+
+int ksem_wait(sem_id sem) {
+	return _sys_ksem(1, (void *)(uint64_t) sem, 0, 0);
+}
+
+int ksem_post(sem_id sem) {
+	return _sys_ksem(2, (void *)(uint64_t) sem, 0, 0);
+}
+
+int ksem_close(sem_id sem) {
+	return _sys_ksem(3, (void *)(uint64_t) sem, 0, 0);
+}
+
+int ksem_destroy(sem_id sem) {
+	return _sys_ksem(4, (void *)(uint64_t) sem, 0, 0);
+}
+
+uint64_t ksem_getvalue(sem_id sem, int * sval) {
+	uint64_t ret;
+	_sys_ksem(5, (void *)(uint64_t) sem, (void *) sval, (void *) &ret);
+	return ret;
+}
+
+unsigned int ksem_get_semaphores_amount() {
+	unsigned int amount;
+	_sys_ksem(6, (void *) &amount, 0, 0);
+	return amount;
+}
+
+unsigned int ksem_get_semaphores_info(sem_info * arr, unsigned int max_size) {
+	unsigned int amount;
+	_sys_ksem(7, (void *) arr, (void *)(uint64_t) max_size, (void *)(uint64_t) &amount);
+	return amount;
 }
 
 // ----------- Strings ------------

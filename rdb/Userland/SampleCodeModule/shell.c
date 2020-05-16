@@ -3,17 +3,6 @@
 #include <commands.h>
 #include <shell.h>
 
-#define BUFFER_SIZE 2000
-#define COMMANDS_BUFFER_SIZE 50
-#define LONGEST_PARAM 20
-#define MAX_PARAMS 2
-#define STUCKED_BEEP_FREQ 230
-
-#define USER_COLOR 0xfff4a3;
-#define USER_BACKGROUND_COLOR 0x000000
-
-#define TAB '\t'
-
 static int command_launch(char * cmd);
 static int instructionReader(char * cmd, char params[][LONGEST_PARAM]);
 static void specialKeyHandler(void);
@@ -26,9 +15,9 @@ static void welcomeMessage(void);
 
 static char inputBuffer[BUFFER_SIZE];
 static char commandsHistory[COMMANDS_BUFFER_SIZE][BUFFER_SIZE];
-static char * commands[] = {"clear", "clock", "help", "inforeg", "kill", "mem", "nice", "phylo", "printmem", "ps", "sem","set", "set writing_color", "test", "test mm", "test mem", "test pipe", "test prior", "test process", "test process_args", "test ps", "test sem", "test sync"};
-static char * void_func[] = {"help", "clock", "inforeg", "clear", "ps", "sem", "loop","phylo", "mem"};
-static void (*void_commands_func[])(void) = {printUserManual, getLocalTime, printRegistersInfo, clear, printProcesses, printSemaphores,loop, philosDiningProblem, printMMStats};
+static char * commands[] = {"clear", "clock", "help", "inforeg", "kill", "mem", "nice", "phylo","pipe", "printmem", "ps", "sem","set", "set writing_color", "sh", "test", "test mm", "test mem", "test pipe", "test prior", "test process", "test process_args", "test ps", "test sem", "test sync"};
+static char * void_func[] = {"help", "clock", "inforeg", "clear", "ps", "sem", "pipe", "loop","phylo", "mem"};
+static void (*void_commands_func[])(void) = {printUserManual, getLocalTime, printRegistersInfo, clear, printProcesses, printSemaphores, printPipes,loop, philosDiningProblem, printMMStats};
 
 static char * user = "not_so_dummie_user";
 static char * syst_name = "@rdb: ";
@@ -252,6 +241,10 @@ static void instructionHandler() {
                 }
                 else if(strcmp(cmd, "cat") == 0) {
                     printInput();
+                    executed = 0;
+                }
+                else if(strcmp(cmd, "sh") == 0) {
+                    shCommand(params);
                     executed = 0;
                 }
                 else
