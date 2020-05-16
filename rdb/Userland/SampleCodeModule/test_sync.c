@@ -15,7 +15,7 @@ static uint64_t my_sem_open(char *name, uint64_t initialValue){
 
 static uint64_t my_sem_wait(sem_id sem_id){
   if (sem_wait(sem_id) < 0)
-    printf("Se rompio todo el wait amigo\n");
+    printf("Se rompio todo el sleep amigo\n");
   return 0;
 }
 

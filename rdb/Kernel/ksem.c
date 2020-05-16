@@ -2,13 +2,16 @@
 #include <process.h>
 #include <ksem.h>
 
-static uint64_t getIndexOnSem(uint64_t pid, sem_t * sem);
+static unsigned int getIndexOnSem(uint64_t pid, sem_t * sem);
 static void enqueue(sem_t * sem, sem_queue * sq);
 static uint64_t dequeuePid(sem_t * sem);
 
+static int ksem_init_open_wrapper(char * name, uint64_t init_val, sem_id * sem);
+static int ksem_getvalue_wrapper(sem_id sem, int * sval, uint64_t * value);
+
 static sem_t semaphores[MAX_SEMAPHORES];
-static uint64_t sem_size = 0; 
-static uint64_t sem_amount = 0; 
+static unsigned int sem_size = 0; 
+static unsigned int sem_amount = 0; 
 
 sem_id ksem_open(const char * name) {
     return ksem_init_open(name, 1);
@@ -17,7 +20,7 @@ sem_id ksem_open(const char * name) {
 sem_id ksem_init_open(const char * name, uint64_t init_val) {
     if (name == NULL || *name == '\0')
         return -1;
-    uint64_t i = 0;
+    unsigned int i = 0;
     uint64_t pid;
     getPid(&pid);
     while (i < sem_size && semaphores[i].name[0] != '\0') {
@@ -65,8 +68,8 @@ int ksem_wait(sem_id sem){
 
     uint64_t pid;
     getPid(&pid);
-    uint64_t idx = getIndexOnSem(pid, &(semaphores[sem]));
-    if (idx >= sem->processes_size)
+    unsigned int idx = getIndexOnSem(pid, &(semaphores[sem]));
+    if (idx >= semaphores[sem].processes_size)
         return -1;
 
     spin_lock(&(semaphores[sem].lock));
@@ -106,8 +109,8 @@ static uint64_t dequeuePid(sem_t * sem) {
     return pid;
 }   
 
-static uint64_t getIndexOnSem(uint64_t pid, sem_t * sem) {
-    uint64_t j;
+static unsigned int getIndexOnSem(uint64_t pid, sem_t * sem) {
+    unsigned int j;
     for (j = 0; j < sem->processes_size && (sem->processes)[j].pid != -1; j++) {
         if((sem->processes)[j].pid == pid)
             return j; 
@@ -137,7 +140,7 @@ int ksem_close(sem_id sem) { //remove a ps from semaphore
         return -1; // Semaphore does not exist
     uint64_t pid;
     getPid(&pid);
-    uint64_t i = 0;
+    unsigned int i = 0;
     while (i < semaphores[sem].processes_size) {
         if (semaphores[sem].processes[i].pid == pid) {
             semaphores[sem].processes[i].pid = -1;
@@ -161,7 +164,7 @@ int ksem_destroy(sem_id sem) {
     if (sem < 0 || sem >= sem_size || semaphores[sem].name[0] == '\0')
         return -1; // Semaphore does not exist
 
-    uint64_t i = 0;
+    unsigned int i = 0;
     while (i < semaphores[sem].processes_size) {
         semaphores[sem].name[0] = '\0';
         if (sem == sem_size - 1)
@@ -174,7 +177,61 @@ int ksem_destroy(sem_id sem) {
 
 uint64_t ksem_getvalue(sem_id sem, int * sval) { // sval is either 0 is returned; or a negative number whose absolute value is the count of the number of processes and threads currently blocked in sem_wait(3)
     if (sem < 0 || sem >= sem_size || semaphores[sem].name[0] == '\0')
-        return -1; // Semaphore does not exist
+        return sem_size; // Semaphore does not exist
     *sval = - semaphores[sem].processes_waiting; 
     return semaphores[sem].value; 
+}
+
+int ksem_get_semaphores_amount(unsigned int * size) {
+    return 0;
+}
+
+int ksem_get_semaphores_info(sem_info * arg1, unsigned int max_size, unsigned int * size) {
+    return 0;
+}
+
+static int ksem_init_open_wrapper(char * name, uint64_t init_val, sem_id * sem) {
+    sem_id aux = ksem_init_open(name, init_val);
+    if (aux < 0)
+        return -1;
+    *sem = aux;
+    return 0;
+}
+
+static int ksem_getvalue_wrapper(sem_id sem, int * sval, uint64_t * value) {
+    uint64_t aux = ksem_getvalue(sem, sval);
+    if (aux >= sem_size)
+        return -1;
+    *value = aux;
+    return 0;
+}
+
+int sys_ksem(void * option, void * arg1, void * arg2, void * arg3) {
+    switch ((uint64_t) option) {
+        case 0:
+            return ksem_init_open_wrapper((char *) arg1, (uint64_t) arg2, (sem_id *) arg3);
+            break;
+        case 1:
+            return ksem_wait((sem_id)(uint64_t) arg1);
+            break;
+        case 2:
+            return ksem_post((sem_id)(uint64_t) arg1);
+            break;
+        case 3:
+            return ksem_close((sem_id)(uint64_t) arg1);
+            break;
+        case 4:
+            return ksem_destroy((sem_id)(uint64_t) arg1);
+            break;
+        case 5:
+            return ksem_getvalue_wrapper((sem_id)(uint64_t) arg1, (int *) arg2, (uint64_t *) arg3);
+            break;
+        case 6:
+            return ksem_get_semaphores_amount((unsigned int *) arg1);
+            break;
+        case 7:
+            return ksem_get_semaphores_info((sem_info *) arg1, (unsigned int)(uint64_t) arg2, (unsigned int *) arg3);
+            break;
+    }
+    return 0;
 }

@@ -8,9 +8,15 @@
 typedef struct pipe_t {
     char name[MAX_PIPE_NAME_LEN];
     char buffer[MAX_PIPE_BUFFER_SIZE];
+    unsigned int blocked_processes; 
     unsigned int idx;  //buffer idx
     unsigned int size; //buffer size
 } pipe_t;
+
+typedef struct pipe_info {
+    char name[MAX_PIPE_NAME_LEN];
+    unsigned int blocked_processes; 
+} pipe_info;
 
 int getPipeInIndex(char * name);
 int getPipeOutIndex(char * name);

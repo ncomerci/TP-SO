@@ -34,7 +34,7 @@ void removeFunction(function func);
 void updateFunction(function func, unsigned int new_ticks);
 int addFunction(function func, unsigned int ticks);
 
-void wait(unsigned int millis);
+void sleep(unsigned int millis);
 
 unsigned long sys_timet(void * option, void * arg1, void * arg2);
 

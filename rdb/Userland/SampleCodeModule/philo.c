@@ -59,14 +59,21 @@ static void addPhilo(philos_info_t * info, main_func_t * main_f);
 static void removePhilo(philos_info_t * info);
 
 
+static void busyWait(uint32_t millis){
+    unsigned int last_ticks = getTicks();
+    printf("BUSY WAIT: %d\n",( millis * PIT_FREQUENCY ) / 1000 ); 
+
+    while(getTicks() - last_ticks < (( millis * PIT_FREQUENCY ) / 1000)); 
+}
 // How a philosopher thinks.
 static void think() {
-    wait(GetUniform(2000));
+    
+    sleep(GetUniform(2000));
 }
 
 // How a philosopher eats.
 static void eat(state_t * state, sem_id state_lock, sem_id viewer_sem) {
-    wait(GetUniform(1000));
+    sleep(GetUniform(1000));
 }
 
 static int take_sticks(philo_t * philo, sem_id left, sem_id right, sem_id state_lock, sem_id viewer_sem) {
@@ -74,15 +81,15 @@ static int take_sticks(philo_t * philo, sem_id left, sem_id right, sem_id state_
     sem_wait(state_lock);
     philo->state = HUNGRY;
     sem_post(state_lock); 
+    sem_post(viewer_sem);
 
     if (philo->table_pos % 2 == 0) {
         //first take right stick
-        sem_wait(right);  //wait for it to be free
+        sem_wait(right);  //sleep for it to be free
         philo->hands.right = right; 
         //printf("Philo %d take right stick (stick sem_id n: %d)\n", philo->table_pos, right);
 
-        wait(GetUniform(1000));
-
+        sleep(GetUniform(1000)); 
         //then take left stick
 
         sem_wait(left);
@@ -101,10 +108,10 @@ static int take_sticks(philo_t * philo, sem_id left, sem_id right, sem_id state_
         philo->hands.left = left; 
         //printf("Philo %d take left stick (stick sem_id n: %d)\n", philo->table_pos, left);
 
-        wait(GetUniform(1000));
+        sleep(GetUniform(1000));
 
         //then take right stick 
-        sem_wait(right);  //wait for it to be free
+        sem_wait(right);  //sleep for it to be free
 
         sem_wait(state_lock);
         philo->state = EATING;
@@ -143,7 +150,7 @@ static int drop_sticks(philo_t * philo, sem_id left, sem_id right, sem_id state_
 
         //printf("Philo %d drop left stick (stick sem_id n: %d)\n", philo->table_pos, left);
 
-        wait(GetUniform(1000));
+        sleep(GetUniform(1000));
 
         philo->hands.right = -1;
         sem_post(right);
@@ -162,7 +169,7 @@ static int drop_sticks(philo_t * philo, sem_id left, sem_id right, sem_id state_
 
         //printf("Philo %d drop right stick (stick sem_id n: %d)\n", philo->table_pos, right);
 
-        wait(GetUniform(1000));
+        sleep(GetUniform(1000));
 
         philo->hands.left = -1;
         sem_post(left);
@@ -221,7 +228,7 @@ static void removePhilo(philos_info_t * info){
         sem_post(left);
     }
 
-    sem_close(left);
+    sem_close(left); 
 
     free((info->args)[i][0]);
     free((info->args)[i][1]);

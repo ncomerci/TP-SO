@@ -209,3 +209,5 @@ clear
 make clean
 make all
 gdb
+cd 
+make clean

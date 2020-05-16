@@ -38,6 +38,7 @@ int _sys_fd(void * arg1, void * arg2, void * arg3, void * arg4, void * arg5);
 int _sys_screen(void * arg1, void * arg2, void * arg3);
 int _sys_video(void * arg1, void * arg2, void * arg3, void * arg4, void * arg5);
 int _sys_sound(void * arg1, void * arg2, void * arg3);
+int _sys_ksem(void * arg1, void * arg2, void * arg3, void * arg4);
 
 // ----------- System ------------
 typedef struct mm_stat {
@@ -103,7 +104,7 @@ unsigned long getSecondsElapsed(void);
 int addTimeFunction(function f, unsigned int ticks);
 int updateTimeFunction(function f, unsigned int new_ticks);
 void removeTimeFunction(function f);
-void wait(unsigned int millis);
+void sleep(unsigned int millis);
 
 // ----------- RTC ------------
 typedef struct time_struct {

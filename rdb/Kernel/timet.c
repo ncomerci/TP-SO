@@ -41,8 +41,9 @@ unsigned long seconds_elapsed() {
 
 static void functionsHandler() {
 	for (int i = 0; i < functions_size; i++) {
-		functions[i].ticks_left--;
-		if (functions[i].ticks_left <= 0) {
+		if (functions[i].ticks_left > 0)
+			functions[i].ticks_left--;
+		if (functions[i].ticks_left == 0) {
 			functions[i].ticks_left = functions[i].ticks;
 			(functions[i].f)();
 		}	
@@ -89,8 +90,9 @@ int addFunction(function func, unsigned int ticks) {
 
 static void pTimersHandler(void) {
 	for (int i = 0; i < processes_waiting_size; i++) {
-		timers[i].ticks_left--;
-		if (timers[i].ticks_left <= 0) {
+		if (timers[i].ticks_left > 0)
+			timers[i].ticks_left--;
+		if (timers[i].ticks_left == 0) {
 			changeState(timers[i].pid, READY);
 			for (int j = i; j < processes_waiting_size - 1; j++)
 				timers[j] = timers[j+1];
@@ -117,12 +119,15 @@ static int addTimer(uint64_t pid, unsigned int millis) {
 	return 0;
 }
 
-void wait(unsigned int millis) {
+void sleep(unsigned int millis) {
 	uint64_t pid;
 	getPid(&pid);
 
-	if (addTimer(pid, millis) == 0)
-		changeState(pid, BLOCKED); // No corre mas.
+	if (millis > 0) {
+		if (addTimer(pid, millis) == 0)
+			changeState(pid, BLOCKED); // No corre mas.
+	}
+
 }
 
 // Returns -1 if arguments aren´t right.
@@ -141,7 +146,7 @@ unsigned long sys_timet(void * option, void * arg1, void * arg2) {
 			updateFunction((function) arg1, (uint64_t) arg2);
 			return 0;
 		case 5:
-			wait((unsigned int)(uint64_t) arg1);
+			sleep((unsigned int)(uint64_t) arg1);
 			return 0;
 	}
 	return -1;
@@ -154,8 +159,8 @@ Breakpoint 1 at 0x102c69: file process.c, line 49.
 Breakpoint 2 at 0x102cf3: file process.c, line 81.
 >>> b commands.c:244
 Breakpoint 3 at 0x4036c7: file commands.c, line 244.
->>> b wait
-Breakpoint 4 at 0x101619: wait. (2 locations)
+>>> b sleep
+Breakpoint 4 at 0x101619: sleep. (2 locations)
 >>> b loop
 Breakpoint 5 at 0x403265: file commands.c, line 173.
 >>> b timet.c:95

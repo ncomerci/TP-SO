@@ -1,13 +1,13 @@
 #include <lib_user.h>
 #include <sem.h>
 
-static uint64_t getIndexOnSem(uint64_t pid, sem_t *sem);
+static unsigned int getIndexOnSem(uint64_t pid, sem_t *sem);
 static void enqueue(sem_t *sem, sem_queue *sq);
 static uint64_t dequeuePid(sem_t *sem);
 
 static sem_t semaphores[MAX_SEMAPHORES];
-static uint64_t sem_size = 0;
-static uint64_t sem_amount = 0;
+static unsigned int sem_size = 0;
+static unsigned int sem_amount = 0;
 
 sem_id sem_open(const char *name)
 {
@@ -18,7 +18,7 @@ sem_id sem_init_open(const char *name, uint64_t init_val)
 {
     if (name == NULL || *name == '\0')
         return -1;
-    uint64_t i = 0;
+    unsigned int i = 0;
     uint64_t pid;
     if (getPid(&pid) < 0)
         return -1;
@@ -26,7 +26,7 @@ sem_id sem_init_open(const char *name, uint64_t init_val)
     {
         if (strcmp(semaphores[i].name, name) == 0)
         {
-            uint64_t j = 0;
+            unsigned int j = 0;
             while (j < semaphores[i].processes_size && semaphores[i].processes[j].pid != -1)
             {
                 if (semaphores[i].processes[j].pid == pid) // Process already opened this semaphore
@@ -75,7 +75,7 @@ int sem_wait(sem_id sem)
     if (getPid(&pid) < 0)
         return -1;
 
-    uint64_t idx = getIndexOnSem(pid, &(semaphores[sem]));
+    unsigned int idx = getIndexOnSem(pid, &(semaphores[sem]));
     if (idx >= sem_size)
         return -1;
 
@@ -121,14 +121,15 @@ static uint64_t dequeuePid(sem_t *sem)
     return pid;
 }
 
-static uint64_t getIndexOnSem(uint64_t pid, sem_t *sem)
+static unsigned int getIndexOnSem(uint64_t pid, sem_t *sem)
 {
-    for (uint64_t j = 0; j < sem->processes_size && (sem->processes)[j].pid != -1; j++)
+    unsigned int j;
+    for (j = 0; j < sem->processes_size && (sem->processes)[j].pid != -1; j++)
     {
         if ((sem->processes)[j].pid == pid)
             return j;
     }
-    return sem_size;
+    return j;  
 }
 
 int sem_post(sem_id sem)
@@ -157,7 +158,7 @@ int sem_close(sem_id sem)
     uint64_t pid;
     if (getPid(&pid) < 0)
         return -1;
-    uint64_t i = 0;
+    unsigned int i = 0;
     while (i < semaphores[sem].processes_size)
     {
         if (semaphores[sem].processes[i].pid == pid)
@@ -184,7 +185,7 @@ int sem_destroy(sem_id sem) {
     if (sem < 0 || sem >= sem_size || semaphores[sem].name[0] == '\0')
         return -1; // Semaphore does not exist
 
-    uint64_t i = 0;
+    unsigned int i = 0;
     while (i < semaphores[sem].processes_size) {
         semaphores[sem].name[0] = '\0';
         if (sem == sem_size - 1)
@@ -201,4 +202,21 @@ uint64_t sem_getvalue(sem_id sem, int *sval)
         return -1; // Semaphore does not exist
     *sval = -semaphores[sem].processes_waiting;
     return (uint64_t)semaphores[sem].value;
+}
+
+void getSemaphoresInfo(sem_info * arr, uint64_t * size){
+  
+    unsigned int j = 0; 
+    
+    for(unsigned int i = 0 ; i < sem_amount; i++){
+        strcpy(arr[j].name, semaphores[i].name); 
+        arr[j].value = semaphores[i].value; 
+        arr[j].processes_waiting = semaphores[i].processes_waiting; 
+        arr[j].id = i; 
+        
+        j++; 
+    }
+
+    *size = j; 
+
 }

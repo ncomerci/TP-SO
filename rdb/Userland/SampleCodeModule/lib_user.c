@@ -106,7 +106,7 @@ int updateTimeFunction(function f, unsigned int new_ticks) {
 	return _sys_timet((void *) 4, (void *) f, (void *)(uint64_t) new_ticks);
 }
 
-void wait(unsigned int millis) {
+void sleep(unsigned int millis) {
 	_sys_timet((void *) 5, (void *)(uint64_t) millis, 0);
 	/*
 	unsigned int last = getTicks();

@@ -33,7 +33,7 @@ static int semProccess1(int argc, char ** argv) {
     sem_wait(sem);
     printf("Sem Process 1 is active now!\n");
 
-    wait(2000);
+    sleep(2000);
 
     printf("Sem Process 1 is dead :O\n");
     sem_post(sem);
@@ -50,7 +50,7 @@ static int semProccess2(int argc, char ** argv) {
     sem_wait(sem);
     printf("Sem Process 2 here!\n");
 
-    wait(2000);
+    sleep(2000);
 
     printf("Sem Process 2 dead :(\n");
 
@@ -103,6 +103,8 @@ void printUserManual(){
     println("- inforeg                              --> Prints registers status.");
     println("- printmem <starting_point>            --> Prints RAM status, starting at <starting_point>.");
     println("- mem                                  --> Prints managed memory status");
+    println("- sem                                  --> Prints semaphores info."); 
+    println("- pipe                                 --> Prints pipes info."); 
     println("- clear                                --> Clear shell screen.");
     println("- ps                                   --> Show living processes info.");
     println("- nice <pid> <priority>                --> Changes priority of process with PID <pid> to <priority>.");
@@ -185,7 +187,7 @@ static int clockUpdater(int argc, char ** argv) {
         print("s");
         i += 8; // hs, m, s
 
-        wait(1000);
+        sleep(1000);
     }
     return 0;
 }
@@ -212,6 +214,24 @@ void printMemoryStatus(long int offset){
     for(int i = 0 ; i + 1 < 32 ; i+= 2) {
         printf("%x: 0x%X    %x: 0x%X\n", offset + i*sizeof(uint64_t), mem[i], offset + (i+1)*sizeof(uint64_t), mem[i+1]);
     }
+}
+
+void printSemaphores(void){
+    printf("User Semaphores\n"); 
+    sem_info info[MAX_SEMAPHORES]; 
+    uint64_t amount; 
+    getSemaphoresInfo(info, &amount);
+    printf("ID  NAME    VALUE   PROCESSES WAITING\n"); 
+    for(unsigned int i = 0 ; i < amount ; i++ ){
+        printf("%d      %s       %d      %d\n", info[i].id, info[i].name, info[i].value, info[i].processes_waiting); 
+    }
+
+    printf("Kernel Semaphores\n"); 
+
+}
+
+void printPipes(){
+
 }
 
 void startAracnoid(gameState * save_file, int * saved) {
@@ -418,7 +438,7 @@ int testProcessArgsMain(int argc, char ** argv) {
 int loopMain(int argc, char ** argv) {
     uint64_t pid;
     for (unsigned int i = 0; 1 ; i++) {
-        wait(1000);
+        sleep(1000);
         if (getPid(&pid) < 0) {
             printf("getPid failed\n");
             return -1;

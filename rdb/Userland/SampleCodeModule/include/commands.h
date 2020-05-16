@@ -39,6 +39,7 @@ void philosDiningProblem(void);
 void countLines(void);
 void filterVowels(void);
 void printInput(void); 
+void printSemaphores(void); 
 
 
 #endif

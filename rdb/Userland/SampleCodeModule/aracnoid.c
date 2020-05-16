@@ -397,7 +397,7 @@ static int updater(int argc, char ** argv) {
     if (gs.shooted)
         move_ball();
 
-    wait(1000 / FPS);
+    sleep(1000 / FPS);
 
     return 0;
 }

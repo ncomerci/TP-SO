@@ -7,9 +7,9 @@
 
     typedef int sem_id;
 
-    // p1 wait()
-    //              p2 wait()
-    //                          p3 wait()
+    // p1 sleep()
+    //              p2 sleep()
+    //                          p3 sleep()
     //                                      p4 post()
     //
 
@@ -30,14 +30,24 @@
         sem_queue * last;
     } sem_t;
 
+    typedef struct sem_info {
+    sem_id id;
+    char name[SEM_NAME_MAX_LENGTH];
+    uint64_t value;
+    unsigned int processes_waiting;
+    }sem_info;
+
     void spin_lock(char * lock);
     void spin_unlock(char * lock);
     sem_id ksem_open(const char * name);
-    sem_id ksem_init_open(const char * name, unsigned int init_val);
+    sem_id ksem_init_open(const char * name, uint64_t init_val) ;
     int ksem_wait(sem_id sem);
     int ksem_post(sem_id sem);
     int ksem_close(sem_id sem);
-    int ksem_getvalue(sem_id sem, int * sval);
+    uint64_t ksem_getvalue(sem_id sem, int * sval);
     int ksem_destroy(sem_id sem);
+    int ksem_get_semaphores_amount(unsigned int * size);
+    int ksem_get_semaphores_info(sem_info * arg1, unsigned int max_size, unsigned int * size);
+    int sys_ksem(void * option, void * arg2, void * arg3, void * arg4);
 
 #endif

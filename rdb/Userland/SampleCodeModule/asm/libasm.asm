@@ -6,6 +6,7 @@ GLOBAL _sys_fd
 GLOBAL _sys_screen
 GLOBAL _sys_video
 GLOBAL _sys_sound
+GLOBAL _sys_ksem
 
 GLOBAL getRegisters
 GLOBAL testDivException
@@ -107,6 +108,15 @@ _sys_sound:
     int 80h
     ret
 
+_sys_ksem:
+    mov r8, rcx   ; Arguments Shifting
+    mov rcx, rdx 
+    mov rdx, rsi
+    mov rsi, rdi
+    mov rdi, SYS_KSEM_CODE
+    int 80h
+    ret
+
 getRegisters:
     mov [array], rax
     mov [array + 8], rbx
@@ -185,3 +195,4 @@ SYS_FD_CODE equ 4
 SYS_SCREEN_CODE equ 5
 SYS_VIDEO_CODE equ 6
 SYS_SOUND_CODE equ 7
+SYS_KSEM_CODE equ 8

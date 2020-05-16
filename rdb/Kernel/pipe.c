@@ -59,7 +59,7 @@ int pipeWrite(int gate, char * str, unsigned int str_size) { //post
     return 0; 
 }
 
-int pipeRead(int gate, char * buff, unsigned int count) { //wait
+int pipeRead(int gate, char * buff, unsigned int count) { //sleep
     int idx = gate/2; 
 
     if (idx <= 0 && idx > MAX_PIPES)
@@ -168,4 +168,17 @@ int openPipe(char * name) {
     pipes_amount++;
 
     return i;
+}
+
+void printPipes( pipe_info * arr , uint64_t * size){
+    unsigned int j = 0 ; 
+
+    for(unsigned int i = 0; i < pipes_amount; i++){
+        arr[j].blocked_processes = pipes[i].blocked_processes;
+        strcpy(arr[j].name, pipes[i].name);   
+        j++;
+
+    
+    *size = j; 
+
 }

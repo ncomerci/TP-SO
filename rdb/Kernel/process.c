@@ -370,7 +370,7 @@ int changeState(uint64_t pid, process_state new_state) {
                     _outportb(0x20, 0x20);
                     _sti();
 
-                    _int81(); //wait for the next ps
+                    _int81(); //sleep for the next ps
                 }
                 else {
                     processes_ready--;
