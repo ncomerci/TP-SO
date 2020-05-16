@@ -3,7 +3,7 @@
 
 #define MAX_SEMAPHORES 40
 #define MAX_PROCESSES_PER_SEMAPHORE 10
-#define SEM_NAME_MAX_LENGTH 30
+#define SEM_NAME_MAX_LENGTH 40
 
 typedef int sem_id;
 
@@ -40,13 +40,13 @@ typedef struct sem_info {
 
 void spin_lock(char * lock);
 void spin_unlock(char * lock);
-sem_id sem_open(const char * name);
-sem_id sem_init_open(const char * name, uint64_t init_val);
+sem_id sem_open(char * name);
+sem_id sem_init_open(char * name, uint64_t init_val);
 int sem_wait(sem_id sem);
 int sem_post(sem_id sem);
 int sem_close(sem_id sem);
 uint64_t sem_getvalue(sem_id sem, int * sval);
 int sem_destroy(sem_id sem);
-void sem_get_semaphores_info(sem_info * arr, uint64_t * size);
+unsigned int sem_get_semaphores_info(sem_info * arr, unsigned int max_size);
 
 #endif

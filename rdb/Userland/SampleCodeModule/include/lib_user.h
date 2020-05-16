@@ -2,6 +2,7 @@
 #define LIBUSER_H
 
 #include <stdint.h>
+#include <sem.h>
 #include <stdarg.h>
 
 #define WHITE_COLOR 0xFFFFFF
@@ -153,6 +154,17 @@ void drawSquare(int x, int y, unsigned int l, uint32_t color);
 void play_sound(uint32_t freq);
 void shut_sounds(void);
 void beeps(uint32_t freq);
+
+// ----------- Kernel Semaphores ------------
+sem_id ksem_init_open(char * name, uint64_t init_val);
+sem_id ksem_open(char * name);
+int ksem_wait(sem_id sem);
+int ksem_post(sem_id sem);
+int ksem_close(sem_id sem);
+int ksem_destroy(sem_id sem);
+uint64_t ksem_getvalue(sem_id sem, int * sval);
+unsigned int ksem_get_semaphores_amount(void);
+unsigned int ksem_get_semaphores_info(sem_info * arr, unsigned int max_size);
 
 // ----------- Strings ------------
 unsigned int strlen(const char *str);

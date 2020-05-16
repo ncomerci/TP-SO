@@ -1,6 +1,5 @@
 #include <commands.h>
 #include <stdint.h>
-#include <shell.h>
 #include <lib_user.h>
 #include <sem.h>
 
@@ -12,7 +11,8 @@ static int semProccess2(int argc, char ** argv);
 static int pipeProccess(int argc, char ** argv);
 static void testPrior(void);
 static void testSync(void);
-static int isVowel(int c); 
+static int isVowel(int c);
+static int main_pipeSh(int argc, char **argv); 
 
 static char * color_names[] = {"black", "red", "green", "yellow", "blue", "pink", "light_blue", "white"};
 static uint32_t color_rgb[] = {0x000000, 0xFF0000, 0x00FF00, 0xFFFF00, 0x0000FF, 0xFF00FF, 0x00FFFF, 0xFFFFFF};
@@ -27,37 +27,37 @@ unsigned long actual_sec;
 static int semProccess1(int argc, char ** argv) {
     unsigned int init_val = 1;
     sem_id sem;
-    const char *name = "sem_test";
+    char *name = "sem_test";
 
-    sem = sem_init_open(name, init_val);
+    sem = ksem_init_open(name, init_val);
 
-    sem_wait(sem);
+    ksem_wait(sem);
     printf("Sem Process 1 is active now!\n");
 
-    sleep(2000);
+    sleep(10000);
 
     printf("Sem Process 1 is dead :O\n");
-    sem_post(sem);
+    ksem_post(sem);
 
-    sem_close(sem);
+    ksem_close(sem);
 
     return 0;
 }
 
 static int semProccess2(int argc, char ** argv) {
-    const char *name = "sem_test";
-    sem_id sem = sem_open(name);
+    char *name = "sem_test";
+    sem_id sem = ksem_open(name);
 
-    sem_wait(sem);
+    ksem_wait(sem);
     printf("Sem Process 2 here!\n");
 
     sleep(2000);
 
     printf("Sem Process 2 dead :(\n");
 
-    sem_post(sem);
+    ksem_post(sem);
 
-    sem_close(sem);
+    ksem_close(sem);
 
     return 0;
 }
@@ -113,7 +113,7 @@ void printUserManual(){
     printf("                  > filter\n");
     printf("                  > phylo\n");
     printf("                  > loop\n");
-    printf(" < -- Remember not to use keyboard input consuming apps with background, this apps will get blocked -- >");
+    printf(" < -- Remember not to use keyboard input consuming apps with background, this apps will get blocked -- >\n");
     //printf("- aracnoid                             --> A classic brick breaker like game.\n");
     printf("- clock                                --> Information about the local time in Buenos Aires.\n");
     printf("- inforeg                              --> Prints registers status.\n");
@@ -246,11 +246,11 @@ void printSemaphores(sem_location loc) {
     switch(loc) {
         case KERNEL:
             printf("Kernel Semaphores\n"); 
-            ksem_get_semaphores_info(info, &amount);
+            amount = ksem_get_semaphores_info(info, MAX_SEMAPHORES);
             break;
         case USER:
             printf("User Semaphores\n"); 
-            sem_get_semaphores_info(info, &amount);
+            amount = sem_get_semaphores_info(info, MAX_SEMAPHORES);
             break;
     }
     printf("ID; NAME; VALUE; PROCESSES WAITING\n"); 
@@ -262,8 +262,9 @@ void printSemaphores(sem_location loc) {
     } 
 }
 
-// void printPipes(){ 
-// }
+void printPipes(){ 
+
+}
 
 void startAracnoid(gameState * save_file, int * saved) {
     aracnoid(save_file, saved);
@@ -401,7 +402,7 @@ void loop(void) {
 }
 
 int main_printInput(int argc, char**argv){ //ARREGLAR
-    char c;
+    int c;
     int i=0;
     char filteredInput[MAX_BUFFER]; 
 
@@ -438,16 +439,17 @@ static int isVowel(int c){
  }
 
  int main_filterVowels(int argc, char**argv){
-     char c;
-     int i=0;
-    char filteredInput[MAX_BUFFER]; 
-     while( (c= scanChar()) != '\n'){
-         if(isVowel(c) == 0)
-            filteredInput[i++] = c; 
-     }
-     filteredInput[i] = '\0'; 
-     printf("%s", filteredInput); 
-     return 0;
+    int c;
+    //int i=0;
+    //char filteredInput[MAX_BUFFER]; 
+    while( (c= scanChar()) != ESC){
+        if(isVowel(c) != 0)
+            putChar(c);
+            //filteredInput[i++] = c;
+    }
+    //filteredInput[i] = '\0'; 
+    //printf("%s", filteredInput); 
+    return 0;
  }
 
  
@@ -597,10 +599,11 @@ static int processCreation(int (func)(int argc, char**argv), int argc, char**arg
     return createProcess(&f, name, foreground, in, out, pid);
 }
 
-void shCommand(char params[MAX_PARAMS][LONGEST_PARAM]) {
+void shCommand(char (* params)[LONGEST_PARAM]) {
     
     char operator = params[1][0];
-    if(operator != '&' || operator != '|') {
+    //printf("I've read operator: %c", operator);
+    if(operator != '&' && operator != '|') {
         printError("ERROR: second argument must be & or |\n");
         return;
     }
@@ -615,7 +618,7 @@ void shCommand(char params[MAX_PARAMS][LONGEST_PARAM]) {
     for(i = 0; i < size && strcmp(params[0], main_func[i]) != 0 ; i++);
 
     if(i == size) {
-        sprintf(err, "%s: command not found\n", params[0])
+        sprintf(err, "%s: command not found\n", params[0]);
         printError(err);
         return;
     }
@@ -623,25 +626,110 @@ void shCommand(char params[MAX_PARAMS][LONGEST_PARAM]) {
     if(operator == '&') {
         
         if(i <= 2) {
-            sprintf(err, "ERROR: %s cannot be followed by &\n", main_func[i])
+            sprintf(err, "ERROR: %s cannot be followed by &\n", main_func[i]);
             printError(err);
             return;
         }
         
-        int aux = processCreation(main_commands_func[i], 1, "5", main_func[i], 0, NULL, NULL, &pid); //el "5" es para que philos arranque con 5
+
+        int aux = processCreation(main_commands_func[i], 0, NULL, main_func[i], 0, NULL, NULL, &pid);
         
         if(aux < 0) {
-            sprintf(err, "ERROR: %s cannot be created\n", main_func[i])
+            sprintf(err, "ERROR: %s cannot be executed\n", main_func[i]);
             printError(err);
             return;
         }
     }
-    // else {
+    else {
 
-        
-    // }
+        for(j = 0; j < size && strcmp(params[2], main_func[j]) != 0 ; j++);
 
-    
+        if(j == size) {
+            sprintf(err, "%s: command not found\n", params[2]);
+            printError(err);
+            return;
+        }
+
+        sem_id sem = sem_init_open(SEM_PIPE_SH_NAME, 0);
+
+        char **argv1;
+        char **argv2;
+
+        argv1 = malloc(2 * sizeof(char *));
+        argv1[0] = malloc(MAX_ARG_LENGTH * sizeof(char));
+        argv1[1] = malloc(MAX_ARG_LENGTH * sizeof(char));
+        argv1[2] = NULL;
+
+        strcpy(argv1[0], "1");
+        sprintf(argv1[1], "%p", main_commands_func[j]);
+
+        processCreation(main_pipeSh, 2, argv1, main_func[j], 0, SEM_PIPE_SH_NAME, NULL, &pid);
+
+        argv2 = malloc(2 * sizeof(char *));
+        argv2[0] = malloc(MAX_ARG_LENGTH * sizeof(char));
+        argv2[1] = malloc(MAX_ARG_LENGTH * sizeof(char));
+        argv2[2] = NULL;
+
+        strcpy(argv2[0], "0");
+        sprintf(argv2[1], "%p", main_commands_func[i]);
+
+        processCreation(main_pipeSh, 2, argv2, main_func[i], 1, NULL, SEM_PIPE_SH_NAME, &pid);
+
+        sem_wait(sem);
+
+        free(argv1[1]);
+        free(argv1[0]);
+        free(argv1);
+
+        free(argv2[1]);
+        free(argv2[0]);
+        free(argv2);
+
+        sem_destroy(sem);
+    }
+
+}
+
+static int main_pipeSh(int argc, char **argv) {
+    int opt, aux = 0;
+    sscanf(argv[0], "%d", &opt);
+    int (*f)(int, char **);
+    sscanf(argv[1], "%p", &f);
+    if (opt != 0 && opt != 1)
+        return -1;
+    sem_id sem = sem_init_open(SEM_PIPE_SH_NAME, 1 - opt);
+    if(sem < 0) {
+        printError("ERROR: sem creation.");
+        return -1;
+    }
+    f(argc-2, &(argv[2]));
+    if (opt == 0) {
+        aux = sem_wait(sem);
+        if(aux < 0) {
+            printError("ERROR: sem wait.");
+            return -1;
+        } 
+        aux = sem_post(sem);
+        if(aux < 0) {
+            printError("ERROR: sem post.");
+            return -1;
+        } 
+    }
+    else {
+        aux = sem_post(sem);
+        if(aux < 0) {
+            printError("ERROR: sem post.");
+            return -1;
+        } 
+    }
+    aux = sem_close(sem);
+
+    if(aux < 0) {
+        printError("ERROR: sem close.");
+        return -1;
+    }
+     
+    return 0;
 }
 
 void testInvOpCode() {

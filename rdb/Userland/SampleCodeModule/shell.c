@@ -15,9 +15,9 @@ static void welcomeMessage(void);
 
 static char inputBuffer[BUFFER_SIZE];
 static char commandsHistory[COMMANDS_BUFFER_SIZE][BUFFER_SIZE];
-static char * commands[] = {"clear", "clock", "help", "inforeg", "kill", "mem", "nice", "phylo","pipe", "printmem", "ps", "sem","set", "set writing_color", "sh", "test", "test mm", "test mem", "test pipe", "test prior", "test process", "test process_args", "test ps", "test sem", "test sync"};
+static char * commands[] = {"clear", "clock", "help", "inforeg", "kill", "mem", "nice", "phylo", "pipe", "printmem", "ps", "sem","set", "set writing_color", "sh", "test", "test mm", "test mem", "test pipe", "test prior", "test process", "test process_args", "test ps", "test sem", "test sync"};
 static char * void_func[] = {"help", "clock", "inforeg", "clear", "ps", "sem", "pipe", "loop","phylo", "mem"};
-static void (*void_commands_func[])(void) = {printUserManual, getLocalTime, printRegistersInfo, clear, printProcesses, printSemaphores, printPipes,loop, philosDiningProblem, printMMStats};
+static void (*void_commands_func[])(void) = {printUserManual, getLocalTime, printRegistersInfo, clear, printProcesses, printBothSemaphores, printPipes,loop, philosDiningProblem, printMMStats};
 
 static char * user = "not_so_dummie_user";
 static char * syst_name = "@rdb: ";
@@ -216,79 +216,81 @@ static void instructionHandler() {
         int res = instructionReader(cmd, params); // returns params_read if params_read <= MAX_PARAMS, -1 if params_read > MAX_PARAMS
         
         int executed = 0; 
-        
-        switch(res) {
 
-            case 0:
-                if (strcmp(cmd, "aracnoid") == 0) {
-                    //printError("Game is in maintenance.\n");
-                    startAracnoid(&aracnoid_save, &aracnoid_saved);
-                    if(aracnoid_saved)
-                        printColored("\n                                    Aracnoid is saved! type \"aracnoid\" to resume the game.\n\n", 0x04E798);
-                    executed = 0;
-                }
-                else if(strcmp(cmd, "phylo") == 0){
-                    philosDiningProblem();
-                    executed = 0;
-                }
-                else if(strcmp(cmd, "wc") == 0) {
-                    countLines();
-                    executed = 0;
-                }
-                else if(strcmp(cmd, "filter") == 0) {
-                    filterVowels();
-                    executed = 0;
-                }
-                else if(strcmp(cmd, "cat") == 0) {
-                    printInput();
-                    executed = 0;
-                }
-                else if(strcmp(cmd, "sh") == 0) {
-                    shCommand(params);
-                    executed = 0;
-                }
-                else
-                    executed = command_launch(cmd);
-                break;
-            case 1:
-                if (strcmp(cmd, "printmem") == 0) {
-                    if (is_num(params[0]) == 0)
-                        printMemoryStatus(strtoint(params[0]));
-                    else
-                        printError("Arguments aren't valid.\n");
-                }
-                else if (strcmp(cmd, "kill") == 0) {
-                    if (is_num(params[0]) == 0)
-                        killProcess(strtoint(params[0]));
-                    else
-                        printError("Arguments aren't valid.\n");
-                }
-                else if (strcmp(cmd, "block") == 0) {
-                    if (is_num(params[0]) == 0)
-                        block(strtoint(params[0]));
-                    else
-                        printError("Arguments aren't valid.\n");
-                }
-                else if (strcmp(cmd, "test") == 0)
-                    test(params[0]);
-                else
-                    executed = 1;
-                break;
-            case 2:
-                if(strcmp(cmd, "set") == 0)
-                    command_set(params[0], params[1]);
-                else if (strcmp(cmd, "nice") == 0) {
-                    if (is_num(params[0]) == 0 && is_num(params[1]) == 0)
-                        changeProcessPriority(strtoint(params[0]), strtoint(params[1]));
-                    else
-                        printError("Arguments aren't valid.\n");
-                }
-                else
-                    executed = 1;
-                break;
+        if (strcmp(cmd, "sh") == 0) {
+            shCommand(params);
+            executed = 0;
         }
+        else {
+            switch(res) {
 
-         if((res == -1 || executed != 0) && inputBuffer[0] != 0) {
+                case 0:
+                    if (strcmp(cmd, "aracnoid") == 0) {
+                        //printError("Game is in maintenance.\n");
+                        startAracnoid(&aracnoid_save, &aracnoid_saved);
+                        if(aracnoid_saved)
+                            printColored("\n                                    Aracnoid is saved! type \"aracnoid\" to resume the game.\n\n", 0x04E798);
+                        executed = 0;
+                    }
+                    else if(strcmp(cmd, "phylo") == 0){
+                        philosDiningProblem();
+                        executed = 0;
+                    }
+                    else if(strcmp(cmd, "wc") == 0) {
+                        main_countLines(0, NULL);
+                        executed = 0;
+                    }
+                    else if(strcmp(cmd, "filter") == 0) {
+                        main_filterVowels(0, NULL);
+                        executed = 0;
+                    }
+                    else if(strcmp(cmd, "cat") == 0) {
+                        main_printInput(0, NULL);
+                        executed = 0;
+                    }
+                    else
+                        executed = command_launch(cmd);
+                    break;
+                case 1:
+                    if (strcmp(cmd, "printmem") == 0) {
+                        if (is_num(params[0]) == 0)
+                            printMemoryStatus(strtoint(params[0]));
+                        else
+                            printError("Arguments aren't valid.\n");
+                    }
+                    else if (strcmp(cmd, "kill") == 0) {
+                        if (is_num(params[0]) == 0)
+                            killProcess(strtoint(params[0]));
+                        else
+                            printError("Arguments aren't valid.\n");
+                    }
+                    else if (strcmp(cmd, "block") == 0) {
+                        if (is_num(params[0]) == 0)
+                            block(strtoint(params[0]));
+                        else
+                            printError("Arguments aren't valid.\n");
+                    }
+                    else if (strcmp(cmd, "test") == 0)
+                        test(params[0]);
+                    else
+                        executed = 1;
+                    break;
+                case 2:
+                    if(strcmp(cmd, "set") == 0)
+                        command_set(params[0], params[1]);
+                    else if (strcmp(cmd, "nice") == 0) {
+                        if (is_num(params[0]) == 0 && is_num(params[1]) == 0)
+                            changeProcessPriority(strtoint(params[0]), strtoint(params[1]));
+                        else
+                            printError("Arguments aren't valid.\n");
+                    }
+                    else
+                        executed = 1;
+                    break;
+            }
+        }
+        
+        if((res == -1 || executed != 0) && inputBuffer[0] != 0) {
             printError("Command not found.\n");
         }
 }

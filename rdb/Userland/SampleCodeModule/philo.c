@@ -58,13 +58,15 @@ static void startPhilo(philo_t * philos, unsigned int pos);
 static void addPhilo(philos_info_t * info, main_func_t * main_f);
 static void removePhilo(philos_info_t * info);
 
-
+/*
 static void busyWait(uint32_t millis){
     unsigned int last_ticks = getTicks();
     printf("BUSY WAIT: %d\n",( millis * PIT_FREQUENCY ) / 1000 ); 
 
     while(getTicks() - last_ticks < (( millis * PIT_FREQUENCY ) / 1000)); 
 }
+*/
+
 // How a philosopher thinks.
 static void think() {
     
@@ -125,6 +127,7 @@ static int take_sticks(philo_t * philo, sem_id left, sem_id right, sem_id state_
     return 0;    
 }
  
+/* 
 static int take(int idx, sem_id * sticks, sem_id * hand){
 
     if(sem_wait(sticks[idx]) == -1) {
@@ -134,6 +137,7 @@ static int take(int idx, sem_id * sticks, sem_id * hand){
 
     return 0;
 }
+*/
  
 static int drop_sticks(philo_t * philo, sem_id left, sem_id right, sem_id state_lock, sem_id viewer_sem){
     
@@ -284,13 +288,12 @@ int thinking_philos_main(int argc, char ** argv) {
 
     philos_info_t info;
     int c;
-
-    sscanf(argv[0], "%d", &(info.n_philos));
+    info.n_philos = INITIAL_PHILOS;
 
     initializePhilos(info.philos, info.n_philos);
     
     for (unsigned int i = 0; i < info.n_philos; i++) {
-        (info.args)[i] = malloc(4 * sizeof(char *));
+        (info.args)[i] = malloc(3 * sizeof(char *));
         (info.args)[i][0] = malloc(MAX_ARG_LENGTH * sizeof(char));
         (info.args)[i][1] = malloc(MAX_ARG_LENGTH * sizeof(char));
         (info.args)[i][2] = malloc(MAX_ARG_LENGTH * sizeof(char));

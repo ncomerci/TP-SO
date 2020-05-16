@@ -31,6 +31,7 @@ static uint64_t processes_alive = 0; //without the killed ones
 static uint64_t processes_ready = 0;
 static uint64_t processes_so_far = 0; //processes created, for the pid to be unique
 
+/*
 static uint64_t isValidProcess(PCB *p){
   if (!p) return 1;
 
@@ -71,7 +72,7 @@ static uint64_t checkQueues(){
    }
   return 1;
 }
-
+*/
 
 void * scheduler(void * rsp) {
 
@@ -114,7 +115,6 @@ void * scheduler(void * rsp) {
                 }
             }
             else {
-                _outportb(0x20, 0x20);
                 return rsp; //keep running
             }
         }

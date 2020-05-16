@@ -1,6 +1,4 @@
-#include <stdint.h>
 #include <lib_user.h>
-#include <sem.h>
 
 /*
 	SysCalls
@@ -207,6 +205,19 @@ int sscanf(const char *str, const char *format, ...) {
 					*num_p = - (*num_p);
 					negative = 0;
 				}
+				break;
+			case 'u':
+				num_p = va_arg(pa, uint64_t *);
+				size = 0;
+				while (*str >= '0' && *str <= '9') {
+					aux[size++] = *(str++);
+				}
+				if (*str != ' ' && *str != '\0') {
+					va_end(pa);
+					return -1;
+				}
+				aux[size++] = '\0';
+				*num_p = strtoint_base(aux, 10);
 				break;
 			case 'p': // Si es pointer
 				if (*str++ != '0')
@@ -418,6 +429,7 @@ static int wrapSprintf(char * buff, const char *format, va_list pa) {
 	unsigned int i = 0;
     char *tmp;
 	int num;
+	uint64_t unum;
 	int size;
 
     while (*format != '\0') {
@@ -439,6 +451,11 @@ static int wrapSprintf(char * buff, const char *format, va_list pa) {
 				size = uintToBase(num, buff + i, 10);
 				i += size;
 				break;
+			case 'u':
+				unum = va_arg(pa, int);
+				size = uintToBase(unum, buff + i, 10);
+				i += size;
+				break;				
 			case 'p': // Si es pointer
 				buff[i++] = '0';
 				buff[i++] = 'x';
@@ -601,11 +618,11 @@ void drawSquare(int x, int y, unsigned int l, uint32_t color) {
 #define BEEP_FREQ 350
 
 void play_timed_sound(uint32_t freq, long duration) {
-	_sys_sound(2, (void *)(uint64_t) freq, (void *)(uint64_t) duration);
+	_sys_sound((void *) 2, (void *)(uint64_t) freq, (void *)(uint64_t) duration);
 }
 
 void play_sound(uint32_t freq) {
-	_sys_sound(1, (void *)(uint64_t) freq, 0);
+	_sys_sound((void *) 1, (void *)(uint64_t) freq, 0);
 }
 
 void shut_sounds() {
@@ -629,36 +646,36 @@ sem_id ksem_open(char * name) {
 }
 
 int ksem_wait(sem_id sem) {
-	return _sys_ksem(1, (void *)(uint64_t) sem, 0, 0);
+	return _sys_ksem((void *) 1, (void *)(uint64_t) sem, 0, 0);
 }
 
 int ksem_post(sem_id sem) {
-	return _sys_ksem(2, (void *)(uint64_t) sem, 0, 0);
+	return _sys_ksem((void *) 2, (void *)(uint64_t) sem, 0, 0);
 }
 
 int ksem_close(sem_id sem) {
-	return _sys_ksem(3, (void *)(uint64_t) sem, 0, 0);
+	return _sys_ksem((void *) 3, (void *)(uint64_t) sem, 0, 0);
 }
 
 int ksem_destroy(sem_id sem) {
-	return _sys_ksem(4, (void *)(uint64_t) sem, 0, 0);
+	return _sys_ksem((void *) 4, (void *)(uint64_t) sem, 0, 0);
 }
 
 uint64_t ksem_getvalue(sem_id sem, int * sval) {
 	uint64_t ret;
-	_sys_ksem(5, (void *)(uint64_t) sem, (void *) sval, (void *) &ret);
+	_sys_ksem((void *) 5, (void *)(uint64_t) sem, (void *) sval, (void *) &ret);
 	return ret;
 }
 
-unsigned int ksem_get_semaphores_amount() {
+unsigned int ksem_get_semaphores_amount(void) {
 	unsigned int amount;
-	_sys_ksem(6, (void *) &amount, 0, 0);
+	_sys_ksem((void *) 6, (void *) &amount, 0, 0);
 	return amount;
 }
 
 unsigned int ksem_get_semaphores_info(sem_info * arr, unsigned int max_size) {
 	unsigned int amount;
-	_sys_ksem(7, (void *) arr, (void *)(uint64_t) max_size, (void *)(uint64_t) &amount);
+	_sys_ksem((void *) 7, (void *) arr, (void *)(uint64_t) max_size, (void *)(uint64_t) &amount);
 	return amount;
 }
 

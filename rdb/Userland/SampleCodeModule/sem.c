@@ -9,12 +9,12 @@ static sem_t semaphores[MAX_SEMAPHORES];
 static unsigned int sem_size = 0;
 static unsigned int sem_amount = 0;
 
-sem_id sem_open(const char *name)
+sem_id sem_open(char *name)
 {
     return sem_init_open(name, 1);
 }
 
-sem_id sem_init_open(const char *name, uint64_t init_val)
+sem_id sem_init_open(char *name, uint64_t init_val)
 {
     if (name == NULL || *name == '\0')
         return -1;
@@ -27,7 +27,7 @@ sem_id sem_init_open(const char *name, uint64_t init_val)
         if (strcmp(semaphores[i].name, name) == 0)
         {
             unsigned int j = 0;
-            while (j < semaphores[i].processes_size && semaphores[i].processes[j].pid != -1)
+            while (j < semaphores[i].processes_size && semaphores[i].processes[j].pid != 0)
             {
                 if (semaphores[i].processes[j].pid == pid) // Process already opened this semaphore
                     return -1;
@@ -76,7 +76,7 @@ int sem_wait(sem_id sem)
         return -1;
 
     unsigned int idx = getIndexOnSem(pid, &(semaphores[sem]));
-    if (idx >= sem_size)
+    if (idx >= semaphores[sem].processes_size)
         return -1;
 
     spin_lock(&(semaphores[sem].lock));
@@ -112,7 +112,7 @@ static void enqueue(sem_t *sem, sem_queue *sq)
 static uint64_t dequeuePid(sem_t *sem)
 {
     if (sem->first == NULL)
-        return -1;
+        return 0;
     uint64_t pid = (sem->first)->pid;
     if (sem->last == sem->first)
         sem->last = NULL;
@@ -124,7 +124,7 @@ static uint64_t dequeuePid(sem_t *sem)
 static unsigned int getIndexOnSem(uint64_t pid, sem_t *sem)
 {
     unsigned int j;
-    for (j = 0; j < sem->processes_size && (sem->processes)[j].pid != -1; j++)
+    for (j = 0; j < sem->processes_size && (sem->processes)[j].pid != 0; j++)
     {
         if ((sem->processes)[j].pid == pid)
             return j;
@@ -144,7 +144,7 @@ int sem_post(sem_id sem)
     if (semaphores[sem].processes_waiting > 0)
     {
         uint64_t pid = dequeuePid(&(semaphores[sem]));
-        if (pid < 0)
+        if (pid == 0)
             return -1; // Failed at dequeuing
         changeState(pid, READY);
     }
@@ -163,7 +163,7 @@ int sem_close(sem_id sem)
     {
         if (semaphores[sem].processes[i].pid == pid)
         {
-            semaphores[sem].processes[i].pid = -1;
+            semaphores[sem].processes[i].pid = 0;
             if (i == semaphores[sem].processes_size - 1)
                 semaphores[sem].processes_size--;
             semaphores[sem].processes_amount--;
@@ -204,17 +204,18 @@ uint64_t sem_getvalue(sem_id sem, int *sval)
     return (uint64_t)semaphores[sem].value;
 }
 
-void sem_get_semaphores_info(sem_info * arr, uint64_t * size){
+unsigned int sem_get_semaphores_info(sem_info * arr, unsigned int max_size){
     unsigned int j = 0;
     unsigned int k = 0;
     sem_queue * it;
     
-    for(unsigned int i = 0 ; (i < sem_size) && (j < sem_amount); i++) {
+    for(unsigned int i = 0 ; (i < sem_size) && (j < max_size) && (j < sem_amount); i++) {
         if (semaphores[i].name[0] != '\0') {
             strcpy(arr[j].name, semaphores[i].name); 
             arr[j].value = semaphores[i].value;
             k = 0;
-            while ( it != NULL ) {
+            it = semaphores[i].first;
+            while ( (it != NULL) && (it->pid != 0) ) {
                 arr[j].processes_waiting[k] = it->pid; 
                 it = it->next;
                 k++;
@@ -225,6 +226,5 @@ void sem_get_semaphores_info(sem_info * arr, uint64_t * size){
             j++; 
         }
     }
-
-    *size = j; 
+    return j; 
 }

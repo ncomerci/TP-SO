@@ -41,38 +41,65 @@ section .text
 %endmacro
 
 _sys_system:
+    BuildSF
+    preserve
+
     mov r8, rcx   ; Arguments Shifting
     mov rcx, rdx
     mov rdx, rsi
     mov rsi, rdi
     mov rdi, SYS_SYSTEM_CODE
     int 80h
+
+    recover
+    breakSF
     ret   
 
 _sys_process:
+    BuildSF
+    preserve
+
     mov r8, rcx   ; Arguments Shifting
     mov rcx, rdx
     mov rdx, rsi
     mov rsi, rdi
     mov rdi, SYS_PROCESS_CODE
     int 80h
+
+    recover
+    breakSF
     ret
 
 _sys_timet:
+    BuildSF
+    preserve
+
     mov rcx, rdx  ; Arguments Shifting
     mov rdx, rsi
     mov rsi, rdi
     mov rdi, SYS_TICKS_CODE
     int 80h
+
+    recover
+    breakSF
     ret
 
 _sys_rtc:
+    BuildSF
+    preserve
+
     mov rsi, rdi  ; Arguments Shifting
     mov rdi, SYS_RTC_CODE
     int 80h
+
+    recover
+    breakSF
     ret
 
 _sys_fd:
+    BuildSF
+    preserve
+
     mov r9, r8    ; Arguments Shifting
     mov r8, rcx
     mov rcx, rdx
@@ -80,17 +107,29 @@ _sys_fd:
     mov rsi, rdi
     mov rdi, SYS_FD_CODE
     int 80h
+
+    recover
+    breakSF
     ret
 
 _sys_screen:
+    BuildSF
+    preserve
+
     mov rcx, rdx  ; Arguments Shifting
     mov rdx, rsi
     mov rsi, rdi
     mov rdi, SYS_SCREEN_CODE
     int 80h
+
+    recover
+    breakSF
     ret    
 
 _sys_video:
+    BuildSF
+    preserve
+
     mov r9, r8    ; Arguments Shifting
     mov r8, rcx
     mov rcx, rdx
@@ -98,26 +137,44 @@ _sys_video:
     mov rsi, rdi
     mov rdi, SYS_VIDEO_CODE
     int 80h
+
+    recover
+    breakSF    
     ret
 
 _sys_sound:
+    BuildSF
+    preserve
+
     mov rcx, rdx  ; Arguments Shifting 
     mov rdx, rsi
     mov rsi, rdi
     mov rdi, SYS_SOUND_CODE
     int 80h
+
+    recover
+    breakSF    
     ret
 
 _sys_ksem:
+    BuildSF
+    preserve    
+
     mov r8, rcx   ; Arguments Shifting
     mov rcx, rdx 
     mov rdx, rsi
     mov rsi, rdi
     mov rdi, SYS_KSEM_CODE
     int 80h
+
+    recover
+    breakSF
     ret
 
 getRegisters:
+    BuildSF
+    preserve
+
     mov [array], rax
     mov [array + 8], rbx
     mov [array + 8*2], rcx
@@ -135,6 +192,9 @@ getRegisters:
     mov [array + 8*14], r15
     
     mov rax, array
+
+    recover
+    breakSF
 	ret
 
 

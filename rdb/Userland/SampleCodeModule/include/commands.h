@@ -3,8 +3,10 @@
 
 #include <aracnoid.h>
 #include <philo.h>
+#include <shell.h>
 
 #define MAX_BUFFER 100
+#define SEM_PIPE_SH_NAME "sh_pipe"
 
 typedef enum {KERNEL, USER} sem_location;
 
@@ -44,6 +46,6 @@ void philosDiningProblem(void);
 void printBothSemaphores(void);
 void printSemaphores(sem_location loc);
 void printPipes(void); 
-void shCommand(char params[MAX_PARAMS][LONGEST_PARAM]);
+void shCommand(char (* params)[LONGEST_PARAM]);
 
 #endif
