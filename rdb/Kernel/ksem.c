@@ -77,10 +77,12 @@ int ksem_wait(sem_id sem){
         enqueue(&(semaphores[sem]), &(semaphores[sem].processes[idx]));
         spin_unlock(&(semaphores[sem].lock));
         changeState(pid, BLOCKED);   
-        spin_lock(&(semaphores[sem].lock));
     }
-    semaphores[sem].value--;
-    spin_unlock(&(semaphores[sem].lock));
+    else {
+        if (semaphores[sem].value > 0)
+            semaphores[sem].value--;
+        spin_unlock(&(semaphores[sem].lock));
+    }
 
     return 0; 
 }
@@ -130,7 +132,11 @@ int ksem_post(sem_id sem) {
         uint64_t pid = dequeuePid(&(semaphores[sem]));
         if (pid == 0)
             return -1; // Failed at dequeuing
+        spin_lock(&(semaphores[sem].lock));
+        if (semaphores[sem].value > 0)
+            semaphores[sem].value--;
         changeState(pid, READY);
+        spin_unlock(&(semaphores[sem].lock));
     }
     return 0;
 }

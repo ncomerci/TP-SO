@@ -417,6 +417,7 @@ static int viewer_main(int argc, char ** argv) {
         
         sem_post(state_lock);
 
+        /*
         if (!equals(state, last_state, n) == 0) {
             if (checkState(state, n) != 0)
                 printf("An error ocurred. Two processes eating together!\n");
@@ -425,8 +426,8 @@ static int viewer_main(int argc, char ** argv) {
             drawPhilos(state, n);
             actual_state = 1 - actual_state;
         }
+        */
 
-        /*
         if (!equals(state, last_state, n) == 0) {
             if (checkState(state, n) != 0)
                 printf("An error ocurred. Two processes eating together!\n");
@@ -437,7 +438,6 @@ static int viewer_main(int argc, char ** argv) {
             }
             actual_state = 1 - actual_state;
         }
-        */
     }
 
     return 0;

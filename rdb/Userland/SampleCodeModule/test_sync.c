@@ -31,13 +31,13 @@ static uint64_t my_sem_close(sem_id sem_id){
   return 0;  
 }
 
-#define N 100000
+#define N 1000000
 #define SEM_ID "sem"
 #define TOTAL_PAIR_PROCESSES 2
 
 uint64_t global;  //shared memory
 
-static void slowInc(uint64_t *p, uint64_t inc){
+static void slowInc(uint64_t *p, int inc){
   uint64_t aux = *p;
   aux += inc;
   for(int i = 0; i < 100 ; i++);
@@ -56,6 +56,7 @@ static int my_process_inc(int argc, char ** argv){
   for (i = 0; i < N; i++){
     my_sem_wait(sem);
     slowInc(&global, 1);
+    //sleep(100);
     my_sem_post(sem);
   }
 
@@ -77,6 +78,7 @@ static int my_process_dec(int argc, char ** argv){
   
   for (i = 0; i < N; i++){
     my_sem_wait(sem);
+    //sleep(100);
     slowInc(&global, -1);
     my_sem_post(sem);
   }
@@ -109,7 +111,7 @@ static int my_process_inc_no_sem(int argc, char ** argv){
     slowInc(&global, 1);
   }
 
-  printf("NO Final value: %d\n", global);
+  printf("NO Final value: %u\n", global);
 
   return 0;
 }
@@ -120,7 +122,7 @@ static int my_process_dec_no_sem(int argc, char ** argv){
     slowInc(&global, -1);
   }
 
-  printf("NO Final value: %d\n", global);
+  printf("NO Final value: %u\n", global);
 
   return 0;
 }
