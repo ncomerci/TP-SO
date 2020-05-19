@@ -1,7 +1,7 @@
 #include <lib_user.h>
 #include <sem.h>
 
-static unsigned int getIndexOnSem(uint64_t pid, sem_t *sem);
+static int getIndexOnSem(uint64_t pid, sem_t *sem);
 static void enqueue(sem_t *sem, sem_queue *sq);
 static uint64_t dequeuePid(sem_t *sem);
 
@@ -27,7 +27,7 @@ sem_id sem_init_open(char *name, uint64_t init_val)
         if (strcmp(semaphores[i].name, name) == 0)
         {
             unsigned int j = 0;
-            while (j < semaphores[i].processes_size && semaphores[i].processes[j].pid != 0)
+            while (j < semaphores[i].processes_size && semaphores[i].processes[j].occupied)
             {
                 if (semaphores[i].processes[j].pid == pid) // Process already opened this semaphore
                     return -1;
@@ -40,6 +40,7 @@ sem_id sem_init_open(char *name, uint64_t init_val)
             if (j == semaphores[i].processes_size)
                 semaphores[i].processes_size++;
             semaphores[i].processes[j].pid = pid; // Add pid to the processes appended to this semaphore
+            semaphores[i].processes[j].occupied = 1;
             semaphores[i].processes_amount++;
             return i;
         }
@@ -54,6 +55,7 @@ sem_id sem_init_open(char *name, uint64_t init_val)
         semaphores[i].lock = 0;
         semaphores[i].processes_waiting = 0;
         semaphores[i].processes[0].pid = pid;
+        semaphores[i].processes[0].occupied = 1;        
         semaphores[i].processes[0].next = NULL;
         semaphores[i].processes_amount = 1;
         semaphores[i].processes_size = 1;
@@ -75,9 +77,11 @@ int sem_wait(sem_id sem)
     if (getPid(&pid) < 0)
         return -1;
 
-    unsigned int idx = getIndexOnSem(pid, &(semaphores[sem]));
-    if (idx >= semaphores[sem].processes_size)
+    int idx = getIndexOnSem(pid, &(semaphores[sem]));
+    if (idx < 0) {
+        printf("Couldn't find process in sem");
         return -1;
+    }
 
     spin_lock(&(semaphores[sem].lock));
     if (semaphores[sem].value == 0)
@@ -87,28 +91,23 @@ int sem_wait(sem_id sem)
         changeState(pid, BLOCKED);
     }
     else {
-        if (semaphores[sem].value > 0)
-            semaphores[sem].value--;
+        semaphores[sem].value--;
         spin_unlock(&(semaphores[sem].lock));
     }
-
 
     return 0;
 }
 
 static void enqueue(sem_t *sem, sem_queue *sq)
 {
-    if (sem->last == NULL)
-    {
+    if (sem->last == NULL) {
         sem->first = sq;
-        sem->last = sq;
     }
-    else
-    {
+    else {
         (sem->last)->next = sq;
-        sem->last = sq;
-        sq->next = NULL;
     }
+    sem->last = sq;
+    sq->next = NULL;
     sem->processes_waiting++;
 }
 
@@ -117,6 +116,8 @@ static uint64_t dequeuePid(sem_t *sem)
     if (sem->first == NULL)
         return 0;
     uint64_t pid = (sem->first)->pid;
+    if (pid == 0)
+        printf("Get pid: 0\n");
     if (sem->last == sem->first)
         sem->last = NULL;
     sem->first = (sem->first)->next;
@@ -124,15 +125,15 @@ static uint64_t dequeuePid(sem_t *sem)
     return pid;
 }
 
-static unsigned int getIndexOnSem(uint64_t pid, sem_t *sem)
+static int getIndexOnSem(uint64_t pid, sem_t *sem)
 {
     unsigned int j;
-    for (j = 0; j < sem->processes_size && (sem->processes)[j].pid != 0; j++)
+    for (j = 0; j < sem->processes_size; j++)
     {
-        if ((sem->processes)[j].pid == pid)
+        if ((sem->processes)[j].occupied && (sem->processes)[j].pid == pid)
             return j;
     }
-    return j;  
+    return -1;
 }
 
 int sem_post(sem_id sem)
@@ -141,20 +142,22 @@ int sem_post(sem_id sem)
         return -1; // Semaphore does not exist
 
     spin_lock(&(semaphores[sem].lock));
-    semaphores[sem].value++;
-    spin_unlock(&(semaphores[sem].lock));
-
+    
     if (semaphores[sem].processes_waiting > 0)
     {
         uint64_t pid = dequeuePid(&(semaphores[sem]));
-        if (pid == 0)
-            return -1; // Failed at dequeuing
-        spin_lock(&(semaphores[sem].lock));
-        if (semaphores[sem].value > 0)
-            semaphores[sem].value--;
+        if (pid == 0) {
+            printf("Failed at dequeuing\n");
+            return -1;
+        }
         changeState(pid, READY);
-        spin_unlock(&(semaphores[sem].lock));
     }
+    else {
+        semaphores[sem].value++;
+    }
+
+    spin_unlock(&(semaphores[sem].lock));
+
     return 0;
 }
 
@@ -168,11 +171,13 @@ int sem_close(sem_id sem)
     unsigned int i = 0;
     while (i < semaphores[sem].processes_size)
     {
-        if (semaphores[sem].processes[i].pid == pid)
+        if (semaphores[sem].processes[i].occupied && semaphores[sem].processes[i].pid == pid)
         {
-            semaphores[sem].processes[i].pid = 0;
+            semaphores[sem].processes[i].occupied = 0;
+
             if (i == semaphores[sem].processes_size - 1)
                 semaphores[sem].processes_size--;
+                
             semaphores[sem].processes_amount--;
             if (semaphores[sem].processes_amount == 0)
             { // delete semaphore
@@ -192,15 +197,12 @@ int sem_destroy(sem_id sem) {
     if (sem < 0 || sem >= sem_size || semaphores[sem].name[0] == '\0')
         return -1; // Semaphore does not exist
 
-    unsigned int i = 0;
-    while (i < semaphores[sem].processes_size) {
-        semaphores[sem].name[0] = '\0';
-        if (sem == sem_size - 1)
-            sem_size--;
-        sem_amount--;
-        i++;
-    }
-    return -1; // process was not found on semaphore
+    semaphores[sem].name[0] = '\0';
+    if (sem == sem_size - 1)
+        sem_size--;
+    sem_amount--;
+
+    return 0; // process was not found on semaphore
 }
 
 uint64_t sem_getvalue(sem_id sem, int *sval)

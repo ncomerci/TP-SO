@@ -62,13 +62,12 @@ static int my_process_inc(int argc, char ** argv){
   for (i = 0; i < N; i++){
     my_sem_wait(sem);
     slowInc(&global, 1);
-    //sleep(100);
     my_sem_post(sem);
   }
 
   my_sem_close(sem);
   
-  printf("SEM Final value: %d\n", global);
+  printf("SEM Final value: %u\n", global);
 
   return 0;
 }
@@ -84,14 +83,13 @@ static int my_process_dec(int argc, char ** argv){
   
   for (i = 0; i < N; i++){
     my_sem_wait(sem);
-    //sleep(100);
     slowInc(&global, -1);
     my_sem_post(sem);
   }
 
   my_sem_close(sem);
 
-  printf("SEM Final value: %d\n", global);
+  printf("SEM Final value: %u\n", global);
 
   return 0;
 }
