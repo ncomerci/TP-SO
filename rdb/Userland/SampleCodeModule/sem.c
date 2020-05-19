@@ -116,8 +116,6 @@ static uint64_t dequeuePid(sem_t *sem)
     if (sem->first == NULL)
         return 0;
     uint64_t pid = (sem->first)->pid;
-    if (pid == 0)
-        printf("Get pid: 0\n");
     if (sem->last == sem->first)
         sem->last = NULL;
     sem->first = (sem->first)->next;

@@ -10,6 +10,9 @@ unsigned int pipes_size = 0;
 unsigned int pipes_amount = 0;
 
 int pipeWrite(int gate, char * str, unsigned int str_size) { //post
+    if (gate % 2 == 0) // READ-END
+        return -1;
+
     int idx = gate/2;
 
     if (idx <= 0 && idx > MAX_PIPES)
@@ -17,14 +20,13 @@ int pipeWrite(int gate, char * str, unsigned int str_size) { //post
 
     char sem_aux_name[SEM_NAME_MAX_LENGTH];
 
-    strcpy(sem_aux_name, pipes[idx].name);
-    strcat(sem_aux_name, "w"); 
+
+    sprintf(sem_aux_name, "%s-%c", pipes[idx].name, 'w');
     sem_id sem_write = ksem_open(sem_aux_name); 
     if(sem_write == -1 )
         return -1; 
     
-    strcpy(sem_aux_name, pipes[idx].name);
-    strcat(sem_aux_name, "r"); 
+    sprintf(sem_aux_name, "%s-%c", pipes[idx].name, 'r');
     sem_id sem_read = ksem_init_open(sem_aux_name, 0); 
     if(sem_read == -1)
         return -1; 
@@ -60,6 +62,9 @@ int pipeWrite(int gate, char * str, unsigned int str_size) { //post
 }
 
 int pipeRead(int gate, char * buff, unsigned int count) { //sleep
+    if (gate % 2 != 0) // WRITE-END
+        return -1;
+
     int idx = gate/2; 
 
     if (idx <= 0 && idx > MAX_PIPES)
@@ -170,11 +175,20 @@ int openPipe(char * name) {
     return i;
 }
 
+int closePipes(int gate) {
+    int idx = gate/2; 
+
+    if (idx <= 0 && idx > MAX_PIPES)
+        return -1;
+
+    
+}
+
 void printPipes( pipe_info * arr , uint64_t * size){
     unsigned int j = 0 ; 
 
     for(unsigned int i = 0; i < pipes_amount; i++){
-        arr[j].blocked_processes = pipes[i].blocked_processes;
+        //arr[j].blocked_processes = pipes[i].blocked_processes;
         strcpy(arr[j].name, pipes[i].name);   
         j++;
     }

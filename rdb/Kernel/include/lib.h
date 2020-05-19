@@ -6,6 +6,7 @@
 #define portBYTE_ALIGNMENT_MASK 7 
 
 #include <stdint.h>
+#include <stdarg.h>
 
 void * memset(void * destination, int32_t character, uint64_t length);
 void * memcpy(void * destination, const void * source, uint64_t length);
@@ -14,6 +15,7 @@ unsigned int strlen(const char *str);
 int strcpy(char *dst, const char *src);
 int strcat(char *dst, const char *src);
 int strcmp(const char *s1, const char *s2);
+int sprintf(char * buff, const char *format, ...);
 
 char *cpuVendor(char *result);
 uint8_t getRTC(char arg);

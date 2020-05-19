@@ -32,6 +32,7 @@
 
     // The three things that philosophers do.
     typedef enum { THINKING, EATING, HUNGRY } state_t;
+    typedef enum { STARTER, NEW } origin;
 
     typedef struct hands_t {
         sem_id left;

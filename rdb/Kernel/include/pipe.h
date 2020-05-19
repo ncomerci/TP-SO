@@ -23,5 +23,6 @@ int getPipeOutIndex(char * name);
 int pipeWrite(int gate, char * str, unsigned int str_size);
 int pipeRead(int gate, char * buff, unsigned int count);
 int openPipe(char * name);
+int closePipes(int gate);
 
 #endif

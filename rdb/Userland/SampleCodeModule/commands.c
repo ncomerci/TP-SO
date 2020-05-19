@@ -8,9 +8,11 @@ static int clockUpdater(int argc, char ** argv);
 static int findColor(char * color);
 static int semProccess1(int argc, char ** argv);
 static int semProccess2(int argc, char ** argv); 
+static int semProccess3(int argc, char ** argv);
 static int pipeProccess(int argc, char ** argv);
 static void testPrior(void);
 static void testSync(void);
+static void testNoSync(void);
 static int isVowel(int c);
 static int main_pipeSh(int argc, char **argv); 
 
@@ -31,13 +33,16 @@ static int semProccess1(int argc, char ** argv) {
 
     sem = ksem_init_open(name, init_val);
 
-    ksem_wait(sem);
-    printf("Sem Process 1 is active now!\n");
 
-    sleep(10000);
+    for (int i = 0; i < 500; i++) {
+        ksem_wait(sem);
+        printf("Sem Process 1 is active now!\n");
 
-    printf("Sem Process 1 is dead :O\n");
-    ksem_post(sem);
+        //sleep(100);
+
+        printf("Sem Process 1 is dead :O\n");
+        ksem_post(sem);
+    }
 
     ksem_close(sem);
 
@@ -48,14 +53,35 @@ static int semProccess2(int argc, char ** argv) {
     char *name = "sem_test";
     sem_id sem = ksem_open(name);
 
-    ksem_wait(sem);
-    printf("Sem Process 2 here!\n");
+    for (int i = 0; i < 100; i++) {
+        ksem_wait(sem);
+        printf("Sem Process 2 here!\n");
 
-    sleep(2000);
+        //sleep(5000);
 
-    printf("Sem Process 2 dead :(\n");
+        printf("Sem Process 2 dead :(\n");
+        ksem_post(sem);
+    }
+    
 
-    ksem_post(sem);
+    ksem_close(sem);
+
+    return 0;
+}
+
+static int semProccess3(int argc, char ** argv) {
+    char *name = "sem_test";
+    sem_id sem = ksem_open(name);
+
+    for (int i = 0; i < 50; i++) {
+        ksem_wait(sem);
+        printf("Sem Process 3 here!\n");
+
+        sleep(1000);
+
+        printf("Sem Process 3 dead :(\n");
+        ksem_post(sem);  
+    }
 
     ksem_close(sem);
 
@@ -82,6 +108,12 @@ static void testSync(void) {
     main_func_t f_sync = {main_test_sync, 0, NULL};
     uint64_t pid;
     createProcess(&f_sync, "Test Sync", 0, NULL, NULL, &pid);
+}
+
+static void testNoSync(void) {
+    main_func_t f = {main_test_no_sync, 0, NULL};
+    uint64_t pid;
+    createProcess(&f, "Test No Sync", 0, NULL, NULL, &pid);
 }
 
 static void testPrior(void) {
@@ -256,8 +288,11 @@ void printSemaphores(sem_location loc) {
     printf("ID; NAME; VALUE; PROCESSES WAITING\n"); 
     for(unsigned int i = 0 ; i < amount ; i++ ) {
         printf("%d; %s; %d; {", info[i].id, info[i].name, (int) info[i].value);
-        for(unsigned int j = 0; j < info[i].processes_waiting_amount; j++)
+        for(unsigned int j = 0; j < info[i].processes_waiting_amount; j++) {
             printf("%d", (int) info[i].processes_waiting[j]);
+            if (j < info[i].processes_waiting_amount - 1)
+                printf(", ");
+        }
         printf("}\n");  
     } 
 }
@@ -508,8 +543,10 @@ void testPS(void) {
 void testSem(void) {
     main_func_t sem1 = {semProccess1, 0, NULL};
     main_func_t sem2 = {semProccess2, 0, NULL};
+    main_func_t sem3 = {semProccess3, 0, NULL};
     uint64_t pid1;
     uint64_t pid2;
+    uint64_t pid3;
     if (createProcess(&sem1, "Test Semaphore 1", 0, NULL, NULL, &pid1) < 0) {
         printf("Create Process Failed\n");
         return;
@@ -520,6 +557,11 @@ void testSem(void) {
         return;
     }
     printf("Sem Proccess 2 pid: %d\n", (int) pid2);
+    if (createProcess(&sem3, "Test Semaphore 3", 0, NULL, NULL, &pid3) < 0) {
+        printf("Create Process Failed\n");
+        return;
+    }
+    printf("Sem Proccess 3 pid: %d\n", (int) pid3);
 }
 
 void testPipe(void){
@@ -560,6 +602,8 @@ void test(char * option) {
         testPrior();
     else if(strcmp(option, "sync") == 0)
         testSync();
+    else if(strcmp(option, "nosync") == 0)
+        testNoSync();
     /*
     else if (strcmp(option, "zero_div") == 0)
         testDivException();

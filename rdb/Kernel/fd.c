@@ -2,7 +2,7 @@
 
 int processes_fds [MAX_PROCESSES][MAX_FILE_DES];
 
-int assignInAndOut(int idx, char * in, char * out) {
+int assignInAndOut(unsigned int idx, char * in, char * out) {
     if (idx < 0 || idx >= MAX_PROCESSES)
         return -1;
     
@@ -22,6 +22,19 @@ int assignInAndOut(int idx, char * in, char * out) {
             return -1;
     }
     processes_fds[idx][1] = gate;
+    return 0;
+}
+
+int closeInAndOut(unsigned int idx) {
+    if (idx < 0 || idx >= MAX_PROCESSES)
+        return -1;   
+
+    if ((processes_fds[idx][0] != STDIN) && (closePipe(processes_fds[idx][0]) < 0))
+        return -1;
+
+    if ((processes_fds[idx][1] != STDOUT) && (closePipe(processes_fds[idx][1]) < 0))
+        return -1;
+
     return 0;
 }
 

@@ -85,6 +85,7 @@ static int my_process_dec(int argc, char ** argv){
     my_sem_wait(sem);
     slowInc(&global, -1);
     my_sem_post(sem);
+    //printf("Variable is: %u\n", global);
   }
 
   my_sem_close(sem);
@@ -148,6 +149,6 @@ static void test_no_sync(){
 
 int main_test_sync(int argc, char ** argv){
   test_sync();
-  test_no_sync();
+  //test_no_sync();
   return 0;
 }

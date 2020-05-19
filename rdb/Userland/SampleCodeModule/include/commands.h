@@ -38,6 +38,7 @@ int main_test_mm(int argc, char ** argv);
 int main_test_process(int argc, char ** argv);
 int main_test_prior(int argc, char ** argv);
 int main_test_sync(int argc, char ** argv);
+int main_test_no_sync(int argc, char **argv);
 int main_countLines(int argc, char**argv);
 int main_filterVowels(int argc, char**argv);
 int main_printInput(int argc, char**argv); 

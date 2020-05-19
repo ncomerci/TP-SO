@@ -14,6 +14,7 @@
     //
 
     typedef struct sem_queue {
+        char occupied;
         uint64_t pid;
         struct sem_queue * next;
     } sem_queue;

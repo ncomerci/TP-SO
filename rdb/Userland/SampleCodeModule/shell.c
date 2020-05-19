@@ -15,7 +15,7 @@ static void welcomeMessage(void);
 
 static char inputBuffer[BUFFER_SIZE];
 static char commandsHistory[COMMANDS_BUFFER_SIZE][BUFFER_SIZE];
-static char * commands[] = {"clear", "clock", "help", "inforeg", "kill", "mem", "nice", "phylo", "pipe", "printmem", "ps", "sem","set", "set writing_color", "sh", "test", "test mm", "test mem", "test pipe", "test prior", "test process", "test process_args", "test ps", "test sem", "test sync"};
+static char * commands[] = {"clear", "clock", "help", "inforeg", "kill", "mem", "nice", "phylo", "pipe", "printmem", "ps", "sem","set", "set writing_color", "sh", "test", "test mm", "test mem", "test nosync", "test pipe", "test prior", "test process", "test process_args", "test ps", "test sem", "test sync"};
 static char * void_func[] = {"help", "clock", "inforeg", "clear", "ps", "sem", "pipe", "loop","phylo", "mem"};
 static void (*void_commands_func[])(void) = {printUserManual, getLocalTime, printRegistersInfo, clear, printProcesses, printBothSemaphores, printPipes,loop, philosDiningProblem, printMMStats};
 

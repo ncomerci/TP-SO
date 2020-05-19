@@ -350,7 +350,7 @@ int changePriority(uint64_t pid, unsigned int new_priority) {
 }
 
 int changeState(uint64_t pid, process_state new_state) {
-    for(int i=0; i < processes_size; i++){
+    for(unsigned int i=0; i < processes_size; i++){
         if(processes[i].pid == pid) {
             process_state last_state = processes[i].state;
 
@@ -396,6 +396,8 @@ int changeState(uint64_t pid, process_state new_state) {
                 else {
                     free(processes[i].stack);
                 }
+
+                closeInAndOut(i);
             }
             return 0;
         }
