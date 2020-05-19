@@ -149,6 +149,10 @@ static void test_no_sync(){
 
 int main_test_sync(int argc, char ** argv){
   test_sync();
-  //test_no_sync();
+  return 0;
+}
+
+int main_test_no_sync(int argc, char **argv){
+  test_no_sync();
   return 0;
 }

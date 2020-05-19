@@ -166,6 +166,11 @@ int openPipe(char * name) {
     strcpy(pipes[i].name, name);
     pipes[i].size = 0;
     pipes[i].idx = 0;
+    pipes[i].processes[0].pid = pid;
+    pipes[i].processes[0].occupied = 1;        
+    pipes[i].processes_amount = 1;
+    pipes[i].processes_size = 1;
+
     (pipes[i].buffer)[0] = '\0';
 
     if (i == pipes_size)
