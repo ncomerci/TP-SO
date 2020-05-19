@@ -205,43 +205,17 @@ testDivException:
     ret
 
 spin_lock:
-    BuildSF
-    preserve
+    mov eax, 1
+    xchg eax, [rdi]
+    test eax, eax
 
-    mov     al, 1          ; Set the EAX register to 1.
+    jnz spin_lock
+    ret
 
-    xchg    al, [rdi]       ; Atomically swap the EAX register with
-                            ;  the lock variable.
-                            ; This will always store 1 to the lock, leaving
-                            ;  the previous value in the EAX register.
-
-    test    al, al          ; Test EAX with itself. Among other things, this will
-                            ;  set the processor's Zero Flag if EAX is 0.
-                            ; If EAX is 0, then the lock was unlocked and
-                            ;  we just locked it.
-                            ; Otherwise, EAX is 1 and we didn't acquire the lock.
-
-    jnz     spin_lock       ; Jump back to the MOV instruction if the Zero Flag is
-                            ;  not set; the lock was previously locked, and so
-                            ; we need to spin until it becomes unlocked.
-
-    recover
-    breakSF
-    ret                     ; The lock has been acquired, return to the calling
-                            ;  function.
-
-spin_unlock:
-    BuildSF
-    preserve    
-
-    mov     al, 0          ; Set the EAX register to 0.
-
-    xchg    al, [rdi]   ; Atomically swap the EAX register with
-                            ;  the lock variable.
-
-    recover
-    breakSF
-    ret                     ; The lock has been released.
+spin_unlock: 
+    mov     eax, 0     
+    xchg    eax, [rdi] 
+    ret                
 
 section .bss
 array resb 8*16

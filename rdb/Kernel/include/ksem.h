@@ -20,7 +20,7 @@
 
     typedef struct sem_t {
         char name[SEM_NAME_MAX_LENGTH];
-        char lock; 
+        uint32_t lock; 
         uint64_t value;
         sem_queue processes[MAX_PROCESSES_PER_SEMAPHORE];
         unsigned int processes_amount; //processes not closed 
@@ -38,8 +38,8 @@
         unsigned int processes_waiting_amount;
     }sem_info;
 
-    void spin_lock(char * lock);
-    void spin_unlock(char * lock);
+    void spin_lock(uint32_t * lock);
+    void spin_unlock(uint32_t * lock);
     sem_id ksem_open(char * name);
     sem_id ksem_init_open(char * name, uint64_t init_val) ;
     int ksem_wait(sem_id sem);
