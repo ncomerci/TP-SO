@@ -211,3 +211,6 @@ make all
 gdb
 cd 
 make clean
+cd
+sed -i -e 's/\r$//' .dckr_make
+sed -i -e 's/\r$//' .dckr_gdb

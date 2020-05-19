@@ -43,7 +43,7 @@ static uint64_t my_sem_close(sem_id sem_id){
 
 uint64_t global;  //shared memory
 
-static void slowInc(uint64_t *p, int64_t inc){
+static void slowInc(uint64_t *p, int inc){
   uint64_t aux = *p;
   aux += inc;
   for(int i = 0; i < 100 ; i++);
