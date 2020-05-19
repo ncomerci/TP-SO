@@ -5,39 +5,45 @@
 static uint64_t my_create_process(int (f)(int, char**), char * name){
   uint64_t pid = 0; 
   main_func_t f_ps = {f, 0, NULL};
-  createProcess( &f_ps, name, 0, NULL, NULL, &pid); //CHECKEAR ERROR!!!!!
+  int aux = createProcess( &f_ps, name, 0, NULL, NULL, &pid); //CHECKEAR ERROR!!!!!
+  if(aux < 0) {
+    printError("ERROR: createProcess!\n");
+  }
   return pid;
 }
 
 static uint64_t my_sem_open(char *name, uint64_t initialValue){
-  return sem_init_open(name, (unsigned int) initialValue);
+  return sem_init_open(name, initialValue);
 }
 
 static uint64_t my_sem_wait(sem_id sem_id){
-  if (sem_wait(sem_id) < 0)
-    printf("Se rompio todo el sleep amigo\n");
-  return 0;
+  int ret = sem_wait(sem_id);
+  if (ret < 0)
+    printf("Se rompio todo el wait amigo\n");
+  return ret;
 }
 
 static uint64_t my_sem_post(sem_id sem_id){
-  if (sem_post(sem_id) < 0)
+  int ret = sem_post(sem_id);
+  if (ret < 0)
     printf("Se rompio todo el post amigo\n");
-  return 0;  
+  return ret;  
 } 
 
 static uint64_t my_sem_close(sem_id sem_id){
-  if (sem_close(sem_id) < 0)
+  int ret = sem_close(sem_id);
+  if (ret < 0)
     printf("Se rompio todo el close amigo\n");
-  return 0;  
+  return ret;  
 }
 
-#define N 100000
-#define SEM_ID "sem"
+#define N 1000000
+#define SEM_NAME "sem"
 #define TOTAL_PAIR_PROCESSES 2
 
 uint64_t global;  //shared memory
 
-static void slowInc(uint64_t *p, uint64_t inc){
+static void slowInc(uint64_t *p, int64_t inc){
   uint64_t aux = *p;
   aux += inc;
   for(int i = 0; i < 100 ; i++);
@@ -48,7 +54,7 @@ static int my_process_inc(int argc, char ** argv){
   uint64_t i;
   sem_id sem;
 
-  if ((sem = my_sem_open(SEM_ID, 1)) < 0){
+  if ((sem = my_sem_open(SEM_NAME, 1)) < 0){
     printf("ERROR OPENING SEM\n");
     return -1;
   }
@@ -70,7 +76,7 @@ static int my_process_dec(int argc, char ** argv){
   uint64_t i;
   sem_id sem; 
 
-  if ((sem = my_sem_open(SEM_ID, 1)) < 0){
+  if ((sem = my_sem_open(SEM_NAME, 1)) < 0){
     printf("ERROR OPENING SEM\n");
     return -1;
   }
