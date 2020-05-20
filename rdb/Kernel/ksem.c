@@ -62,6 +62,37 @@ sem_id ksem_init_open(char * name, uint64_t init_val) {
         semaphores[i].processes[0].next = NULL;
         semaphores[i].processes_amount = 1;
         semaphores[i].processes_size = 1;
+        semaphores[i].privileged = DEFAULT;
+        if (i == sem_size)
+            sem_size++;
+        sem_amount++;
+        return i;
+    }
+    else
+        return -1;
+}
+
+sem_id ksem_init_open_priv(char * name, uint64_t init_val) {
+    if (name == NULL || *name == '\0')
+        return -1;
+    unsigned int i = 0;
+    uint64_t pid;
+    if (getPid(&pid) < 0)
+        return -1;
+    while (i < sem_size && semaphores[i].name[0] != '\0') {
+        i++;
+    }
+    if (i < MAX_SEMAPHORES)
+    {
+        strcpy(semaphores[i].name, name);
+        semaphores[i].first = NULL;
+        semaphores[i].last = NULL;
+        semaphores[i].value = init_val;
+        semaphores[i].lock = 0;
+        semaphores[i].processes_waiting = 0;       
+        semaphores[i].processes_amount = 0;
+        semaphores[i].processes_size = 0;
+        semaphores[i].privileged = PRIVILEGED;
         if (i == sem_size)
             sem_size++;
         sem_amount++;
@@ -189,7 +220,7 @@ int ksem_close(sem_id sem) { //remove a ps from semaphore
 }
 
 int ksem_destroy(sem_id sem) {
-    if (sem < 0 || sem >= sem_size || semaphores[sem].name[0] == '\0')
+    if (sem < 0 || sem >= sem_size || semaphores[sem].name[0] == '\0' || semaphores[sem].privileged == PRIVILEGED)
         return -1; // Semaphore does not exist
 
     semaphores[sem].name[0] = '\0';
@@ -198,6 +229,18 @@ int ksem_destroy(sem_id sem) {
     sem_amount--;
 
     return 0; // process was not found on semaphore
+}
+
+int ksem_destroy_priv(sem_id sem) {
+    if (sem < 0 || sem >= sem_size || semaphores[sem].name[0] == '\0' || semaphores[sem].privileged != PRIVILEGED)
+        return -1; // Semaphore does not exist
+
+    semaphores[sem].name[0] = '\0';
+    if (sem == sem_size - 1)
+        sem_size--;
+    sem_amount--;
+    
+    return 0;
 }
 
 uint64_t ksem_getvalue(sem_id sem, int * sval) { // sval is either 0 is returned; or a negative number whose absolute value is the count of the number of processes and threads currently blocked in sem_wait(3)

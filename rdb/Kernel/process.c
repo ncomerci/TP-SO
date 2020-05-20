@@ -242,7 +242,7 @@ int createProcess(ps_info_t * ps_info, fd_info_t * fd_info, uint64_t * pid) {
         //printDec(i);
         //printString("\n", 2);
 
-        assignInAndOut(i, in, out);
+        assignInAndOut(i, in, out, processes[i].pid);
 
         prepareStackProcess(main_f->f, main_f->argc, main_f->argv, processes[i].rbp, processes[i].rsp);
 
@@ -397,7 +397,7 @@ int changeState(uint64_t pid, process_state new_state) {
                     free(processes[i].stack);
                 }
 
-                closeInAndOut(i);
+                closeInAndOut(i, processes[i].pid);
             }
             return 0;
         }

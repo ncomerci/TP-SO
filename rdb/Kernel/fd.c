@@ -2,7 +2,7 @@
 
 int processes_fds [MAX_PROCESSES][MAX_FILE_DES];
 
-int assignInAndOut(unsigned int idx, char * in, char * out) {
+int assignInAndOut(unsigned int idx, char * in, char * out, uint64_t pid) {
     if (idx < 0 || idx >= MAX_PROCESSES)
         return -1;
     
@@ -11,28 +11,28 @@ int assignInAndOut(unsigned int idx, char * in, char * out) {
     if (in == NULL || *in == '\0')
         gate = STDIN;
     else {
-        if ( ( gate = getPipeOutIndex(in) ) < 0 )
+        if ( ( gate = getPipeOutIndex(in, pid) ) < 0 )
             return -1;
     }
     processes_fds[idx][0] = gate;
     if (out == NULL || *out == '\0')
         gate = STDOUT;
     else {
-        if ( ( gate = getPipeInIndex(out) ) < 0 )
+        if ( ( gate = getPipeInIndex(out, pid) ) < 0 )
             return -1;
     }
     processes_fds[idx][1] = gate;
     return 0;
 }
 
-int closeInAndOut(unsigned int idx) {
+int closeInAndOut(unsigned int idx, uint64_t pid) {
     if (idx < 0 || idx >= MAX_PROCESSES)
         return -1;   
 
-    if ((processes_fds[idx][0] != STDIN) && (closePipe(processes_fds[idx][0]) < 0))
+    if ((processes_fds[idx][0] != STDIN) && (closePipe(processes_fds[idx][0], pid) < 0))
         return -1;
 
-    if ((processes_fds[idx][1] != STDOUT) && (closePipe(processes_fds[idx][1]) < 0))
+    if ((processes_fds[idx][1] != STDOUT) && (closePipe(processes_fds[idx][1], pid) < 0))
         return -1;
 
     return 0;

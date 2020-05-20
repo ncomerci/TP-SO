@@ -1,6 +1,8 @@
 #ifndef _KSEM_H
     #define _KSEM_H
 
+    #include <stdint.h>
+
     #define MAX_SEMAPHORES 40
     #define MAX_PROCESSES_PER_SEMAPHORE 10
     #define SEM_NAME_MAX_LENGTH 40
@@ -12,6 +14,7 @@
     //                          p3 sleep()
     //                                      p4 post()
     //
+    typedef enum {DEFAULT, PRIVILEGED} p_status_t;
 
     typedef struct sem_queue {
         char occupied;
@@ -29,6 +32,7 @@
         unsigned int processes_waiting; 
         sem_queue * first;
         sem_queue * last;
+        p_status_t privileged;
     } sem_t;
 
     typedef struct sem_info {
@@ -42,12 +46,14 @@
     void spin_lock(uint32_t * lock);
     void spin_unlock(uint32_t * lock);
     sem_id ksem_open(char * name);
-    sem_id ksem_init_open(char * name, uint64_t init_val) ;
+    sem_id ksem_init_open(char * name, uint64_t init_val);
+    sem_id ksem_init_open_priv(char * name, uint64_t init_val);
     int ksem_wait(sem_id sem);
     int ksem_post(sem_id sem);
     int ksem_close(sem_id sem);
-    uint64_t ksem_getvalue(sem_id sem, int * sval);
     int ksem_destroy(sem_id sem);
+    int ksem_destroy_priv(sem_id sem);
+    uint64_t ksem_getvalue(sem_id sem, int * sval);
     int ksem_get_semaphores_amount(unsigned int * size);
     int ksem_get_semaphores_info(sem_info * arr, unsigned int max_size, unsigned int * size);
     int sys_ksem(void * option, void * arg2, void * arg3, void * arg4);

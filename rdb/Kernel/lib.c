@@ -1,6 +1,10 @@
-#include <stdint.h> 
+#include <stdint.h>
+#include <lib.h>
+#include <screen.h>
 
 static int wrapSprintf(char * buff, const char *format, va_list pa);
+static void _64Hexfill(int n, char * buffer);
+uint32_t uintToBase(uint64_t value, char * buffer, uint32_t base);
 
 void * memset(void * destination, int32_t c, uint64_t length)
 {
@@ -57,18 +61,6 @@ unsigned int strlen(const char *str) {
 	return i - 1;
 }
 
-int strcpy(char *dst, const char *src) {
-	int i = 0;
-	do {
-		dst[i] = src[i];
-	} while(src[i++] != 0);
-	return 0;
-}
-
-int strcat(char *dst, const char *src) {
-	return strcpy(dst + strlen(dst), src);
-}
-
 int strcmp(const char *s1, const char *s2) {
     unsigned char c1, c2;
     while ((c1 = *s1++) == (c2 = *s2++)) {
@@ -76,6 +68,18 @@ int strcmp(const char *s1, const char *s2) {
             return 0;
     }
     return c1 - c2;
+}
+
+int strcpy(char *dst, const char *src) {
+	int i = 0;
+	do {
+		dst[i] = src[i];
+	} while(src[i++] != 0);
+	return i;
+}
+
+int strcat(char *dst, const char *src) {
+	return strcpy(dst + strlen(dst) + 1, src);
 }
 
 int sprintf(char * buff, const char *format, ...) {
@@ -150,4 +154,14 @@ static int wrapSprintf(char * buff, const char *format, va_list pa) {
     }
 	buff[i++] = '\0';
 	return i;
+}
+
+static void _64Hexfill(int n, char * buffer) {
+	for (int i = 15; i >= 0; i--) {
+		if (i >= n)
+			buffer[i] = buffer[i - n];
+		else
+			buffer[i] = '0';
+	}
+	buffer[16] = 0;
 }
