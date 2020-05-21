@@ -90,7 +90,7 @@ static int semProccess3(int argc, char ** argv) {
 
 static int pipeProccess(int argc, char ** argv) {
     char c;
-    const int buff_size = 31;
+    const int buff_size = 128;
     char buff[buff_size];
     int count = 0;
     while((c = scanChar()) != '\n') {
@@ -443,6 +443,7 @@ int main_printInput(int argc, char**argv){ //ARREGLAR
     char filteredInput[MAX_BUFFER]; 
 
     while( (c= scanChar()) != ESC){
+        putChar(c);
         if(c != '\n')
             filteredInput[i++] = c; 
         else{
@@ -479,7 +480,7 @@ static int isVowel(int c){
     //int i=0;
     //char filteredInput[MAX_BUFFER]; 
     while( (c= scanChar()) != ESC){
-        if(isVowel(c) != 0)
+        if(!isVowel(c))
             putChar(c);
             //filteredInput[i++] = c;
     }
@@ -571,16 +572,16 @@ void testPipe(void){
     uint64_t pid2;
     main_func_t pipeps1 = {pipeProccess, 1, (char **)argv};
     main_func_t pipeps2 = {pipeProccess, 1, (char **)argv};
-    if (createProcess(&pipeps2, "Test Pipe 2", 0, "patito", NULL, &pid2) < 0) { //lee de patito y escribe en stdout
-        printf("Create Process Failed\n");
-        return;
-    }
-    printf("Pipe Proccess 2 pid: %d\n", (int) pid2);
     if (createProcess(&pipeps1, "Test Pipe 1", 1, NULL, "patito", &pid1) < 0) { //lee de stdin y escribe en patito
         printf("Create Process Failed\n");
         return;
     }
     printf("Pipe Proccess 1 pid: %d\n", (int) pid1);
+    if (createProcess(&pipeps2, "Test Pipe 2", 0, "patito", NULL, &pid2) < 0) { //lee de patito y escribe en stdout
+        printf("Create Process Failed\n");
+        return;
+    }
+    printf("Pipe Proccess 2 pid: %d\n", (int) pid2);
 }
 
 void test(char * option) {

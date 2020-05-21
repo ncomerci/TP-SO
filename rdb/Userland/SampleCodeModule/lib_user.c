@@ -414,7 +414,7 @@ int printf(const char *format, ...) {
 	int size = wrapSprintf(printf_buffer, format, pa);
     va_end(pa);
 
-    return write(printf_buffer, size, WHITE_COLOR);
+    return write(printf_buffer, size - 1, WHITE_COLOR);
 }
 
 int sprintf(char * buff, const char *format, ...) {

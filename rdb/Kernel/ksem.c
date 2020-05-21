@@ -205,7 +205,7 @@ int ksem_close(sem_id sem) { //remove a ps from semaphore
                 semaphores[sem].processes_size--;
                 
             semaphores[sem].processes_amount--;
-            if (semaphores[sem].processes_amount == 0)
+            if (semaphores[sem].processes_amount == 0 && semaphores[sem].privileged != PRIVILEGED)
             { // delete semaphore
                 semaphores[sem].name[0] = '\0';
                 if (sem == sem_size - 1)

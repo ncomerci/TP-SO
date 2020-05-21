@@ -38,6 +38,7 @@ int pipeWrite(int gate, char * str, unsigned int str_size) { //post
     ksem_wait(sem_write);  //si alguien esta escribiendo, no escribas
     
     unsigned int i = 0;
+    unsigned int k = 0;
     unsigned int size = str_size; //tamaño que quiero escribir
     unsigned int size_left = size;
     unsigned int amount;
@@ -60,11 +61,11 @@ int pipeWrite(int gate, char * str, unsigned int str_size) { //post
     for(unsigned int j = 0; j < package_amount; j++) {
         ksem_wait(sem_cons);
 
-        amount = (size < PACKAGE_SIZE)?size:PACKAGE_SIZE;
+        amount = (size_left < PACKAGE_SIZE)?size_left:PACKAGE_SIZE;
 
         i = 0;
         while (i < amount) {
-            pipes[idx].buffer[(buff_idx + buff_size + i) % MAX_PIPE_BUFFER_SIZE] = str[i];
+            pipes[idx].buffer[(buff_idx + buff_size + i) % MAX_PIPE_BUFFER_SIZE] = str[k++];
             i++;
         }
         size_left -= amount;
@@ -72,6 +73,8 @@ int pipeWrite(int gate, char * str, unsigned int str_size) { //post
         spin_lock(&(pipes[idx].package_lock));
         pipes[idx].size += amount;
         spin_unlock(&(pipes[idx].package_lock));
+
+        buff_size = pipes[idx].size;
 
         ksem_post(sem_prod);
     }
@@ -116,10 +119,14 @@ int pipeRead(int gate, char * buff, unsigned int count) { //sleep
 
     ksem_wait(sem_read); // Si alguien esta leyendo, espera a que termine. Cuando me desbloquea leo
     
+    ksem_wait(sem_prod);
+
     spin_lock(&(pipes[idx].package_lock)); //me aseguro que nadie consulte el tamaño del paquete que voy a escribir
     unsigned int buff_idx = pipes[idx].idx;
-    unsigned int size = ((count < pipes[idx].size)? count : pipes[idx].size) * sizeof(char);
+    unsigned int buff_size = pipes[idx].size;
     spin_unlock(&(pipes[idx].package_lock)); 
+
+    unsigned int size = ((count < buff_size)? count : buff_size) * sizeof(char);
 
     unsigned int i = 0;
     unsigned int size_left = size;
@@ -132,11 +139,15 @@ int pipeRead(int gate, char * buff, unsigned int count) { //sleep
     */
 
     unsigned int package_amount = (size % PACKAGE_SIZE == 0)?(size / PACKAGE_SIZE):((size / PACKAGE_SIZE) + 1);
+    unsigned int packages_left_to_read_before, packages_left_to_read_left;
 
     for(unsigned int j = 0; j < package_amount; j++) {
-        ksem_wait(sem_prod);
+        if (j > 0)
+            ksem_wait(sem_prod);
 
         amount = (size_left < PACKAGE_SIZE)?size_left:PACKAGE_SIZE;
+
+        packages_left_to_read_left = (buff_size % PACKAGE_SIZE == 0)?(buff_size / PACKAGE_SIZE):((buff_size / PACKAGE_SIZE) + 1);
 
         i = 0;
         while (i < amount) {
@@ -150,11 +161,14 @@ int pipeRead(int gate, char * buff, unsigned int count) { //sleep
         pipes[idx].idx = (buff_idx + i) % MAX_PIPE_BUFFER_SIZE; 
 
         pipes[idx].size -= amount;
+        buff_size = pipes[idx].size;
 
-        if (((pipes[idx].size)/PACKAGE_SIZE) == ((pipes[idx].size + amount)/PACKAGE_SIZE))
-            ksem_post(sem_prod);
+        packages_left_to_read_before = (buff_size % PACKAGE_SIZE == 0)?(buff_size / PACKAGE_SIZE):((buff_size / PACKAGE_SIZE) + 1);
+
+        if (pipes[idx].size != 0 && (packages_left_to_read_before == packages_left_to_read_left))
+            ksem_post(sem_prod); // Devuelvo la cantidad de paquetes
         else
-            ksem_post(sem_cons);
+            ksem_post(sem_cons); // Lo consumí
 
         spin_unlock(&(pipes[idx].package_lock));
     }

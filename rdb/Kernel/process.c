@@ -385,6 +385,8 @@ int changeState(uint64_t pid, process_state new_state) {
                 if (last_state == READY)
                     processes_ready--;
 
+                closeInAndOut(i, processes[i].pid);
+
                 if (curr_process != NULL && curr_process->pid == pid) {
                     updateProcess(&(processes[i]));
                     curr_process = NULL;
@@ -396,8 +398,6 @@ int changeState(uint64_t pid, process_state new_state) {
                 else {
                     free(processes[i].stack);
                 }
-
-                closeInAndOut(i, processes[i].pid);
             }
             return 0;
         }
