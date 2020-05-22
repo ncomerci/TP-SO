@@ -93,6 +93,9 @@ static int pipeProccess(int argc, char ** argv) {
     const int buff_size = 128;
     char buff[buff_size];
     int count = 0;
+
+    if (argc == 2)
+        sleep(10000);
     while((c = scanChar()) != '\n') {
         if(count < buff_size-1)
             buff[count++] = c;
@@ -571,17 +574,17 @@ void testPipe(void){
     uint64_t pid1;
     uint64_t pid2;
     main_func_t pipeps1 = {pipeProccess, 1, (char **)argv};
-    main_func_t pipeps2 = {pipeProccess, 1, (char **)argv};
-    if (createProcess(&pipeps1, "Test Pipe 1", 1, NULL, "patito", &pid1) < 0) { //lee de stdin y escribe en patito
-        printf("Create Process Failed\n");
-        return;
-    }
-    printf("Pipe Proccess 1 pid: %d\n", (int) pid1);
+    main_func_t pipeps2 = {pipeProccess, 2, (char **)argv};
     if (createProcess(&pipeps2, "Test Pipe 2", 0, "patito", NULL, &pid2) < 0) { //lee de patito y escribe en stdout
         printf("Create Process Failed\n");
         return;
     }
     printf("Pipe Proccess 2 pid: %d\n", (int) pid2);
+    if (createProcess(&pipeps1, "Test Pipe 1", 1, NULL, "patito", &pid1) < 0) { //lee de stdin y escribe en patito
+        printf("Create Process Failed\n");
+        return;
+    }
+    printf("Pipe Proccess 1 pid: %d\n", (int) pid1);
 }
 
 void test(char * option) {
