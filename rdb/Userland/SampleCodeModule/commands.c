@@ -90,12 +90,9 @@ static int semProccess3(int argc, char ** argv) {
 
 static int pipeProccess(int argc, char ** argv) {
     char c;
-    const int buff_size = 128;
+    const int buff_size = 31;
     char buff[buff_size];
     int count = 0;
-
-    if (argc == 2)
-        sleep(10000);
     while((c = scanChar()) != '\n') {
         if(count < buff_size-1)
             buff[count++] = c;
@@ -440,14 +437,13 @@ void loop(void) {
     //printf("Process %d %s\n", pid, (kill(pid) == 0)?"Killed":"Not Killed");
 }
 
-int main_printInput(int argc, char**argv){ //ARREGLAR
+int main_printInput(int argc, char**argv){
     int c;
     int i=0;
     char filteredInput[MAX_BUFFER]; 
 
     while( (c= scanChar()) != ESC){
-        putChar(c);
-        if(c != '\n')
+        if(c != '\n' && i < MAX_BUFFER)
             filteredInput[i++] = c; 
         else{
             filteredInput[i] = '\0'; 
@@ -464,11 +460,12 @@ int main_countLines(int argc, char**argv){
     int lines= 0; 
     int c; 
     while( (c=scanChar()) != ESC ){
-        if(c == '\n')
+        if(c == '\n') {
             lines++;
+            printf("%d\n", lines);
+        }
     }
 
-    printf("%d", lines);
     return 0; 
 }
 
@@ -483,7 +480,7 @@ static int isVowel(int c){
     //int i=0;
     //char filteredInput[MAX_BUFFER]; 
     while( (c= scanChar()) != ESC){
-        if(!isVowel(c))
+        if(isVowel(c) == 0)
             putChar(c);
             //filteredInput[i++] = c;
     }
@@ -574,7 +571,7 @@ void testPipe(void){
     uint64_t pid1;
     uint64_t pid2;
     main_func_t pipeps1 = {pipeProccess, 1, (char **)argv};
-    main_func_t pipeps2 = {pipeProccess, 2, (char **)argv};
+    main_func_t pipeps2 = {pipeProccess, 1, (char **)argv};
     if (createProcess(&pipeps2, "Test Pipe 2", 0, "patito", NULL, &pid2) < 0) { //lee de patito y escribe en stdout
         printf("Create Process Failed\n");
         return;
@@ -620,26 +617,9 @@ void test(char * option) {
 }
 
 void philosDiningProblem(void) {
-    int cant;
-    char buff[5];
-    int c;
-    unsigned int i;
-    do {       
-        i = 0;
-        printf("Enter initial amount of philosophers:\n");
-        while (i < 5 && (c = scanChar()) != '\n') {
-            buff[i++] = (char) c;
-            putChar(c);
-        }
-        buff[i] = '\0';
-    } while(sscanf(buff, "%d", &cant) < 0);
-    char ** args = malloc(2 * sizeof(char *));
-    args[0] = malloc(5 * sizeof(char));
-    args[1] = NULL;
-    sprintf(args[0], "%d", cant);
-    main_func_t f_philos = {thinking_philos_main, 1, args};
+    main_func_t f_philos = {thinking_philos_main, 0, NULL};
     uint64_t pid;
-    printf("\n--> Philos Running with %d philosophers <--\n--> Press <a> to Add Philosophers <--\n--> Press <r> to Remove Philosophers <--\n", cant);
+    printf("\n--> Philos Running with %d philosophers <--\n--> Press <a> to Add Philosophers <--\n--> Press <r> to Remove Philosophers <--\n",INITIAL_PHILOS);
     createProcess(&f_philos, "philo problem", 1, NULL, NULL, &pid);
 }
 
@@ -723,7 +703,6 @@ void shCommand(char (* params)[LONGEST_PARAM]) {
         sprintf(argv2[1], "%p", main_commands_func[i]);
 
         processCreation(main_pipeSh, 2, argv2, main_func[i], 1, NULL, SEM_PIPE_SH_NAME, &pid);
-
         sem_wait(sem);
 
         free(argv1[1]);
@@ -744,14 +723,19 @@ static int main_pipeSh(int argc, char **argv) {
     sscanf(argv[0], "%d", &opt);
     int (*f)(int, char **);
     sscanf(argv[1], "%p", &f);
+
     if (opt != 0 && opt != 1)
         return -1;
-    sem_id sem = sem_init_open(SEM_PIPE_SH_NAME, 1 - opt);
+
+    sem_id sem = sem_init_open(SEM_PIPE_SH_NAME, 1 - opt); //el sem de shCommand se llama igual, por lo que se está ignorando el 1-opt => está bien esto??
+
     if(sem < 0) {
         printError("ERROR: sem creation.");
         return -1;
     }
+
     f(argc-2, &(argv[2]));
+
     if (opt == 0) {
         aux = sem_wait(sem);
         if(aux < 0) {
