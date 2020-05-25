@@ -186,18 +186,18 @@ int sys_screen(void * option, void * arg1, void * arg2) {
     return 0;
 }
 
-static char buffer[64] = { '0' };
-
 int printDec(uint64_t value) {
 	return printBase(value, 10);
 }
 
 int printBase(uint64_t value, uint32_t base) {
+    char buffer[64];
     uintToBase(value, buffer, base);
     return printString(buffer, 64);
 }
 
 int print64Hex(uint64_t value) {
+    char buffer[64];
 	int digits = uintToBase(value, buffer, 16);
 	_64Hexfill(16 - digits, buffer);
 	return printColorString(buffer, 64, ERROR_COLOR);

@@ -3,7 +3,7 @@
 int processes_fds [MAX_PROCESSES][MAX_FILE_DES];
 
 int assignInAndOut(unsigned int idx, char * in, char * out, uint64_t pid) {
-    if (idx < 0 || idx >= MAX_PROCESSES)
+    if (idx >= MAX_PROCESSES)
         return -1;
     
     int gate = -1;
@@ -26,7 +26,7 @@ int assignInAndOut(unsigned int idx, char * in, char * out, uint64_t pid) {
 }
 
 int closeInAndOut(unsigned int idx, uint64_t pid) {
-    if (idx < 0 || idx >= MAX_PROCESSES)
+    if (idx >= MAX_PROCESSES)
         return -1;   
 
     if ((processes_fds[idx][0] != STDIN) && (closePipe(processes_fds[idx][0], pid) < 0))

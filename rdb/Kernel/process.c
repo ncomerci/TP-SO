@@ -336,7 +336,7 @@ int exit() {
 
 int changePriority(uint64_t pid, unsigned int new_priority) {
     
-    if(new_priority >= MIN_PRIORITY && new_priority <=MAX_PRIORITY){
+    if(new_priority >= MIN_PRIORITY && new_priority <= MAX_PRIORITY){
         for(int i=0; i < processes_size; i++){
             if(processes[i].pid == pid) {
                 if (processes[i].state == KILLED)
