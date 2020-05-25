@@ -313,13 +313,19 @@ void testMem(void){
     printf("Beggining\n");
     printMMStats();
     char * line2 = malloc(sizeof(line1)/sizeof(char));
+    if (line2 == NULL)
+        return;
     strcpy(line2, line1);
     printf("Copied?: %s\n", line2);
     printMMStats();
     void * aux = malloc((1 << 22) - 8);
+    if (aux == NULL)
+        return;
     printf("Malloc returned %p\n", (uint64_t) aux);
     printMMStats();
     void * aux2 = malloc(100);
+    if (aux == NULL)
+        return;
     printf("Malloc returned %p\n", (uint64_t) aux2);
     printMMStats();
     free(line2);
@@ -370,11 +376,9 @@ void block(uint64_t pid){
 
         if(ans == -1 || state == KILLED) //it is KILLED or does not exist 
             printf("Process not found\n"); 
-        
         else if ( state == READY )  
             changeState(pid, BLOCKED); 
-
-        else if( state == BLOCKED)
+        else
             changeState(pid, READY); 
     }
    
@@ -401,15 +405,19 @@ void testProcess(void) {
 
 void testProcessArgs(void) {
     char ** args = malloc(6 * sizeof(char *));
+    if (args == NULL)
+        return;
     for (int i = 0; i < 5; i++) {
         args[i] = malloc(10 * sizeof(char));
+        if (args[i] == NULL)
+            return;
     }
     strcpy(args[0],"Hola");
     strcpy(args[1],"Esta");
     strcpy(args[2],"Es");
     strcpy(args[3],"Una");
     strcpy(args[4],"Prueba");
-    strcpy(args[5],NULL);
+    args[5] = NULL;
 
     main_func_t testprocessargs = {testProcessArgsMain, 5, args};
     uint64_t pid;
@@ -690,16 +698,24 @@ void shCommand(char (* params)[LONGEST_PARAM]) {
         char **argv2;
 
         argv1 = malloc(5 * sizeof(char *));
+        if (argv1 == NULL)
+            return;
         argv1[0] = malloc(MAX_ARG_LENGTH * sizeof(char));
         argv1[1] = malloc(MAX_ARG_LENGTH * sizeof(char));
         argv1[3] = NULL;
         argv1[4] = NULL;
 
+        if (argv1[0] == NULL)
+            return;
         strcpy(argv1[0], "1");
+        if (argv1[1] == NULL)
+            return;
         sprintf(argv1[1], "%p", main_commands_func[j]);
 
         if(strcmp(main_func[j], "phylo") == 0) {
             argv1[2] = malloc(MAX_ARG_LENGTH * sizeof(char));
+            if (argv1[2] == NULL)
+                return;
             sprintf(argv1[2], "%s", SEM_PIPE_SH_NAME);
         }
         else {
@@ -709,16 +725,24 @@ void shCommand(char (* params)[LONGEST_PARAM]) {
         processCreation(main_pipeSh, 4, argv1, main_func[j], 0, SEM_PIPE_SH_NAME, NULL, &pid);
 
         argv2 = malloc(5 * sizeof(char *));
+        if (argv2 == NULL)
+            return;
         argv2[0] = malloc(MAX_ARG_LENGTH * sizeof(char));
         argv2[1] = malloc(MAX_ARG_LENGTH * sizeof(char));
         argv2[2] = NULL;
         argv2[4] = NULL;
 
+        if (argv2[0] == NULL)
+            return;
         strcpy(argv2[0], "0");
+        if (argv2[1] == NULL)
+            return;
         sprintf(argv2[1], "%p", main_commands_func[i]);
         
         if(strcmp(main_func[i], "phylo") == 0) {
             argv2[3] = malloc(MAX_ARG_LENGTH * sizeof(char));
+            if (argv2[3] == NULL)
+                return;
             sprintf(argv2[3], "%s", SEM_PIPE_SH_NAME);
         }
         else {

@@ -46,7 +46,7 @@ uint64_t global;  //shared memory
 static void slowInc(uint64_t *p, int inc){
   uint64_t aux = *p;
   aux += inc;
-  for(int i = 0; i < 100 ; i++);
+  for(int i = 0; i < 100 ; i++){}
   *p = aux;
 }
 

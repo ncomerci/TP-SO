@@ -14,7 +14,7 @@
 	Strings
 */
 
-static char buffer[64] = { '0' };
+static char buffer[64];
 
 static void _64Hexfill(int n, char * buffer);
 static int wrapSprintf(char * buff, const char *format, va_list pa);
@@ -777,9 +777,6 @@ uint64_t strtoint_base(char* s, unsigned int base){
 
     return num; 
 }
-
-
-
 
 int is_num(char *s) {
 	int i = 0;

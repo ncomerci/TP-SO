@@ -108,7 +108,7 @@ void * scheduler(void * rsp) {
                 else // Blocked current process
                     enqueueProcess(curr_process); // Expires the current process
 
-                if (processes_ready <= 0) {
+                if (processes_ready == 0) {
                     curr_process = NULL;
                     _outportb(0x20, 0x20);
                     return halter.rsp;

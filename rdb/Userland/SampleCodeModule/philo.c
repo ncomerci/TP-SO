@@ -128,20 +128,10 @@ static int take_sticks(philo_t * philo, sem_id left, sem_id right, sem_id state_
     return 0;    
 }
  
-/* 
-static int take(int idx, sem_id * sticks, sem_id * hand){
-
-    if(sem_wait(sticks[idx]) == -1) {
-        return -1;
-    } 
-    *hand = idx; 
-
-    return 0;
-}
-*/
- 
 static int drop_sticks(philo_t * philo, sem_id left, sem_id right, sem_id state_lock, sem_id viewer_sem){
-    
+    if (philo == NULL)
+        return -1;
+
     if (philo->table_pos % 2 == 0) {
         philo->hands.left = -1;
 
@@ -185,6 +175,8 @@ static int drop_sticks(philo_t * philo, sem_id left, sem_id right, sem_id state_
 }
 
 static void addPhilo(philos_info_t * info, main_func_t * main_f, sem_id o_sem){
+    if (info == NULL && main_f == NULL)
+        return;
     unsigned int i = info->n_philos;
 
     startPhilo(info->philos, i);
@@ -321,6 +313,7 @@ int thinking_philos_main(int argc, char ** argv) {
 
     char ** viewer_args = malloc(2 * sizeof(char *));
     viewer_args[0] = malloc(MAX_ARG_LENGTH * sizeof(char));
+    viewer_args[1] = NULL;
 
     main_func_t f_viewer = {viewer_main, 1, viewer_args};
 
