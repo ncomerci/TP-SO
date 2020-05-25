@@ -54,6 +54,7 @@ static void eat();
 static int take_sticks( philo_t * philo, sem_id left, sem_id right, sem_id state_lock, sem_id viewer_sem);
 static int drop_sticks( philo_t * philo, sem_id left, sem_id right, sem_id state_lock, sem_id viewer_sem);
 static void initializePhilos(philo_t * philos, unsigned int n_philos);
+static void toggleMode(mode_t * m_ptr);
 static void startPhilo(philo_t * philos, unsigned int pos);
 static void addPhilo(philos_info_t * info, main_func_t * main_f, sem_id o_sem);
 static void removePhilo(philos_info_t * info);
@@ -298,6 +299,7 @@ int thinking_philos_main(int argc, char ** argv) {
     philos_info_t info;
     int c;
     info.n_philos = INITIAL_PHILOS;
+    info.mode = DEFAULT;
 
     initializePhilos(info.philos, info.n_philos);
     
@@ -342,7 +344,10 @@ int thinking_philos_main(int argc, char ** argv) {
         createProcess(&f_aux, philo_name, 0, NULL, NULL, &info.philos[i].pid);
     }
 
-    createProcess(&f_viewer, "Philo Viewer", 0, NULL, NULL, &viewer_pid);
+    if (argc != 2)
+        createProcess(&f_viewer, "Philo Viewer", 0, NULL, NULL, &viewer_pid);
+    else
+        createProcess(&f_viewer, "Philo Viewer", 0, argv[0], argv[1], &viewer_pid);        
 
     clearScreen();
 
@@ -351,11 +356,12 @@ int thinking_philos_main(int argc, char ** argv) {
             addPhilo(&info, &f_aux, o_sem);
         else if (c == 'r' && info.n_philos > MIN_PHILOS)
             removePhilo(&info);
-        else if (c == 'x')
-            for(unsigned int i = 0; i < info.n_philos; i++)
-                kill(info.philos[i].pid);
         else if (c == 'p')
             printProcesses();
+        else if (c == 's')
+            printBothSemaphores();
+        else if (c == 't')
+            toggleMode(&(info.mode));
     }
     //finish process 
 
@@ -400,6 +406,10 @@ static void startPhilo(philo_t * philos, unsigned int pos) {
     philos[pos].table_pos = pos;
 }
 
+static void toggleMode(mode_t * m_ptr) {
+    *m_ptr = (*m_ptr == DEFAULT)?ENHANCED:DEFAULT;
+}
+
 static int viewer_main(int argc, char ** argv) {
     philos_info_t * info;
     //int sval;
@@ -407,6 +417,7 @@ static int viewer_main(int argc, char ** argv) {
 
     unsigned int i;
     unsigned int n;
+    mode_t last_mode, mode;
     state_t states[2][MAX_PHILOS] = {{0}, {0}};
     state_t actual_state = 0;
     state_t * last_state;
@@ -414,13 +425,17 @@ static int viewer_main(int argc, char ** argv) {
 
     sem_id viewer_sem = sem_init_open("philo_viewer", 0);
     sem_id state_lock = sem_open("state_lock");
+    
+    last_mode = mode = info->mode;
 
-    drawTable();
+    if (mode == ENHANCED)
+        drawTable();
      
     while(1) {
         sem_wait(viewer_sem); //in case a philo is changing state
 
         n = info->n_philos;
+        mode = info->mode;
         last_state = states[actual_state];
         state = states[1 - actual_state];
 
@@ -434,24 +449,22 @@ static int viewer_main(int argc, char ** argv) {
         if (!equals(state, last_state, n) == 0) {
             if (checkState(state, n) != 0)
                 printf("An error ocurred. Two processes eating together!\n");
-            clearScreen();
-            drawTable();
-            drawPhilos(state, n);
-            actual_state = 1 - actual_state;
-        }
-
-        /*
-        if (!equals(state, last_state, n) == 0) {
-            if (checkState(state, n) != 0)
-                printf("An error ocurred. Two processes eating together!\n");
-            else {
+            if (mode != last_mode) {
+                clearScreen();
+                last_mode = mode;
+            }
+            if (mode == ENHANCED) {
+                clearScreen();
+                drawTable();
+                drawPhilos(state, n);
+            }
+            else if (mode == DEFAULT) {
                 for(i = 0; i < info->n_philos; i++)
                     printf("%s ", (state[i] == EATING)?"E":".");
                 printf("\n");
             }
             actual_state = 1 - actual_state;
         }
-        */
     }
 
     return 0;
@@ -471,6 +484,46 @@ static int checkState(state_t * state, unsigned int size) {
             return -1;
     return 0;
 }
+
+
+/*
+Implementacion en Python para hallar las distintas posiciones en enteros que representan a las posiciones del coseno y el seno, multiplicadas por 1000.
+
+import math  
+
+n = 35
+    
+a = math.pi
+out = "{\n" 
+
+for i in range(n):
+  out += "{"
+  for j in range(n):
+    if j <= i:
+      x = int(100 * math.cos(2 * math.pi * (j / (i+1))))
+      y = int(100 * math.sin(2 * math.pi * (j / (i+1))))
+    else:
+      x = 0
+      y = 0
+    out += "{ "
+    out += str(x)
+    out += ", "
+    out += str(y)
+    out += "}"
+    if j < (n-1):
+      out += ","
+
+  out += "}"
+  if i < (n-1):
+    out += ","
+  out += "\n" 
+
+out += "}"
+
+print(out)
+
+*/
+
 
 static void drawTable(void) {
     drawCircle(TABLE_X, TABLE_Y, TABLE_RADIUS, TABLE_COLOR);

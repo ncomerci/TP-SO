@@ -43,6 +43,8 @@ int pipeWrite(int gate, char * str, unsigned int str_size) { //post
     unsigned int size_left = size;
     unsigned int amount;
 
+    ksem_wait(sem_cons);
+
     spin_lock(&(pipes[idx].package_lock)); //me aseguro que nadie consulte el tamaño del paquete que voy a escribir
     unsigned int buff_idx = pipes[idx].idx;
     unsigned int buff_size = pipes[idx].size;
@@ -55,11 +57,12 @@ int pipeWrite(int gate, char * str, unsigned int str_size) { //post
     */
 
     unsigned int package_amount = (((buff_size + size) / PACKAGE_SIZE) - (buff_size / PACKAGE_SIZE));
-    if ((buff_size == 0) && ((buff_size + size) % PACKAGE_SIZE != 0))
+    if (size > 0 && package_amount == 0 && ((buff_size + size) % PACKAGE_SIZE != 0))
         package_amount += 1;
 
     for(unsigned int j = 0; j < package_amount; j++) {
-        ksem_wait(sem_cons);
+        if (j > 0)
+            ksem_wait(sem_cons);
 
         amount = (size_left < PACKAGE_SIZE)?size_left:PACKAGE_SIZE;
 
@@ -263,6 +266,8 @@ int openPipe(char * name, uint64_t pid) {
     if (i < MAX_PIPES) {
         strcpy(pipes[i].name, name);
         pipes[i].buffer[0] = '\0';
+        pipes[i].size = 0;
+        pipes[i].idx = 0;
         pipes[i].package_lock = 0;
         pipes[i].processes[0].pid = pid;
         pipes[i].processes[0].occupied = 1;        
@@ -317,11 +322,8 @@ int closePipe(int gate, uint64_t pid) {
                     pipes_size--;
                 pipes_amount--;
 
-                if (pipes_size == 0) {
-                    ksem_destroy_priv(pipes[idx].sem_producer);
-                    ksem_destroy_priv(pipes[idx].sem_consumer);
-                }
-                    
+                ksem_destroy_priv(pipes[idx].sem_producer);
+                ksem_destroy_priv(pipes[idx].sem_consumer);    
             }
             return 0;
         }

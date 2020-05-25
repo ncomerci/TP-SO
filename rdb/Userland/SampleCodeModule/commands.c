@@ -451,6 +451,11 @@ int main_printInput(int argc, char**argv){
             printf("%s\n", filteredInput); 
         }
     }
+    if (i > 0) {
+        filteredInput[i++] = c;
+        filteredInput[i] = '\0';
+        printf("%s\n", filteredInput);
+    }
 
     return 0;
 }
@@ -684,25 +689,43 @@ void shCommand(char (* params)[LONGEST_PARAM]) {
         char **argv1;
         char **argv2;
 
-        argv1 = malloc(2 * sizeof(char *));
+        argv1 = malloc(5 * sizeof(char *));
         argv1[0] = malloc(MAX_ARG_LENGTH * sizeof(char));
         argv1[1] = malloc(MAX_ARG_LENGTH * sizeof(char));
-        argv1[2] = NULL;
+        argv1[3] = NULL;
+        argv1[4] = NULL;
 
         strcpy(argv1[0], "1");
         sprintf(argv1[1], "%p", main_commands_func[j]);
 
-        processCreation(main_pipeSh, 2, argv1, main_func[j], 0, SEM_PIPE_SH_NAME, NULL, &pid);
+        if(strcmp(main_func[j], "phylo") == 0) {
+            argv1[2] = malloc(MAX_ARG_LENGTH * sizeof(char));
+            sprintf(argv1[2], "%s", SEM_PIPE_SH_NAME);
+        }
+        else {
+            argv1[2] = NULL;
+        }
 
-        argv2 = malloc(2 * sizeof(char *));
+        processCreation(main_pipeSh, 4, argv1, main_func[j], 0, SEM_PIPE_SH_NAME, NULL, &pid);
+
+        argv2 = malloc(5 * sizeof(char *));
         argv2[0] = malloc(MAX_ARG_LENGTH * sizeof(char));
         argv2[1] = malloc(MAX_ARG_LENGTH * sizeof(char));
         argv2[2] = NULL;
+        argv2[4] = NULL;
 
         strcpy(argv2[0], "0");
         sprintf(argv2[1], "%p", main_commands_func[i]);
+        
+        if(strcmp(main_func[i], "phylo") == 0) {
+            argv2[3] = malloc(MAX_ARG_LENGTH * sizeof(char));
+            sprintf(argv2[3], "%s", SEM_PIPE_SH_NAME);
+        }
+        else {
+            argv2[3] = NULL;
+        }
 
-        processCreation(main_pipeSh, 2, argv2, main_func[i], 1, NULL, SEM_PIPE_SH_NAME, &pid);
+        processCreation(main_pipeSh, 4, argv2, main_func[i], 1, NULL, SEM_PIPE_SH_NAME, &pid);
         sem_wait(sem);
 
         free(argv1[1]);
@@ -737,6 +760,7 @@ static int main_pipeSh(int argc, char **argv) {
     f(argc-2, &(argv[2]));
 
     if (opt == 0) {
+        putChar(ESC);
         aux = sem_wait(sem);
         if(aux < 0) {
             printError("ERROR: sem wait.");

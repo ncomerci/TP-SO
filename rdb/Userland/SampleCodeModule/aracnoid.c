@@ -365,40 +365,41 @@ static int directionDecision(void) {
 }
 
 static int updater(int argc, char ** argv) {
-    int secs = getSecondsElapsed();
+    while (1) {
+        int secs = getSecondsElapsed();
 
-    if (secs > last_sec) {
-        last_sec = secs;
-        gs.seconds_elapsed++;
-    }
-
-    if (gs.ball.mov.velocity != MAX_VELOCITY && gs.seconds_elapsed / SPEEDING_TIME > speed) {
-        speed = gs.seconds_elapsed / SPEEDING_TIME;
-        gs.ball.mov.velocity = ((gs.ball.mov.velocity + 1) > MAX_VELOCITY)?MAX_VELOCITY:gs.ball.mov.velocity + 1;
-        gs.stick.mov.velocity = gs.ball.mov.velocity * STICK_BALL_RELATIVITY;
-        beeps(SPEEDING_SOUND_FREQ);
-    }
-
-    if (last_key == ARROW_LEFT || last_key == ARROW_RIGHT) {
-        if(last_key == ARROW_LEFT) {
-            if (!gs.shooted)
-                gs.ball.mov.movingDirX = -1;        
-            gs.stick.mov.movingDirX = -1; 
+        if (secs > last_sec) {
+            last_sec = secs;
+            gs.seconds_elapsed++;
         }
-        else {
-            if (!gs.shooted)
-                gs.ball.mov.movingDirX = 1;   
-            gs.stick.mov.movingDirX = 1;
+
+        if (gs.ball.mov.velocity != MAX_VELOCITY && gs.seconds_elapsed / SPEEDING_TIME > speed) {
+            speed = gs.seconds_elapsed / SPEEDING_TIME;
+            gs.ball.mov.velocity = ((gs.ball.mov.velocity + 1) > MAX_VELOCITY)?MAX_VELOCITY:gs.ball.mov.velocity + 1;
+            gs.stick.mov.velocity = gs.ball.mov.velocity * STICK_BALL_RELATIVITY;
+            beeps(SPEEDING_SOUND_FREQ);
         }
+
+        if (last_key == ARROW_LEFT || last_key == ARROW_RIGHT) {
+            if(last_key == ARROW_LEFT) {
+                if (!gs.shooted)
+                    gs.ball.mov.movingDirX = -1;        
+                gs.stick.mov.movingDirX = -1; 
+            }
+            else {
+                if (!gs.shooted)
+                    gs.ball.mov.movingDirX = 1;   
+                gs.stick.mov.movingDirX = 1;
+            }
+        }
+        last_key = 0;
+
+        move_stick();
+        if (gs.shooted)
+            move_ball();
+
+        sleep(1000 / FPS);
     }
-    last_key = 0;
-
-    move_stick();
-    if (gs.shooted)
-        move_ball();
-
-    sleep(1000 / FPS);
-
     return 0;
 }
 

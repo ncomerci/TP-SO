@@ -33,6 +33,7 @@
     // The three things that philosophers do.
     typedef enum { THINKING, EATING, HUNGRY } state_t;
     typedef enum { STARTER, NEW } origin;
+    typedef enum { ENHANCED, DEFAULT } mode_t;
 
     typedef struct hands_t {
         sem_id left;
@@ -51,6 +52,7 @@
         unsigned int n_philos; 
         philo_t philos[MAX_PHILOS];
         char ** args[MAX_PHILOS];
+        mode_t mode;
     }philos_info_t;
 
     int thinking_philos_main(int argc, char ** argv);
